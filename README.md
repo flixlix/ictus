@@ -17,7 +17,7 @@ Measured on this repo (`npm run measure`). Min+gzip is what a bundler ships.
 
 ## Docs
 
-`npm run docs` opens a local page with separator demos, an interactive acceptance table, parse/format playgrounds, and the API.
+Live docs: [ictus.luca-felix.com](https://ictus.luca-felix.com). Locally, `npm run docs`.
 
 ## Install
 
