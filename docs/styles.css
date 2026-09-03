@@ -1,0 +1,29 @@
+html {
+  color-scheme: light only;
+}
+
+body {
+  max-width: 32em;
+  margin: 2em auto;
+  padding: 0 1em 4em;
+  line-height: 1.5;
+  font-family: system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+}
+
+pre {
+  overflow: auto;
+}
+
+#spec-body tr {
+  cursor: pointer;
+}
+
+#spec-body tr[data-on] {
+  background: #eee;
+}

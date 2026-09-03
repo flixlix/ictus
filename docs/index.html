@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ictus</title>
+    <meta
+      name="description"
+      content="Headless as-you-type mask for a single day-month-year input. Live demos and API."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <h1>ictus</h1>
+    <p>
+      Headless as-you-type behavior for a single <code>&lt;input&gt;</code> date field. Day-month-year,
+      zero dependencies, no calendar, no React in the core.
+    </p>
+    <p><a href="#demos">Demos</a> · <a href="#size">Size</a> · <a href="#api">API</a></p>
+
+    <p>
+      <label for="hero-date">Try it</label><br />
+      <span data-mask data-separator=".">
+        <input
+          id="hero-date"
+          size="12"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="dd.mm.yyyy"
+        />
+        <br />
+        <code data-caret>|</code>
+        <span data-parse data-kind="incomplete">incomplete</span>
+        <span data-hint></span>
+      </span>
+    </p>
+    <p>Type 4, then 9, then 2026. Backspace through the separators.</p>
+    <p>
+      <code>npm install ictus</code>
+      <button type="button" data-copy="npm install ictus">Copy</button>
+    </p>
+
+    <h2 id="size">Size and speed</h2>
+    <p>Min+gzip, as a bundler ships it. Reproduce with <code>npm run measure</code>.</p>
+    <table border="1" cellspacing="0" cellpadding="4">
+      <thead>
+        <tr>
+          <th>Entry</th>
+          <th>minify</th>
+          <th>gzip</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>ictus</code></td>
+          <td>2.4 kB</td>
+          <td>1.1 kB</td>
+        </tr>
+        <tr>
+          <td><code>ictus/react</code> (react external)</td>
+          <td>0.7 kB</td>
+          <td>0.4 kB</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      <code>apply</code> is 0.1–0.2 µs per keystroke (about 5–8 million ops/s). Typing
+      <code>11.12.2026</code> is about 2 µs. <code>parseDate</code> is about 0.4 µs. A 16 ms frame is
+      tens of thousands of keystrokes. The machine walks at most ten characters and does not touch
+      the DOM.
+    </p>
+    <h2 id="demos">Demos</h2>
+    <p>Same machine, different separators, and the parse/format seam.</p>
+
+    <h3>Dot</h3>
+    <p>Default separator. Day overflow-pads <code>4–9</code>, month <code>2–9</code>.</p>
+    <p>
+      <label for="demo-dot">dd.mm.yyyy</label><br />
+      <span data-mask data-separator=".">
+        <input
+          id="demo-dot"
+          size="12"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="dd.mm.yyyy"
+        />
+        <br />
+        <code data-caret>|</code>
+        <span data-parse data-kind="incomplete">incomplete</span>
+        <span data-hint></span>
+      </span>
+    </p>
+
+    <h3>Slash</h3>
+    <p>Typing <code>.</code>, <code>/</code>, or <code>-</code> still writes <code>/</code>.</p>
+    <p>
+      <label for="demo-slash">dd/mm/yyyy</label><br />
+      <span data-mask data-separator="/">
+        <input
+          id="demo-slash"
+          size="12"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="dd/mm/yyyy"
+        />
+        <br />
+        <code data-caret>|</code>
+        <span data-parse data-kind="incomplete">incomplete</span>
+        <span data-hint></span>
+      </span>
+    </p>
+
+    <h3>Dash</h3>
+    <p>Still day-month-year. Year never pads on the first digit.</p>
+    <p>
+      <label for="demo-dash">dd-mm-yyyy</label><br />
+      <span data-mask data-separator="-">
+        <input
+          id="demo-dash"
+          size="12"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="dd-mm-yyyy"
+        />
+        <br />
+        <code data-caret>|</code>
+        <span data-parse data-kind="incomplete">incomplete</span>
+        <span data-hint></span>
+      </span>
+    </p>
+
+    <h3>formatDate</h3>
+    <p>Local calendar parts, padded, with the separator you pass.</p>
+    <p>
+      <label for="native-date">Date</label>
+      <input id="native-date" type="date" />
+    </p>
+    <p>
+      <label for="format-sep">Separator</label>
+      <select id="format-sep">
+        <option value="." selected>.</option>
+        <option value="/">/</option>
+        <option value="-">-</option>
+      </select>
+    </p>
+    <p>formatDate = <code id="format-result"></code></p>
+    <p><button type="button" id="load-formatted">Load into field</button></p>
+
+    <h3>Acceptance table</h3>
+    <p>Click a row to run that keystroke. <code>|</code> is the caret.</p>
+    <p>
+      <label for="demo-table">Table target</label><br />
+      <span id="table-field" data-mask data-separator=".">
+        <input
+          id="demo-table"
+          size="12"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="dd.mm.yyyy"
+        />
+        <br />
+        <code data-caret>|</code>
+        <span data-parse data-kind="incomplete">incomplete</span>
+        <span data-hint></span>
+      </span>
+    </p>
+    <table border="1" cellspacing="0" cellpadding="4">
+      <thead>
+        <tr>
+          <th>Before</th>
+          <th>Key</th>
+          <th>After</th>
+        </tr>
+      </thead>
+      <tbody id="spec-body">
+        <tr data-before="|" data-key="4" data-after="04.|">
+          <td><code>|</code></td>
+          <td>4</td>
+          <td><code>04.|</code></td>
+        </tr>
+        <tr data-before="|" data-key="1" data-after="1|">
+          <td><code>|</code></td>
+          <td>1</td>
+          <td><code>1|</code></td>
+        </tr>
+        <tr data-before="1|" data-key="." data-after="01.|">
+          <td><code>1|</code></td>
+          <td>.</td>
+          <td><code>01.|</code></td>
+        </tr>
+        <tr data-before="13|" data-key="." data-after="13.|">
+          <td><code>13|</code></td>
+          <td>.</td>
+          <td><code>13.|</code></td>
+        </tr>
+        <tr data-before="|" data-key="." data-after="|">
+          <td><code>|</code></td>
+          <td>.</td>
+          <td><code>|</code></td>
+        </tr>
+        <tr data-before="04.|" data-key="." data-after="04.|">
+          <td><code>04.|</code></td>
+          <td>.</td>
+          <td><code>04.|</code></td>
+        </tr>
+        <tr data-before="04.|" data-key="9" data-after="04.09.|">
+          <td><code>04.|</code></td>
+          <td>9</td>
+          <td><code>04.09.|</code></td>
+        </tr>
+        <tr data-before="3|" data-key="9" data-after="3|">
+          <td><code>3|</code></td>
+          <td>9</td>
+          <td><code>3|</code></td>
+        </tr>
+        <tr data-before="04.1|" data-key="3" data-after="04.1|">
+          <td><code>04.1|</code></td>
+          <td>3</td>
+          <td><code>04.1|</code></td>
+        </tr>
+        <tr data-before="11|" data-key="1" data-after="11.1|">
+          <td><code>11|</code></td>
+          <td>1</td>
+          <td><code>11.1|</code></td>
+        </tr>
+        <tr data-before="11.12.|" data-key="Backspace" data-after="11.12|">
+          <td><code>11.12.|</code></td>
+          <td>⌫</td>
+          <td><code>11.12|</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 id="api">API</h2>
+    <p>Four exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
+
+    <h3 id="apply"><code>apply</code></h3>
+    <p>
+      Take the previous masked value, a collapsed caret, and the key just pressed. Returns the next
+      value and caret. Unknown keys are a no-op. The box is never cleared on reject.
+    </p>
+    <p><button type="button" data-copy-target="code-apply">Copy</button></p>
+    <pre id="code-apply"><code>import { apply } from "ictus";
+
+apply({
+  value: "1",
+  caret: 1,
+  key: ".",
+  separator: ".", // default
+});
+// { value: "01.", caret: 3 }</code></pre>
+    <dl>
+      <dt><code>value</code></dt>
+      <dd>Current masked string.</dd>
+      <dt><code>caret</code></dt>
+      <dd>Collapsed selection index.</dd>
+      <dt><code>key</code></dt>
+      <dd>
+        A digit, <code>.</code> <code>/</code> <code>-</code>, <code>Backspace</code>, or
+        <code>Delete</code> — the <code>KeyboardEvent.key</code> values.
+      </dd>
+      <dt><code>separator?</code></dt>
+      <dd>Written separator. Default <code>"."</code>. Use a single character.</dd>
+    </dl>
+
+    <h3 id="parseDate"><code>parseDate</code></h3>
+    <p>
+      Returns a <strong>local</strong> <code>Date</code>
+      (<code>new Date(year, monthIndex, day)</code>) only for a complete, calendar-valid triple.
+      Partial strings and impossible dates return <code>undefined</code>. Separators
+      <code>.</code>, <code>/</code>, and <code>-</code> are all accepted.
+    </p>
+    <p><button type="button" data-copy-target="code-parse">Copy</button></p>
+    <pre id="code-parse"><code>parseDate("11.12.2026"); // local Date
+parseDate("11/12/2026"); // same
+parseDate("32.01.2020"); // undefined
+parseDate("31.02.2020"); // undefined
+parseDate("11.12");      // undefined</code></pre>
+    <p>
+      <label for="parse-input">Masked string</label><br />
+      <input id="parse-input" size="16" value="11.12.2026" spellcheck="false" />
+    </p>
+    <pre id="parse-output"></pre>
+
+    <h3 id="formatDate"><code>formatDate</code></h3>
+    <p>Writes <code>dd{sep}mm{sep}yyyy</code> from the date’s local day, month, and year.</p>
+    <p><button type="button" data-copy-target="code-format">Copy</button></p>
+    <pre id="code-format"><code>formatDate(new Date(2026, 11, 11));
+// "11.12.2026"
+
+formatDate(new Date(2026, 11, 11), "/");
+// "11/12/2026"</code></pre>
+
+    <h3 id="isDateMaskKey"><code>isDateMaskKey</code></h3>
+    <p>
+      True for keys <code>apply</code> handles. Use it to <code>preventDefault</code> in
+      <code>keydown</code> without swallowing arrows, tab, or shortcuts.
+    </p>
+    <p><button type="button" data-copy-target="code-key">Copy</button></p>
+    <pre id="code-key"><code>if (!isDateMaskKey(event.key)) return;
+event.preventDefault();</code></pre>
+
+    <h3 id="types">Types</h3>
+    <p><button type="button" data-copy-target="code-types">Copy</button></p>
+    <pre id="code-types"><code>type ApplyInput = {
+  value: string;
+  caret: number;
+  key: string;
+  separator?: string;
+};
+
+type ApplyResult = {
+  value: string;
+  caret: number;
+};</code></pre>
+
+    <h3 id="vanilla">Vanilla <code>&lt;input&gt;</code></h3>
+    <p><button type="button" data-copy-target="code-vanilla">Copy</button></p>
+    <pre id="code-vanilla"><code>import { apply, isDateMaskKey } from "ictus";
+
+const input = document.querySelector("input");
+input.addEventListener("keydown", (event) => {
+  if (!isDateMaskKey(event.key)) return;
+  event.preventDefault();
+  const next = apply({
+    value: input.value,
+    caret: input.selectionStart ?? 0,
+    key: event.key,
+  });
+  input.value = next.value;
+  input.setSelectionRange(next.caret, next.caret);
+});</code></pre>
+
+    <h3 id="react"><code>useDateFieldMask</code></h3>
+    <p>
+      Optional React entry. Peer on <code>react</code>. Restores the caret after commit.
+      <code>parsed</code> is a local <code>Date</code> or <code>undefined</code>.
+    </p>
+    <p><button type="button" data-copy-target="code-react">Copy</button></p>
+    <pre id="code-react"><code>import { useDateFieldMask } from "ictus/react";
+
+function DateInput() {
+  const { inputProps, parsed } = useDateFieldMask();
+  return &lt;input {...inputProps} /&gt;;
+}</code></pre>
+
+    <hr />
+    <footer>
+      <p>
+        MIT ·
+        <a href="https://github.com/flixlix">flixlix</a> ·
+        <a href="https://github.com/flixlix/ictus">github.com/flixlix/ictus</a>
+      </p>
+    </footer>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
