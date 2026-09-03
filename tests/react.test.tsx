@@ -82,6 +82,14 @@ describe("useDateFieldMask", () => {
     expect(onValueChange).toHaveBeenCalledWith("04.");
   });
 
+  it("clears when the whole value is selected and deleted", () => {
+    render(<DateInput defaultValue="11.12.2026" />);
+    const input = screen.getByLabelText("date") as HTMLInputElement;
+    input.setSelectionRange(0, input.value.length);
+    fireEvent.keyDown(input, { key: "Backspace" });
+    expect(input.value).toBe("");
+  });
+
   it("leaves arrows and letters to the browser", () => {
     render(<DateInput defaultValue="11" />);
     const input = screen.getByLabelText("date");

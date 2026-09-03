@@ -56,6 +56,7 @@ function bindMask(root: HTMLElement): void {
     const next = apply({
       value: input.value,
       caret,
+      selectionEnd: input.selectionEnd ?? undefined,
       key: event.key,
       separator,
     });

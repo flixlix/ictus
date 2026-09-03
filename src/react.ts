@@ -43,6 +43,7 @@ export function useDateFieldMask(
       const next = apply({
         value: event.currentTarget.value,
         caret: event.currentTarget.selectionStart ?? 0,
+        selectionEnd: event.currentTarget.selectionEnd ?? undefined,
         key: event.key,
         separator,
       });

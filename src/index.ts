@@ -1,6 +1,7 @@
 export type ApplyInput = {
   value: string;
   caret: number;
+  selectionEnd?: number;
   key: string;
   separator?: string;
 };
@@ -182,9 +183,27 @@ function commitSeparator(value: string, caret: number, sep: string): ApplyResult
   };
 }
 
+function clampIndex(value: string, index: number): number {
+  return Math.min(Math.max(index, 0), value.length);
+}
+
 export function apply(input: ApplyInput): ApplyResult {
-  const { value, caret, key } = input;
+  let { value, caret, key } = input;
   const separator = input.separator || ".";
+  const from = clampIndex(value, caret);
+  const to = clampIndex(value, input.selectionEnd ?? caret);
+  const start = Math.min(from, to);
+  const end = Math.max(from, to);
+
+  if (end > start) {
+    value = value.slice(0, start) + value.slice(end);
+    caret = start;
+    if (key === "Backspace" || key === "Delete") {
+      return { value, caret };
+    }
+  } else {
+    caret = start;
+  }
 
   if (key === "Backspace") {
     if (caret === 0) return { value, caret };

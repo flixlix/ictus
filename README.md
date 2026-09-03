@@ -41,10 +41,11 @@ The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the
 import { apply, parseDate, formatDate, isDateMaskKey } from "ictus";
 
 apply({
-  value: string,       // current masked value
-  caret: number,       // collapsed caret
-  key: string,         // digit, `.` `/` `-`, Backspace, Delete
-  separator?: string,  // default '.'
+  value: string,          // current masked value
+  caret: number,          // selection start (or collapsed caret)
+  selectionEnd?: number,  // selection end, defaults to caret
+  key: string,            // digit, `.` `/` `-`, Backspace, Delete
+  separator?: string,     // default '.'
 }): { value: string; caret: number }
 
 parseDate(masked: string): Date | undefined
@@ -52,7 +53,7 @@ formatDate(date: Date, separator?: string): string
 isDateMaskKey(key: string): boolean
 ```
 
-`parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. The library never clears the box.
+`parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
 
 `formatDate` writes `dd{sep}mm{sep}yyyy` from the date's local calendar parts.
 
@@ -74,7 +75,7 @@ isDateMaskKey(key: string): boolean
 | `11\|` | `1` | `11.1\|` |
 | `11.12.\|` | `⌫` | `11.12\|` |
 
-Empty current group + separator is a no-op (`Blank + . → ""`). Backspace/Delete remove one visible character, including a trailing separator.
+Empty current group + separator is a no-op (`Blank + . → ""`). Backspace/Delete remove one visible character, including a trailing separator. A selected range is deleted (select-all + delete clears the field).
 
 ## Vanilla `<input>`
 
@@ -88,6 +89,7 @@ input.addEventListener("keydown", (event) => {
   const next = apply({
     value: input.value,
     caret: input.selectionStart ?? 0,
+    selectionEnd: input.selectionEnd ?? undefined,
     key: event.key,
   });
   input.value = next.value;

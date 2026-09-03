@@ -242,8 +242,9 @@
 
     <h3 id="apply"><code>apply</code></h3>
     <p>
-      Take the previous masked value, a collapsed caret, and the key just pressed. Returns the next
-      value and caret. Unknown keys are a no-op. The box is never cleared on reject.
+      Take the previous masked value, the selection, and the key just pressed. Returns the next
+      value and caret. Unknown keys are a no-op. The box is never cleared on reject. A non-empty
+      selection is replaced: Backspace and Delete remove it, a digit types into the hole.
     </p>
     <p><button type="button" data-copy-target="code-apply">Copy</button></p>
     <pre id="code-apply"><code>import { apply } from "ictus";
@@ -259,7 +260,9 @@ apply({
       <dt><code>value</code></dt>
       <dd>Current masked string.</dd>
       <dt><code>caret</code></dt>
-      <dd>Collapsed selection index.</dd>
+      <dd>Selection start (or the collapsed caret).</dd>
+      <dt><code>selectionEnd?</code></dt>
+      <dd>Selection end. Defaults to <code>caret</code>.</dd>
       <dt><code>key</code></dt>
       <dd>
         A digit, <code>.</code> <code>/</code> <code>-</code>, <code>Backspace</code>, or
@@ -311,6 +314,7 @@ event.preventDefault();</code></pre>
     <pre id="code-types"><code>type ApplyInput = {
   value: string;
   caret: number;
+  selectionEnd?: number;
   key: string;
   separator?: string;
 };
@@ -331,6 +335,7 @@ input.addEventListener("keydown", (event) => {
   const next = apply({
     value: input.value,
     caret: input.selectionStart ?? 0,
+    selectionEnd: input.selectionEnd ?? undefined,
     key: event.key,
   });
   input.value = next.value;

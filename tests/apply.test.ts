@@ -5,14 +5,22 @@ function show(value: string, caret: number): string {
   return `${value.slice(0, caret)}|${value.slice(caret)}`;
 }
 
-function at(marked: string): { value: string; caret: number } {
-  const caret = marked.indexOf("|");
-  return { value: marked.replace("|", ""), caret };
+function at(marked: string): { value: string; caret: number; selectionEnd?: number } {
+  const first = marked.indexOf("|");
+  const second = marked.indexOf("|", first + 1);
+  if (second === -1) {
+    return { value: marked.replace("|", ""), caret: first };
+  }
+  return {
+    value: marked.replaceAll("|", ""),
+    caret: first,
+    selectionEnd: second - 1,
+  };
 }
 
 function type(before: string, key: string, separator?: string) {
-  const { value, caret } = at(before);
-  return apply({ value, caret, key, separator });
+  const { value, caret, selectionEnd } = at(before);
+  return apply({ value, caret, selectionEnd, key, separator });
 }
 
 describe("acceptance table", () => {
@@ -52,6 +60,10 @@ describe("apply", () => {
     ["1|", "/", "01.|"],
     ["1|", "-", "01.|"],
     ["|", "a", "|"],
+    ["|11.12.2026|", "Backspace", "|"],
+    ["|11.12.2026|", "Delete", "|"],
+    ["11.|12|.2026", "Backspace", "11.|.2026"],
+    ["|11.12.2026|", "4", "04.|"],
   ] as const)("%s + %s → %s", (before, key, after) => {
     const result = type(before, key);
     expect(show(result.value, result.caret)).toBe(after);
