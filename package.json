@@ -5,7 +5,7 @@
     "url": "git+https://github.com/flixlix/ictus.git"
   },
   "homepage": "https://github.com/flixlix/ictus",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Headless as-you-type mask for a single day-month-year input",
   "type": "module",
   "sideEffects": false,
