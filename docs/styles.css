@@ -10,10 +10,27 @@ body {
   font-family: system-ui, sans-serif;
 }
 
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
+}
+
 h1,
 h2,
 h3 {
   line-height: 1.2;
+}
+
+.version {
+  margin: 0;
+  font-size: 0.8em;
+  color: #666;
+}
+
+.version a {
+  color: inherit;
 }
 
 pre {
