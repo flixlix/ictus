@@ -39,6 +39,7 @@ type Parsed = {
   digits: [string, string, string];
   seps: [boolean, boolean];
   groupIndex: GroupIndex;
+  offset: number;
 };
 
 function parseState(value: string, caret: number, sep: string): Parsed {
@@ -47,6 +48,7 @@ function parseState(value: string, caret: number, sep: string): Parsed {
   let i = 0;
   let active: GroupIndex = 0;
   let assigned = false;
+  let offset = 0;
 
   for (const g of [0, 1, 2] as const) {
     const start = i;
@@ -58,9 +60,12 @@ function parseState(value: string, caret: number, sep: string): Parsed {
       i += 1;
     }
 
-    if (!assigned && caret >= start && caret <= i) {
-      active = g;
-      assigned = true;
+    if (caret >= start && caret <= i) {
+      if (!assigned) {
+        active = g;
+        assigned = true;
+      }
+      if (active === g) offset = caret - start;
     }
 
     if (g < 2 && i < value.length && value[i] === sep) {
@@ -69,12 +74,13 @@ function parseState(value: string, caret: number, sep: string): Parsed {
       if (caret > i) {
         active = (g + 1) as GroupIndex;
         assigned = true;
+        offset = 0;
       }
       i += 1;
     }
   }
 
-  return { digits, seps, groupIndex: active };
+  return { digits, seps, groupIndex: active, offset };
 }
 
 function assemble(
@@ -133,17 +139,20 @@ function insertDigit(
   const digits = state.digits;
   const seps = state.seps;
   let g: GroupIndex | undefined = state.groupIndex;
+  let offset = state.offset;
 
   while (g !== undefined && digits[g].length >= GROUPS[g].width) {
     if (g === 2) return { value, caret };
     setSep(seps, g);
     g = nextGroup(g);
+    if (g !== undefined) offset = digits[g].length;
   }
 
   if (g === undefined) return { value, caret };
 
   const spec = GROUPS[g];
   const current = digits[g];
+  const at = Math.min(Math.max(offset, 0), current.length);
 
   if (current.length === 0 && spec.overflowFirst.has(digit)) {
     digits[g] = `0${digit}`;
@@ -154,11 +163,12 @@ function insertDigit(
     };
   }
 
-  if (current.length > 0 && spec.max !== null && Number(current + digit) > spec.max) {
+  const next = current.slice(0, at) + digit + current.slice(at);
+  if (spec.max !== null && Number(next) > spec.max) {
     return { value, caret };
   }
 
-  digits[g] = current + digit;
+  digits[g] = next;
   const complete = digits[g].length >= spec.width && g < 2;
   if (complete) setSep(seps, g);
 
