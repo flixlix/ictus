@@ -24,15 +24,20 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit && tsc --noEmit -p docs/tsconfig.json",
-    "prepublishOnly": "npm run typecheck && npm run test && npm run build",
+    "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build",
     "docs": "vite --config docs/vite.config.ts",
     "docs:build": "vite build --config docs/vite.config.ts",
-    "measure": "npm run build && node scripts/measure.mjs"
+    "measure": "pnpm build && node scripts/measure.mjs",
+    "changeset": "changeset",
+    "release": "changeset publish"
   },
   "keywords": [
     "date",
@@ -44,6 +49,7 @@
   ],
   "author": "flixlix",
   "license": "MIT",
+  "packageManager": "pnpm@10.33.4",
   "engines": {
     "node": ">=18"
   },
@@ -55,7 +61,12 @@
       "optional": true
     }
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
   "devDependencies": {
+    "@changesets/changelog-github": "^1.0.0",
+    "@changesets/cli": "^3.0.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^26.4.1",
     "@types/react": "^19.1.13",

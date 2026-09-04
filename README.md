@@ -6,7 +6,7 @@ Segmented date fields already own overflow-advance, but they replace the input w
 
 ## Size and speed
 
-Measured on this repo (`npm run measure`). Min+gzip is what a bundler ships.
+Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 
 | Entry | minify | gzip |
 | --- | ---: | ---: |
@@ -17,7 +17,7 @@ Measured on this repo (`npm run measure`). Min+gzip is what a bundler ships.
 
 ## Docs
 
-Live docs: [ictus.luca-felix.com](https://ictus.luca-felix.com). Locally, `npm run docs`.
+Live docs: [ictus.luca-felix.com](https://ictus.luca-felix.com). Locally, `pnpm docs`.
 
 ## Install
 
@@ -97,7 +97,7 @@ input.addEventListener("keydown", (event) => {
 });
 ```
 
-Live demos and the full API live in [`docs/`](docs/) (`npm run docs`).
+Live demos and the full API live in [`docs/`](docs/) (`pnpm docs`).
 
 ## React
 
@@ -117,6 +117,18 @@ function DateInput() {
 ```
 
 `inputProps` is `ref`, `value`, `onKeyDown`, a no-op `onChange` (value is owned by `apply`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`.
+
+## Releasing
+
+This repo uses [Changesets](https://changesets.dev). On a branch with a user-facing change:
+
+```bash
+pnpm changeset
+```
+
+Merging to `main` opens a Version Packages PR. Merging that PR publishes to npm and creates a GitHub release.
+
+Publishing needs an `NPM_TOKEN` repository secret. In the repo’s Actions settings, enable **Allow GitHub Actions to create and approve pull requests**.
 
 ## Out of scope
 
