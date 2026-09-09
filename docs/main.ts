@@ -1,7 +1,12 @@
 import { apply, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
 
-function show(value: string, caret: number): string {
-  return `${value.slice(0, caret)}|${value.slice(caret)}`;
+function show(value: string, caret: number, selectionEnd = caret): string {
+  if (selectionEnd === caret) {
+    return `${value.slice(0, caret)}|${value.slice(caret)}`;
+  }
+  const from = Math.min(caret, selectionEnd);
+  const to = Math.max(caret, selectionEnd);
+  return `${value.slice(0, from)}|${value.slice(from, to)}|${value.slice(to)}`;
 }
 
 function at(marked: string): { value: string; caret: number } {
@@ -68,9 +73,14 @@ function bindMask(root: HTMLElement): void {
     syncField(root, next.value, next.caret, ignored ? "ignored" : "");
   });
 
-  input.addEventListener("click", () => {
-    syncField(root, input.value, input.selectionStart ?? 0);
-  });
+  const paintCaret = () => {
+    const caretEl = root.querySelector("[data-caret]");
+    if (!caretEl) return;
+    const caret = input.selectionStart ?? 0;
+    caretEl.textContent = show(input.value, caret, input.selectionEnd ?? caret);
+  };
+  input.addEventListener("click", paintCaret);
+  input.addEventListener("select", paintCaret);
 }
 
 function bindCopies(): void {
