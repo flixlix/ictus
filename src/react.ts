@@ -8,6 +8,7 @@ export type UseDateFieldMaskOptions = {
   onValueChange?: (value: string) => void;
   min?: Date;
   max?: Date;
+  step?: number;
 };
 
 export type DateFieldInputProps = {
@@ -33,14 +34,18 @@ function noopChange(_event: ChangeEvent<HTMLInputElement>) {}
 export function useDateFieldMask(
   options: UseDateFieldMaskOptions = {},
 ): UseDateFieldMaskReturn {
-  const { separator, defaultValue = "", onValueChange, min, max } = options;
+  const { separator, defaultValue = "", onValueChange, min, max, step = 0 } =
+    options;
   const ref = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState(defaultValue);
   const parsed = useMemo(() => parseDate(value, { min, max }), [value, min, max]);
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
-      if (!isDateMaskKey(event.key)) return;
+      if (event.nativeEvent.isComposing) return;
+      const isStepArrow =
+        step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown");
+      if (!isDateMaskKey(event.key) && !isStepArrow) return;
       event.preventDefault();
       const next = apply({
         value: event.currentTarget.value,
@@ -48,6 +53,7 @@ export function useDateFieldMask(
         selectionEnd: event.currentTarget.selectionEnd ?? undefined,
         key: event.key,
         separator,
+        step,
       });
       setValue(next.value);
       onValueChange?.(next.value);
@@ -56,7 +62,7 @@ export function useDateFieldMask(
         ref.current?.setSelectionRange(caret, caret);
       });
     },
-    [separator, onValueChange],
+    [separator, onValueChange, step],
   );
 
   return {
