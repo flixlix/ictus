@@ -358,13 +358,19 @@ input.addEventListener("keydown", (event) => {
     <h3 id="react"><code>useDateFieldMask</code></h3>
     <p>
       Optional React entry. Peer on <code>react</code>. Restores the caret after commit.
-      <code>parsed</code> is a local <code>Date</code> or <code>undefined</code>.
+      Pass <code>value</code> + <code>onValueChange</code> to control it, or omit
+      <code>value</code> and use <code>defaultValue</code> uncontrolled.
     </p>
     <p><button type="button" data-copy-target="code-react">Copy</button></p>
-    <pre id="code-react"><code>import { useDateFieldMask } from "ictus/react";
+    <pre id="code-react"><code>import { useState } from "react";
+import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
-  const { inputProps, parsed } = useDateFieldMask();
+  const [value, setValue] = useState("");
+  const { inputProps, parsed } = useDateFieldMask({
+    value,
+    onValueChange: setValue,
+  });
   return &lt;input {...inputProps} /&gt;;
 }</code></pre>
 
