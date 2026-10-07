@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ictus.luca-felix.com/sitemap.xml

@@ -1,8 +1,12 @@
 # ictus
 
-Headless as-you-type behavior for a single `<input>` date or time field. One string, day-month-year or hour-minute(-second). No UI, no calendar, no React in the core.
+**Date and time input mask** for a plain `<input>`. Formats `dd/mm/yyyy`, `mm/dd/yyyy`, or `yyyy-mm-dd` dates and `HH:mm` or `HH:mm:ss` times **as you type**. Headless, zero-dependency, **2.6 kB** gzipped. Optional React hook (`ictus/react`).
 
-Segmented date fields already own overflow-advance, but they replace the input with contentEditable spinbuttons. This library is a tiny, zero-dependency state machine other design systems can attach to their own Input primitive.
+Use it when you need a **text date field** with caret-aware masking (overflow-advance, paste normalization, parse/format) without a calendar picker, contentEditable spinbuttons, or a general-purpose input-mask library.
+
+Segmented date fields already own overflow-advance, but they replace the input with contentEditable spinbuttons. ictus is a tiny state machine other design systems can attach to their own Input primitive.
+
+Docs: [ictus.luca-felix.com](https://ictus.luca-felix.com) · npm: [`ictus`](https://www.npmjs.com/package/ictus)
 
 ## Size and speed
 
@@ -16,15 +20,26 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 
 `apply` is **0.1–0.2 µs** per keystroke (~5–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.4 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
 
-## Docs
-
-Live docs: [ictus.luca-felix.com](https://ictus.luca-felix.com). Locally, `pnpm docs`.
-
 ## Install
 
 ```bash
 npm install ictus
 ```
+
+Live demos and API reference: [ictus.luca-felix.com](https://ictus.luca-felix.com) (`pnpm docs` locally).
+
+## When to use
+
+| Need | Fit |
+| --- | --- |
+| `dd/mm/yyyy` / `mm/dd/yyyy` / `yyyy-mm-dd` in one text input | Yes |
+| As-you-type formatting with correct caret | Yes |
+| Keep your own styles / design-system Input | Yes (headless) |
+| React hook or vanilla `bindDateMask` | Yes |
+| Calendar / date picker UI | No — out of scope |
+| Phone, credit card, or pattern masks | No — date-only |
+
+Lighter alternative when IMask, Cleave, Maskito, or `react-input-mask` are heavier than a dedicated date mask.
 
 ## Groups
 
