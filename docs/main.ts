@@ -1,5 +1,6 @@
 import { apply, applyPaste, dateStatus, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
 import type { DateStatus } from "../src/index.js";
+import { mountOverflowScrollGradients } from "./overflow-scroll-gradient.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
   if (selectionEnd === caret) {
@@ -142,6 +143,25 @@ function bindFolds(): void {
   }
 }
 
+function bindPackageManagers(): void {
+  const tabs = document.querySelectorAll<HTMLButtonElement>(".pm-tabs [data-pm]");
+  const command = document.querySelector("#install-command");
+  const copy = document.querySelector<HTMLButtonElement>("#copy-install");
+  if (!(command instanceof HTMLElement) || !copy || tabs.length === 0) return;
+
+  for (const tab of tabs) {
+    tab.addEventListener("click", () => {
+      const next = tab.dataset.pm;
+      if (!next) return;
+      for (const other of tabs) {
+        other.setAttribute("aria-selected", other === tab ? "true" : "false");
+      }
+      command.textContent = next;
+      copy.dataset.copy = next;
+    });
+  }
+}
+
 function bindFormat(): void {
   const native = document.querySelector<HTMLInputElement>("#native-date");
   const sep = document.querySelector<HTMLSelectElement>("#format-sep");
@@ -225,12 +245,18 @@ function bindParseLive(): void {
   render();
 }
 
+const scrollShell = document.querySelector("#scroll-shell");
+if (scrollShell instanceof HTMLElement) {
+  mountOverflowScrollGradients(scrollShell);
+}
+
 for (const root of document.querySelectorAll<HTMLElement>("[data-mask]")) {
   bindMask(root);
 }
 
 bindCopies();
 bindFolds();
+bindPackageManagers();
 bindFormat();
 bindTable();
 bindParseLive();
