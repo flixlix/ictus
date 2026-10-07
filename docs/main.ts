@@ -1,5 +1,20 @@
-import { apply, applyPaste, dateStatus, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
+import {
+  apply,
+  applyPaste,
+  dateStatus,
+  formatDate,
+  isDateMaskKey,
+  parseDate,
+} from "../src/index.js";
 import type { DateStatus } from "../src/index.js";
+import {
+  applyTime,
+  applyTimePaste,
+  isTimeMaskKey,
+  parseTime,
+  timeStatus,
+} from "../src/time.js";
+import type { TimeFieldPrecision, TimeStatus } from "../src/time.js";
 import { appendBlurLayers, mountOverflowScrollGradients } from "./overflow-scroll-gradient.js";
 import { mountToc } from "./toc.js";
 
@@ -44,6 +59,42 @@ function parseKind(masked: string): { kind: DateStatus; label: string } {
   }
 }
 
+function parseTimeKind(
+  masked: string,
+  precision: TimeFieldPrecision,
+): { kind: TimeStatus; label: string } {
+  const status = timeStatus(masked, { precision });
+  switch (status) {
+    case "valid": {
+      const time = parseTime(masked, { precision });
+      if (!time) return { kind: "incomplete", label: "incomplete" };
+      const label =
+        precision === "second"
+          ? `${String(time.hours).padStart(2, "0")}:${String(time.minutes).padStart(2, "0")}:${String(time.seconds).padStart(2, "0")}`
+          : `${String(time.hours).padStart(2, "0")}:${String(time.minutes).padStart(2, "0")}`;
+      return { kind: "valid", label };
+    }
+    case "invalid":
+      return { kind: "invalid", label: "not a clock time" };
+    case "incomplete":
+      return { kind: "incomplete", label: "incomplete" };
+    case "empty":
+      return { kind: "empty", label: "empty" };
+    default: {
+      const _exhaustive: never = status;
+      return _exhaustive;
+    }
+  }
+}
+
+function isTimeRoot(root: HTMLElement): boolean {
+  return root.dataset.kind === "time";
+}
+
+function timePrecision(root: HTMLElement): TimeFieldPrecision {
+  return root.dataset.precision === "second" ? "second" : "minute";
+}
+
 function syncField(root: HTMLElement, value: string, caret: number, hint = ""): void {
   const input = root.querySelector("input");
   const caretEl = root.querySelector("[data-caret]");
@@ -54,7 +105,9 @@ function syncField(root: HTMLElement, value: string, caret: number, hint = ""): 
   input.setSelectionRange(caret, caret);
   if (caretEl) caretEl.textContent = show(value, caret);
   if (parseEl instanceof HTMLElement) {
-    const parsed = parseKind(value);
+    const parsed = isTimeRoot(root)
+      ? parseTimeKind(value, timePrecision(root))
+      : parseKind(value);
     parseEl.dataset.kind = parsed.kind;
     parseEl.textContent = parsed.label;
   }
@@ -64,24 +117,37 @@ function syncField(root: HTMLElement, value: string, caret: number, hint = ""): 
 function bindMask(root: HTMLElement): void {
   const input = root.querySelector("input");
   if (!(input instanceof HTMLInputElement)) return;
-  const separator = root.dataset.separator || ".";
+  const time = isTimeRoot(root);
+  const separator = root.dataset.separator || (time ? ":" : ".");
+  const precision = timePrecision(root);
   const step = Number(root.dataset.step) || 0;
   syncField(root, input.value, input.selectionStart ?? input.value.length);
 
   input.addEventListener("keydown", (event) => {
     const arrow =
       step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown");
-    if (!isDateMaskKey(event.key) && !arrow) return;
+    const isMaskKey = time ? isTimeMaskKey(event.key) : isDateMaskKey(event.key);
+    if (!isMaskKey && !arrow) return;
     event.preventDefault();
     const caret = input.selectionStart ?? 0;
-    const next = apply({
-      value: input.value,
-      caret,
-      selectionEnd: input.selectionEnd ?? undefined,
-      key: event.key,
-      separator,
-      step,
-    });
+    const next = time
+      ? applyTime({
+          value: input.value,
+          caret,
+          selectionEnd: input.selectionEnd ?? undefined,
+          key: event.key,
+          separator,
+          precision,
+          step,
+        })
+      : apply({
+          value: input.value,
+          caret,
+          selectionEnd: input.selectionEnd ?? undefined,
+          key: event.key,
+          separator,
+          step,
+        });
     const ignored =
       next.value === input.value &&
       next.caret === caret &&
@@ -92,13 +158,22 @@ function bindMask(root: HTMLElement): void {
 
   input.addEventListener("paste", (event) => {
     event.preventDefault();
-    const next = applyPaste({
-      value: input.value,
-      caret: input.selectionStart ?? 0,
-      selectionEnd: input.selectionEnd ?? undefined,
-      pasted: event.clipboardData?.getData("text") ?? "",
-      separator,
-    });
+    const next = time
+      ? applyTimePaste({
+          value: input.value,
+          caret: input.selectionStart ?? 0,
+          selectionEnd: input.selectionEnd ?? undefined,
+          pasted: event.clipboardData?.getData("text") ?? "",
+          separator,
+          precision,
+        })
+      : applyPaste({
+          value: input.value,
+          caret: input.selectionStart ?? 0,
+          selectionEnd: input.selectionEnd ?? undefined,
+          pasted: event.clipboardData?.getData("text") ?? "",
+          separator,
+        });
     syncField(root, next.value, next.caret);
   });
 

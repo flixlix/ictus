@@ -24,9 +24,20 @@ describe("bundle size", () => {
     expect(gzip).toBeLessThan(2800);
   });
 
-  it("react entry stays under 0.85 kB gzip", async () => {
-    const { gzip } = await minGzip("src/react.ts", ["react", "./index.js", "./index.ts"]);
-    expect(gzip).toBeLessThan(850);
+  it("react entry stays under 1.0 kB gzip", async () => {
+    const { gzip } = await minGzip("src/react.ts", [
+      "react",
+      "./index.js",
+      "./index.ts",
+      "./time.js",
+      "./time.ts",
+    ]);
+    expect(gzip).toBeLessThan(1000);
+  });
+
+  it("time entry stays under 2.5 kB gzip", async () => {
+    const { gzip } = await minGzip("src/time.ts");
+    expect(gzip).toBeLessThan(2500);
   });
 });
 
