@@ -137,6 +137,30 @@
       </span>
     </p>
 
+    <h3>Arrow step</h3>
+    <p>
+      Opt-in <code>step: 1</code>. Click into a group, then
+      <code>ArrowUp</code> / <code>ArrowDown</code>. The caret keeps its place in
+      the group. Other demos leave arrows alone.
+    </p>
+    <p>
+      <label for="demo-step">dd.mm.yyyy</label><br />
+      <span data-mask data-separator="." data-step="1">
+        <input
+          id="demo-step"
+          size="12"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          value="11.12.2026"
+        />
+        <br />
+        <code data-caret>11.12.2026|</code>
+        <span data-parse data-kind="valid">valid</span>
+        <span data-hint></span>
+      </span>
+    </p>
+
     <h3>formatDate</h3>
     <p>Local calendar parts, padded, with the separator you pass.</p>
     <p>
@@ -283,7 +307,24 @@ apply({
       </dd>
       <dt><code>separator?</code></dt>
       <dd>Written separator. Default <code>"."</code>. Use a single character.</dd>
+      <dt><code>step?</code></dt>
+      <dd>
+        Optional segment step size. Default off (<code>0</code>). When
+        <code>step &gt; 0</code>, <code>ArrowUp</code> / <code>ArrowDown</code> change
+        the caret’s group by that amount. Those keys are
+        <strong>not</strong> in <code>isDateMaskKey</code> — callers must handle them
+        when opting in.
+      </dd>
     </dl>
+    <p><button type="button" data-copy-target="code-step">Copy</button></p>
+    <pre id="code-step"><code>const step = 1;
+if (
+  isDateMaskKey(event.key) ||
+  (step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown"))
+) {
+  event.preventDefault();
+  apply({ value, caret, key: event.key, step });
+}</code></pre>
 
     <h3 id="parseDate"><code>parseDate</code></h3>
     <p>
@@ -342,6 +383,7 @@ event.preventDefault();</code></pre>
   selectionEnd?: number;
   key: string;
   separator?: string;
+  step?: number; // default 0 (off)
 };
 
 type ApplyResult = {

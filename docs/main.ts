@@ -63,10 +63,13 @@ function bindMask(root: HTMLElement): void {
   const input = root.querySelector("input");
   if (!(input instanceof HTMLInputElement)) return;
   const separator = root.dataset.separator || ".";
+  const step = Number(root.dataset.step) || 0;
   syncField(root, input.value, input.selectionStart ?? input.value.length);
 
   input.addEventListener("keydown", (event) => {
-    if (!isDateMaskKey(event.key)) return;
+    const arrow =
+      step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown");
+    if (!isDateMaskKey(event.key) && !arrow) return;
     event.preventDefault();
     const caret = input.selectionStart ?? 0;
     const next = apply({
@@ -75,6 +78,7 @@ function bindMask(root: HTMLElement): void {
       selectionEnd: input.selectionEnd ?? undefined,
       key: event.key,
       separator,
+      step,
     });
     const ignored =
       next.value === input.value &&
