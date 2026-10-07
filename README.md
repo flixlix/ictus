@@ -46,6 +46,7 @@ apply({
   selectionEnd?: number,  // selection end, defaults to caret
   key: string,            // digit, `.` `/` `-`, Backspace, Delete
   separator?: string,     // default '.'
+  step?: number,          // default 0: ignore ArrowUp/ArrowDown
 }): { value: string; caret: number }
 
 parseDate(masked: string): Date | undefined
@@ -56,6 +57,23 @@ isDateMaskKey(key: string): boolean
 `parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
 
 `formatDate` writes `dd{sep}mm{sep}yyyy` from the date's local calendar parts.
+
+### Optional arrow step
+
+`step` defaults to `0` (off). When `step > 0`, `ArrowUp` / `ArrowDown` increment or decrement the caret’s current group by `step`. Day wraps in 1–31, month wraps in 1–12, year clamps to 0001–9999. An empty group seeds from today’s local day/month/year, then steps. Partial groups are treated as their typed integer and padded to width. The caret keeps its offset inside the group (clamped if the width changes). An empty group that seeds from today still places the caret at the end of that group. Left/Right, Home/End, and Page keys are not handled. Do not set `role="spinbutton"` on the input.
+
+`isDateMaskKey` does **not** include arrow keys. Callers that opt in must treat them as handled themselves:
+
+```ts
+const step = 1;
+if (
+  isDateMaskKey(event.key) ||
+  (step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown"))
+) {
+  event.preventDefault();
+  // apply({ ..., key: event.key, step })
+}
+```
 
 ## Acceptance table
 
@@ -84,15 +102,22 @@ Empty current group + separator is a no-op (`Blank + . → ""`). Backspace/Delet
 ```js
 import { apply, isDateMaskKey } from "ictus";
 
+const step = 0; // set > 0 to enable ArrowUp/ArrowDown segment step
 const input = document.querySelector("input");
 input.addEventListener("keydown", (event) => {
-  if (!isDateMaskKey(event.key)) return;
+  if (
+    !isDateMaskKey(event.key) &&
+    !(step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown"))
+  ) {
+    return;
+  }
   event.preventDefault();
   const next = apply({
     value: input.value,
     caret: input.selectionStart ?? 0,
     selectionEnd: input.selectionEnd ?? undefined,
     key: event.key,
+    step,
   });
   input.value = next.value;
   input.setSelectionRange(next.caret, next.caret);
@@ -111,6 +136,7 @@ import { useDateFieldMask } from "ictus/react";
 function DateInput() {
   const { inputProps, parsed } = useDateFieldMask({
     separator: ".",
+    // step: 1, // optional; off by default
     onValueChange: (value) => console.log(value, parsed),
   });
 
@@ -118,7 +144,7 @@ function DateInput() {
 }
 ```
 
-`inputProps` is `ref`, `value`, `onKeyDown`, a no-op `onChange` (value is owned by `apply`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`.
+`inputProps` is `ref`, `value`, `onKeyDown`, a no-op `onChange` (value is owned by `apply`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`. Pass `step` to enable ArrowUp/ArrowDown segment increment; it stays off when omitted.
 
 ## Releasing
 
