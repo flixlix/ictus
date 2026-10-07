@@ -244,7 +244,19 @@ export function apply(input: ApplyInput): ApplyResult {
 
 const PARSE_RE = /^(\d{2})[./-](\d{2})[./-](\d{4})$/;
 
-export function parseDate(masked: string): Date | undefined {
+export type ParseDateOptions = {
+  min?: Date;
+  max?: Date;
+};
+
+function localDayTime(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+export function parseDate(
+  masked: string,
+  options: ParseDateOptions = {},
+): Date | undefined {
   const match = PARSE_RE.exec(masked);
   if (!match?.[1] || !match[2] || !match[3]) return undefined;
 
@@ -260,6 +272,11 @@ export function parseDate(masked: string): Date | undefined {
   ) {
     return undefined;
   }
+
+  const { min, max } = options;
+  const time = date.getTime();
+  if (min !== undefined && time < localDayTime(min)) return undefined;
+  if (max !== undefined && time > localDayTime(max)) return undefined;
 
   return date;
 }

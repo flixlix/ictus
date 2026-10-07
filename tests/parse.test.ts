@@ -45,4 +45,56 @@ describe("parseDate", () => {
     expect(parseDate("11.12.20")).toBeUndefined();
     expect(parseDate("04.")).toBeUndefined();
   });
+
+  it("ignores min and max for partial values", () => {
+    const min = new Date(2020, 0, 1);
+    const max = new Date(2020, 11, 31);
+    expect(parseDate("11.12", { min, max })).toBeUndefined();
+    expect(parseDate("11.12.20", { min, max })).toBeUndefined();
+  });
+
+  it("accepts a complete date within min and max", () => {
+    const date = parseDate("15.06.2020", {
+      min: new Date(2020, 0, 1),
+      max: new Date(2020, 11, 31),
+    });
+    expect(ymd(date!)).toEqual({ year: 2020, month: 6, day: 15 });
+  });
+
+  it("rejects a complete date before min", () => {
+    expect(
+      parseDate("31.12.2019", { min: new Date(2020, 0, 1) }),
+    ).toBeUndefined();
+  });
+
+  it("rejects a complete date after max", () => {
+    expect(
+      parseDate("01.01.2021", { max: new Date(2020, 11, 31) }),
+    ).toBeUndefined();
+  });
+
+  it("accepts the min and max boundary days", () => {
+    const min = new Date(2020, 0, 1);
+    const max = new Date(2020, 11, 31);
+    expect(ymd(parseDate("01.01.2020", { min, max })!)).toEqual({
+      year: 2020,
+      month: 1,
+      day: 1,
+    });
+    expect(ymd(parseDate("31.12.2020", { min, max })!)).toEqual({
+      year: 2020,
+      month: 12,
+      day: 31,
+    });
+  });
+
+  it("compares min and max by local calendar day", () => {
+    const min = new Date(2020, 5, 15, 23, 59, 59);
+    const max = new Date(2020, 5, 15, 0, 0, 1);
+    expect(ymd(parseDate("15.06.2020", { min, max })!)).toEqual({
+      year: 2020,
+      month: 6,
+      day: 15,
+    });
+  });
 });

@@ -48,12 +48,12 @@ apply({
   separator?: string,     // default '.'
 }): { value: string; caret: number }
 
-parseDate(masked: string): Date | undefined
+parseDate(masked: string, options?: { min?: Date; max?: Date }): Date | undefined
 formatDate(date: Date, separator?: string): string
 isDateMaskKey(key: string): boolean
 ```
 
-`parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
+`parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Optional `min` / `max` reject complete dates outside that local calendar-day range (still `undefined`). Partial and impossible strings stay in the input and parse to `undefined` without range checks. Reject never clears the box; selecting the value and deleting does.
 
 `formatDate` writes `dd{sep}mm{sep}yyyy` from the date's local calendar parts.
 
@@ -111,6 +111,8 @@ import { useDateFieldMask } from "ictus/react";
 function DateInput() {
   const { inputProps, parsed } = useDateFieldMask({
     separator: ".",
+    min: new Date(1900, 0, 1),
+    max: new Date(2100, 11, 31),
     onValueChange: (value) => console.log(value, parsed),
   });
 
