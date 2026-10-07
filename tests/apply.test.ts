@@ -119,7 +119,9 @@ describe("apply step", () => {
     ["15.12.9999|", "ArrowUp", "15.12.9999|"],
     ["15.12.0001|", "ArrowDown", "15.12.0001|"],
     ["1|.12.2026", "ArrowUp", "02|.12.2026"],
-    ["11.|12.2026", "ArrowUp", "11.01|.2026"],
+    ["11.|12.2026", "ArrowUp", "11.|01.2026"],
+    ["12.02.20|27", "ArrowUp", "12.02.20|28"],
+    ["12.02.20|27", "ArrowDown", "12.02.20|26"],
   ] as const)("%s + %s (step 1) → %s", (before, key, after) => {
     const result = type(before, key, undefined, 1);
     expect(show(result.value, result.caret)).toBe(after);
@@ -141,9 +143,9 @@ describe("apply step", () => {
     expect(show(year.value, year.caret)).toBe("07.10.2025|");
   });
 
-  it("keeps caret in the same group and leaves navigation keys alone", () => {
+  it("keeps caret offset when width is unchanged", () => {
     const result = type("11.12.|2026", "ArrowUp", undefined, 1);
-    expect(show(result.value, result.caret)).toBe("11.12.2027|");
+    expect(show(result.value, result.caret)).toBe("11.12.|2027");
     for (const key of ["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"]) {
       const left = type("11.12.2026|", key, undefined, 1);
       expect(show(left.value, left.caret)).toBe("11.12.2026|");

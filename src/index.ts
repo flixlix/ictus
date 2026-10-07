@@ -204,10 +204,11 @@ function stepGroup(
   delta: number,
   sep: string,
 ): ApplyResult {
-  const { digits, seps, groupIndex: g } = parseState(value, caret, sep);
+  const { digits, seps, groupIndex: g, offset } = parseState(value, caret, sep);
+  const beforeLen = digits[g].length;
   const now = new Date();
   let n =
-    digits[g].length === 0
+    beforeLen === 0
       ? g === 0
         ? now.getDate()
         : g === 1
@@ -224,9 +225,15 @@ function stepGroup(
   digits[g] = String(n).padStart(GROUPS[g].width, "0");
   if (digits[1] || seps[1] || digits[2]) seps[0] = true;
   if (digits[2]) seps[1] = true;
+  const afterLen = digits[g].length;
+  const groupEnd = caretAt(digits, seps, sep, g, false);
+  const nextCaret =
+    beforeLen > 0 && beforeLen === afterLen
+      ? groupEnd - afterLen + Math.min(offset, afterLen)
+      : groupEnd;
   return {
     value: assemble(digits, seps, sep),
-    caret: caretAt(digits, seps, sep, g, false),
+    caret: nextCaret,
   };
 }
 
