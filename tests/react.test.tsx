@@ -16,7 +16,7 @@ function DateInput({
   onValueChange?: (value: string) => void;
   step?: number;
 }) {
-  const { inputProps, parsed } = useDateFieldMask({
+  const { inputProps, parsed, status } = useDateFieldMask({
     separator,
     defaultValue,
     onValueChange,
@@ -26,6 +26,7 @@ function DateInput({
     <>
       <input aria-label="date" {...inputProps} />
       <output>{parsed ? parsed.toDateString() : "incomplete"}</output>
+      <span data-testid="status">{status}</span>
     </>
   );
 }
@@ -74,8 +75,17 @@ describe("useDateFieldMask", () => {
   it("parses only a complete calendar date", () => {
     render(<DateInput defaultValue="11.12.2026" />);
     expect(screen.getByRole("status").textContent).toMatch(/Dec 11/);
+    expect(screen.getByTestId("status").textContent).toBe("valid");
     typeKey("Backspace");
     expect(screen.getByRole("status").textContent).toBe("incomplete");
+    expect(screen.getByTestId("status").textContent).toBe("incomplete");
+  });
+
+  it("exposes dateStatus on the return value", () => {
+    render(<DateInput />);
+    expect(screen.getByTestId("status").textContent).toBe("empty");
+    typeKey("4");
+    expect(screen.getByTestId("status").textContent).toBe("incomplete");
   });
 
   it("calls onValueChange", () => {

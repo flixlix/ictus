@@ -10,7 +10,7 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 
 | Entry | minify | gzip |
 | --- | ---: | ---: |
-| `ictus` | 4.3 kB | **1.8 kB** |
+| `ictus` | 4.0 kB | **1.7 kB** |
 | `ictus/react` (react external) | 1.1 kB | **0.6 kB** |
 
 `apply` is **0.1–0.2 µs** per keystroke (~5–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.4 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
@@ -42,6 +42,7 @@ import {
   apply,
   applyPaste,
   parseDate,
+  dateStatus,
   formatDate,
   expandTwoDigitYear,
   isDateMaskKey,
@@ -65,6 +66,7 @@ applyPaste({
 }): { value: string; caret: number }
 
 parseDate(masked: string, options?: { yyExpand?: { pivot?: number } }): Date | undefined
+dateStatus(masked: string): "empty" | "incomplete" | "invalid" | "valid"
 formatDate(date: Date, separator?: string, options?: { yyExpand?: { pivot?: number } }): string
 expandTwoDigitYear(yy: number, pivot?: number): number
 isDateMaskKey(key: string): boolean
@@ -74,11 +76,9 @@ isDateMaskKey(key: string): boolean
 
 `parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
 
-By default the year group must be four digits. Pass `yyExpand` to also accept a complete `dd{sep}mm{sep}yy` mask and expand the two-digit year. The pivot (default `50`) chooses the century: `yy < pivot` → `2000 + yy`, otherwise `1900 + yy`. So with the default pivot, `00–49` → `2000–2049` and `50–99` → `1950–1999`. Four-digit years are unchanged when `yyExpand` is set. The as-you-type mask still uses a width-4 year group; expansion is opt-in on parse/format only.
+`dateStatus` classifies a masked string for UI feedback: `""` → `empty`, a partial mask → `incomplete`, a complete `dd{sep}mm{sep}yyyy` that is not a calendar date → `invalid`, and a value `parseDate` accepts → `valid`.
 
-`formatDate` writes `dd{sep}mm{sep}yyyy` from the date's local calendar parts. With `yyExpand`, years that round-trip through that pivot are written as two digits; years outside the window stay four digits.
-
-`expandTwoDigitYear` is the same pivot rule used by `parseDate` / `formatDate`.
+`formatDate` writes `dd{sep}mm{sep}yyyy` from the date's local calendar parts.
 
 ### Optional arrow step
 
@@ -168,17 +168,17 @@ Live demos and the full API live in [`docs/`](docs/) (`pnpm docs`).
 import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
-  const { inputProps, parsed } = useDateFieldMask({
+  const { inputProps, parsed, status } = useDateFieldMask({
     separator: ".",
     // step: 1, // optional; off by default
-    onValueChange: (value) => console.log(value, parsed),
+    onValueChange: (value) => console.log(value, parsed, status),
   });
 
   return <input {...inputProps} />;
 }
 ```
 
-`inputProps` is `ref`, `value`, `onKeyDown`, `onPaste` (`preventDefault` + `applyPaste`), a no-op `onChange` (value is owned by `apply` / `applyPaste`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`. Pass `step` to enable ArrowUp/ArrowDown segment increment; it stays off when omitted.
+`inputProps` is `ref`, `value`, `onKeyDown`, `onPaste` (`preventDefault` + `applyPaste`), a no-op `onChange` (value is owned by `apply` / `applyPaste`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`. `status` is the same classification as `dateStatus`. Pass `step` to enable ArrowUp/ArrowDown segment increment; it stays off when omitted.
 
 ## Releasing
 

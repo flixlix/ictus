@@ -1,4 +1,5 @@
-import { apply, applyPaste, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
+import { apply, applyPaste, dateStatus, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
+import type { DateStatus } from "../src/index.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
   if (selectionEnd === caret) {
@@ -14,21 +15,31 @@ function at(marked: string): { value: string; caret: number } {
   return { value: marked.replace("|", ""), caret };
 }
 
-function parseKind(masked: string): { kind: "valid" | "invalid" | "incomplete"; label: string } {
-  const date = parseDate(masked);
-  if (date) {
-    const label = new Intl.DateTimeFormat(undefined, {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }).format(date);
-    return { kind: "valid", label };
+function parseKind(masked: string): { kind: DateStatus; label: string } {
+  const status = dateStatus(masked);
+  switch (status) {
+    case "valid": {
+      const date = parseDate(masked);
+      if (!date) return { kind: "incomplete", label: "incomplete" };
+      const label = new Intl.DateTimeFormat(undefined, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(date);
+      return { kind: "valid", label };
+    }
+    case "invalid":
+      return { kind: "invalid", label: "not a calendar date" };
+    case "incomplete":
+      return { kind: "incomplete", label: "incomplete" };
+    case "empty":
+      return { kind: "empty", label: "empty" };
+    default: {
+      const _exhaustive: never = status;
+      return _exhaustive;
+    }
   }
-  if (/^\d{2}[./-]\d{2}[./-]\d{4}$/.test(masked)) {
-    return { kind: "invalid", label: "not a calendar date" };
-  }
-  return { kind: "incomplete", label: "incomplete" };
 }
 
 function syncField(root: HTMLElement, value: string, caret: number, hint = ""): void {
