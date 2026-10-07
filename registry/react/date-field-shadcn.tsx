@@ -22,19 +22,27 @@ export function DateFieldShadcn({
     ...options,
   });
 
+  const statusLabel =
+    status === "valid" && parsed
+      ? parsed.toLocaleDateString(undefined, {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : status;
+
   return (
     <div className={className}>
-      <label htmlFor={id}>{label}</label>
-      <Input id={id} placeholder={placeholder} {...inputProps} />
+      {label ? <label htmlFor={id}>{label}</label> : null}
+      <Input
+        id={id}
+        placeholder={placeholder}
+        aria-label={label || placeholder || "Date"}
+        {...inputProps}
+      />
       <p data-status={status}>
-        {status === "valid" && parsed
-          ? parsed.toLocaleDateString(undefined, {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : status}
+        {statusLabel}
         {isoValue ? ` · ${isoValue}` : ""}
       </p>
     </div>

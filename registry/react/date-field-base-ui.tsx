@@ -23,19 +23,28 @@ export function DateFieldBaseUi({
     ...options,
   });
 
+  const statusLabel =
+    status === "valid" && parsed
+      ? parsed.toLocaleDateString(undefined, {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : status;
+
   return (
     <Field.Root className={className}>
-      <Field.Label htmlFor={id}>{label}</Field.Label>
-      <Input id={id} placeholder={placeholder} className="ictus-base-ui-input" {...inputProps} />
+      {label ? <Field.Label htmlFor={id}>{label}</Field.Label> : null}
+      <Input
+        id={id}
+        placeholder={placeholder}
+        className="ictus-base-ui-input"
+        aria-label={label || placeholder || "Date"}
+        {...inputProps}
+      />
       <Field.Description data-status={status}>
-        {status === "valid" && parsed
-          ? parsed.toLocaleDateString(undefined, {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : status}
+        {statusLabel}
         {isoValue ? ` · ${isoValue}` : ""}
       </Field.Description>
     </Field.Root>

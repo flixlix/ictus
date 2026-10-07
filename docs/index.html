@@ -518,33 +518,20 @@ When done, summarize what you installed, what you changed, and how to try it.</c
 
     <h2 id="advanced" data-short="With your UI">With your UI library</h2>
     <p>
-      ictus is the mask layer. These React blocks wire <code>useDateFieldMask</code> into common
-      inputs so you can drop the pattern into a project. Try them here, then install from the
-      GitHub registry or copy <code>registry/react/</code>.
+      Same mask as the demos above, wired into common React inputs. Type in each field (try
+      <code>4122026</code>). Install later with the shadcn CLI, or copy
+      <code>registry/react/</code>.
     </p>
-
-    <div id="advanced-demos-root"></div>
-
-    <p>
-      Install with the shadcn CLI from this GitHub repo, or from the docs registry URL after
-      deploy:
-    </p>
-    <div class="code-block">
-      <pre id="code-registry-add"><code>npx shadcn@latest add flixlix/ictus/date-field-shadcn
-npx shadcn@latest add flixlix/ictus/date-field-base-ui
-npx shadcn@latest add flixlix/ictus/date-field-day-picker
-
-# or from the docs site
-npx shadcn@latest add https://ictus.luca-felix.com/r/date-field-shadcn.json</code></pre>
-      <button type="button" class="copy-icon" data-copy-target="code-registry-add" aria-label="Copy code"></button>
-    </div>
 
     <h3 id="advanced-shadcn">shadcn Input</h3>
     <p>
-      Spreads the hook’s <code>inputProps</code> onto a shadcn <code>Input</code>. The registry
-      item also pulls in shadcn’s <code>input</code>.
+      <code>useDateFieldMask</code> spread onto a shadcn-style <code>Input</code>.
     </p>
+    <div id="advanced-demo-shadcn" class="advanced-demo-slot"></div>
     <p>
+      <button type="button" data-copy="npx shadcn@latest add flixlix/ictus/date-field-shadcn">
+        Copy install
+      </button>
       <button type="button" data-copy-target="code-agent-shadcn">Copy agent prompt</button>
     </p>
     <div class="fold-wrap">
@@ -560,10 +547,13 @@ Wire useDateFieldMask from ictus/react; keep the host Input styles. Ask before i
 
     <h3 id="advanced-base-ui">Base UI</h3>
     <p>
-      Same hook on Base UI <code>Field</code> + <code>Input</code>. Useful when the design system
-      is Base UI rather than shadcn.
+      Same hook on Base UI <code>Field</code> + <code>Input</code>.
     </p>
+    <div id="advanced-demo-base-ui" class="advanced-demo-slot"></div>
     <p>
+      <button type="button" data-copy="npx shadcn@latest add flixlix/ictus/date-field-base-ui">
+        Copy install
+      </button>
       <button type="button" data-copy-target="code-agent-base-ui">Copy agent prompt</button>
     </p>
     <div class="fold-wrap">
@@ -579,10 +569,13 @@ Use useDateFieldMask; keep Field/Input composition. Ask before inventing a new d
 
     <h3 id="advanced-day-picker">Day Picker + popover</h3>
     <p>
-      Type into the masked field, or open the popover and pick a day. Both paths update the same
-      value. Calendar is <code>react-day-picker</code>; popover is Base UI.
+      Type a date, or open the calendar and pick one. Both update the same masked value.
     </p>
+    <div id="advanced-demo-day-picker" class="advanced-demo-slot"></div>
     <p>
+      <button type="button" data-copy="npx shadcn@latest add flixlix/ictus/date-field-day-picker">
+        Copy install
+      </button>
       <button type="button" data-copy-target="code-agent-day-picker">Copy agent prompt</button>
     </p>
     <div class="fold-wrap">

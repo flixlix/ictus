@@ -57,11 +57,27 @@ export function DateFieldDayPicker({
     if (parsed) setMonth(parsed);
   }, [parsed]);
 
+  const statusLabel =
+    status === "valid" && parsed
+      ? parsed.toLocaleDateString(undefined, {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : status;
+
   return (
     <div className={className}>
-      <label htmlFor={id}>{label}</label>
+      {label ? <label htmlFor={id}>{label}</label> : null}
       <div className="ictus-day-picker-row">
-        <input id={id} placeholder={placeholder} className="ictus-day-picker-input" {...inputProps} />
+        <input
+          id={id}
+          placeholder={placeholder}
+          className="ictus-day-picker-input"
+          aria-label={label || placeholder || "Date"}
+          {...inputProps}
+        />
         <Popover.Root open={open} onOpenChange={setOpen}>
           <Popover.Trigger
             type="button"
@@ -94,14 +110,7 @@ export function DateFieldDayPicker({
         </Popover.Root>
       </div>
       <p data-status={status}>
-        {status === "valid" && parsed
-          ? parsed.toLocaleDateString(undefined, {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : status}
+        {statusLabel}
         {isoValue ? ` · ${isoValue}` : ""}
       </p>
     </div>

@@ -864,15 +864,20 @@ h3[id] {
   }
 }
 
-.advanced-demos {
-  display: grid;
-  gap: 1.25rem;
-  margin: 1rem 0 1.5rem;
+.advanced-demo-slot {
+  margin: 0.75rem 0 1rem;
 }
 
 .advanced-demo {
   display: grid;
   gap: 0.35rem;
+}
+
+.advanced-demo-slot .advanced-demo {
+  padding: 0.85rem 0.9rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--surface));
 }
 
 .advanced-demo label,
