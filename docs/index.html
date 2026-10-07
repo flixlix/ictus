@@ -103,12 +103,12 @@ When done, summarize what you installed, what you changed, and how to try it.</c
       <tbody>
         <tr>
           <td><code>ictus</code></td>
-          <td>5.1 kB</td>
-          <td>2.1 kB</td>
+          <td>5.2 kB</td>
+          <td>2.2 kB</td>
         </tr>
         <tr>
           <td><code>ictus/react</code> (react external)</td>
-          <td>1.1 kB</td>
+          <td>1.2 kB</td>
           <td>0.6 kB</td>
         </tr>
       </tbody>
@@ -393,10 +393,13 @@ applyPaste({
       (<code>new Date(year, monthIndex, day)</code>) only for a complete, calendar-valid triple.
       Partial strings and impossible dates return <code>undefined</code>. Separators
       <code>.</code>, <code>/</code>, and <code>-</code> are all accepted.
+      Optional <code>min</code> / <code>max</code> Dates bound complete calendar days; partials
+      ignore bounds.
     </p>
     <p><button type="button" data-copy-target="code-parse">Copy</button></p>
     <pre id="code-parse"><code>parseDate("11.12.2026"); // local Date
 parseDate("11/12/2026"); // same
+parseDate("11.12.2026", { min, max });
 parseDate("32.01.2020"); // undefined
 parseDate("31.02.2020"); // undefined
 parseDate("11.12");      // undefined</code></pre>
@@ -494,6 +497,8 @@ const unbind = bindDateMask(input, {
       Optional React entry. Peer on <code>react</code>. Restores the caret after commit.
       <code>parsed</code> is a local <code>Date</code> or <code>undefined</code>.
       <code>status</code> is the same classification as <code>dateStatus</code>.
+      The hook accepts the same optional <code>min</code> / <code>max</code> as
+      <code>parseDate</code>.
     </p>
     <p><button type="button" data-copy-target="code-react">Copy</button></p>
     <pre id="code-react"><code>import { useDateFieldMask } from "ictus/react";

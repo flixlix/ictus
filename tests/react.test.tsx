@@ -9,17 +9,23 @@ function DateInput({
   separator,
   defaultValue,
   onValueChange,
+  min,
+  max,
   step,
 }: {
   separator?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  min?: Date;
+  max?: Date;
   step?: number;
 }) {
   const { inputProps, parsed, status } = useDateFieldMask({
     separator,
     defaultValue,
     onValueChange,
+    min,
+    max,
     step,
   });
   return (
@@ -86,6 +92,28 @@ describe("useDateFieldMask", () => {
     expect(screen.getByTestId("status").textContent).toBe("empty");
     typeKey("4");
     expect(screen.getByTestId("status").textContent).toBe("incomplete");
+  });
+
+  it("treats an out-of-range complete date as incomplete", () => {
+    render(
+      <DateInput
+        defaultValue="11.12.2026"
+        min={new Date(2020, 0, 1)}
+        max={new Date(2020, 11, 31)}
+      />,
+    );
+    expect(screen.getByRole("status").textContent).toBe("incomplete");
+  });
+
+  it("parses a complete date within min and max", () => {
+    render(
+      <DateInput
+        defaultValue="15.06.2020"
+        min={new Date(2020, 0, 1)}
+        max={new Date(2020, 11, 31)}
+      />,
+    );
+    expect(screen.getByRole("status").textContent).toMatch(/Jun 15/);
   });
 
   it("calls onValueChange", () => {

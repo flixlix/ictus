@@ -10,8 +10,8 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 
 | Entry | minify | gzip |
 | --- | ---: | ---: |
-| `ictus` | 5.1 kB | **2.1 kB** |
-| `ictus/react` (react external) | 1.1 kB | **0.6 kB** |
+| `ictus` | 5.2 kB | **2.2 kB** |
+| `ictus/react` (react external) | 1.2 kB | **0.6 kB** |
 
 `apply` is **0.1–0.2 µs** per keystroke (~5–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.4 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
 
@@ -66,7 +66,11 @@ applyPaste({
   separator?: string,
 }): { value: string; caret: number }
 
-parseDate(masked: string, options?: { yyExpand?: { pivot?: number } }): Date | undefined
+parseDate(masked: string, options?: {
+  yyExpand?: { pivot?: number };
+  min?: Date;
+  max?: Date;
+}): Date | undefined
 dateStatus(masked: string): "empty" | "incomplete" | "invalid" | "valid"
 formatDate(date: Date, separator?: string, options?: { yyExpand?: { pivot?: number } }): string
 expandTwoDigitYear(yy: number, pivot?: number): number
@@ -83,7 +87,7 @@ bindDateMask(input: HTMLInputElement, options?: {
 
 `applyPaste` normalizes common clipboard shapes (`11/12/2026`, `11-12-2026`, `11.12.2026`, digit-only `11122026`, ISO `2026-12-11`) into the mask via the same group and overflow rules as `apply`. Non-date characters are ignored. ISO year-month-day with separators is remapped to day-month-year; digit-only strings stay DMY order.
 
-`parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
+`parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Optional `min` / `max` reject complete dates outside that local calendar-day range (still `undefined`). Partial and impossible strings stay in the input and parse to `undefined` without range checks. Reject never clears the box; selecting the value and deleting does.
 
 `dateStatus` classifies a masked string for UI feedback: `""` → `empty`, a partial mask → `incomplete`, a complete `dd{sep}mm{sep}yyyy` that is not a calendar date → `invalid`, and a value `parseDate` accepts → `valid`.
 
@@ -159,6 +163,8 @@ import { useDateFieldMask } from "ictus/react";
 function DateInput() {
   const { inputProps, parsed, status } = useDateFieldMask({
     separator: ".",
+    min: new Date(1900, 0, 1),
+    max: new Date(2100, 11, 31),
     // step: 1, // optional; off by default
     onValueChange: (value) => console.log(value, parsed, status),
   });

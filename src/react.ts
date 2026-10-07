@@ -7,6 +7,8 @@ export type UseDateFieldMaskOptions = {
   separator?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  min?: Date;
+  max?: Date;
   step?: number;
 };
 
@@ -36,10 +38,14 @@ function noopChange(_event: ChangeEvent<HTMLInputElement>) {}
 export function useDateFieldMask(
   options: UseDateFieldMaskOptions = {},
 ): UseDateFieldMaskReturn {
-  const { separator, defaultValue = "", onValueChange, step = 0 } = options;
+  const { separator, defaultValue = "", onValueChange, min, max, step = 0 } =
+    options;
   const ref = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState(defaultValue);
-  const parsed = useMemo(() => parseDate(value), [value]);
+  const parsed = useMemo(
+    () => parseDate(value, { min, max }),
+    [value, min, max],
+  );
   const status = useMemo(() => dateStatus(value), [value]);
 
   const commit = useCallback(

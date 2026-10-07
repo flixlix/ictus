@@ -357,6 +357,8 @@ export type YyExpand = {
 
 export type ParseDateOptions = {
   yyExpand?: YyExpand;
+  min?: Date;
+  max?: Date;
 };
 
 export type FormatDateOptions = {
@@ -368,6 +370,10 @@ export function expandTwoDigitYear(
   pivot: number = DEFAULT_YY_PIVOT,
 ): number {
   return yy < pivot ? 2000 + yy : 1900 + yy;
+}
+
+function localDayTime(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
 
 function calendarDate(
@@ -390,25 +396,32 @@ export function parseDate(
   masked: string,
   options: ParseDateOptions = {},
 ): Date | undefined {
+  let date: Date | undefined;
+
   const match4 = PARSE_RE.exec(masked);
   if (match4?.[1] && match4[2] && match4[3]) {
-    return calendarDate(
+    date = calendarDate(
       Number(match4[1]),
       Number(match4[2]),
       Number(match4[3]),
     );
-  }
-
-  if (options.yyExpand !== undefined) {
+  } else if (options.yyExpand !== undefined) {
     const match2 = PARSE_RE_YY.exec(masked);
     if (match2?.[1] && match2[2] && match2[3]) {
       const pivot = options.yyExpand.pivot ?? DEFAULT_YY_PIVOT;
       const year = expandTwoDigitYear(Number(match2[3]), pivot);
-      return calendarDate(Number(match2[1]), Number(match2[2]), year);
+      date = calendarDate(Number(match2[1]), Number(match2[2]), year);
     }
   }
 
-  return undefined;
+  if (!date) return undefined;
+
+  const { min, max } = options;
+  const time = date.getTime();
+  if (min !== undefined && time < localDayTime(min)) return undefined;
+  if (max !== undefined && time > localDayTime(max)) return undefined;
+
+  return date;
 }
 
 export type DateStatus = "empty" | "incomplete" | "invalid" | "valid";
