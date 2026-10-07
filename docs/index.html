@@ -151,16 +151,6 @@
         <option value="-">-</option>
       </select>
     </p>
-    <p>
-      <label>
-        <input id="format-yy-expand" type="checkbox" />
-        <code>yyExpand</code> (two-digit year when it round-trips the pivot)
-      </label>
-    </p>
-    <p>
-      <label for="format-yy-pivot">pivot</label>
-      <input id="format-yy-pivot" type="number" min="0" max="99" value="50" size="3" />
-    </p>
     <p>formatDate = <code id="format-result"></code></p>
     <p><button type="button" id="load-formatted">Load into field</button></p>
 
@@ -261,7 +251,7 @@
     </table>
 
     <h2 id="api">API</h2>
-    <p>Five exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
+    <p>Four exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
 
     <h3 id="apply"><code>apply</code></h3>
     <p>
@@ -300,60 +290,28 @@ apply({
       Returns a <strong>local</strong> <code>Date</code>
       (<code>new Date(year, monthIndex, day)</code>) only for a complete, calendar-valid triple.
       Partial strings and impossible dates return <code>undefined</code>. Separators
-      <code>.</code>, <code>/</code>, and <code>-</code> are all accepted. Pass
-      <code>yyExpand</code> to also accept <code>dd{sep}mm{sep}yy</code> (typing still uses a
-      four-digit year group).
+      <code>.</code>, <code>/</code>, and <code>-</code> are all accepted.
     </p>
     <p><button type="button" data-copy-target="code-parse">Copy</button></p>
     <pre id="code-parse"><code>parseDate("11.12.2026"); // local Date
 parseDate("11/12/2026"); // same
-parseDate("11.12.26");   // undefined
-parseDate("11.12.26", { yyExpand: {} }); // 2026-12-11
-parseDate("11.12.99", { yyExpand: { pivot: 50 } }); // 1999-12-11
 parseDate("32.01.2020"); // undefined
 parseDate("31.02.2020"); // undefined
 parseDate("11.12");      // undefined</code></pre>
     <p>
       <label for="parse-input">Masked string</label><br />
-      <input id="parse-input" size="16" value="11.12.26" spellcheck="false" />
-    </p>
-    <p>
-      <label>
-        <input id="parse-yy-expand" type="checkbox" checked />
-        <code>yyExpand</code>
-      </label>
-      ·
-      <label for="parse-yy-pivot">pivot</label>
-      <input id="parse-yy-pivot" type="number" min="0" max="99" value="50" size="3" />
+      <input id="parse-input" size="16" value="11.12.2026" spellcheck="false" />
     </p>
     <pre id="parse-output"></pre>
 
     <h3 id="formatDate"><code>formatDate</code></h3>
-    <p>
-      Writes <code>dd{sep}mm{sep}yyyy</code> from the date’s local day, month, and year. With
-      <code>yyExpand</code>, years that round-trip the pivot are written as two digits.
-    </p>
+    <p>Writes <code>dd{sep}mm{sep}yyyy</code> from the date’s local day, month, and year.</p>
     <p><button type="button" data-copy-target="code-format">Copy</button></p>
     <pre id="code-format"><code>formatDate(new Date(2026, 11, 11));
 // "11.12.2026"
 
-formatDate(new Date(2026, 11, 11), "/", { yyExpand: {} });
-// "11/12/26"
-
-formatDate(new Date(1999, 11, 11), ".", { yyExpand: { pivot: 50 } });
-// "11.12.99"</code></pre>
-
-    <h3 id="expandTwoDigitYear"><code>expandTwoDigitYear</code></h3>
-    <p>
-      Same pivot rule as <code>parseDate</code> / <code>formatDate</code>. Default pivot
-      <code>50</code>: <code>00–49</code> → <code>2000–2049</code>, <code>50–99</code> →
-      <code>1950–1999</code>.
-    </p>
-    <p><button type="button" data-copy-target="code-yy">Copy</button></p>
-    <pre id="code-yy"><code>expandTwoDigitYear(26); // 2026
-expandTwoDigitYear(99); // 1999
-expandTwoDigitYear(49, 50); // 2049
-expandTwoDigitYear(50, 50); // 1950</code></pre>
+formatDate(new Date(2026, 11, 11), "/");
+// "11/12/2026"</code></pre>
 
     <h3 id="isDateMaskKey"><code>isDateMaskKey</code></h3>
     <p>

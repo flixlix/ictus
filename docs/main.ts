@@ -102,23 +102,9 @@ function bindCopies(): void {
   }
 }
 
-function yyExpandOptions(
-  enabled: HTMLInputElement | null,
-  pivotEl: HTMLInputElement | null,
-): { yyExpand: { pivot?: number } } | undefined {
-  if (!enabled?.checked) return undefined;
-  const pivot = Number(pivotEl?.value);
-  if (Number.isInteger(pivot) && pivot >= 0 && pivot <= 99) {
-    return { yyExpand: { pivot } };
-  }
-  return { yyExpand: {} };
-}
-
 function bindFormat(): void {
   const native = document.querySelector<HTMLInputElement>("#native-date");
   const sep = document.querySelector<HTMLSelectElement>("#format-sep");
-  const yyExpand = document.querySelector<HTMLInputElement>("#format-yy-expand");
-  const yyPivot = document.querySelector<HTMLInputElement>("#format-yy-pivot");
   const result = document.querySelector("#format-result");
   const load = document.querySelector("#load-formatted");
   if (!native || !sep || !result) return;
@@ -133,17 +119,11 @@ function bindFormat(): void {
       result.textContent = "";
       return;
     }
-    result.textContent = formatDate(
-      new Date(year, month - 1, day),
-      sep.value,
-      yyExpandOptions(yyExpand, yyPivot) ?? {},
-    );
+    result.textContent = formatDate(new Date(year, month - 1, day), sep.value);
   };
 
   native.addEventListener("input", render);
   sep.addEventListener("change", render);
-  yyExpand?.addEventListener("change", render);
-  yyPivot?.addEventListener("input", render);
   render();
 
   load?.addEventListener("click", () => {
@@ -185,13 +165,11 @@ function bindTable(): void {
 
 function bindParseLive(): void {
   const input = document.querySelector<HTMLInputElement>("#parse-input");
-  const yyExpand = document.querySelector<HTMLInputElement>("#parse-yy-expand");
-  const yyPivot = document.querySelector<HTMLInputElement>("#parse-yy-pivot");
   const output = document.querySelector("#parse-output");
   if (!input || !output) return;
 
   const render = () => {
-    const date = parseDate(input.value, yyExpandOptions(yyExpand, yyPivot) ?? {});
+    const date = parseDate(input.value);
     if (!date) {
       output.textContent = "undefined";
       return;
@@ -204,8 +182,6 @@ function bindParseLive(): void {
   };
 
   input.addEventListener("input", render);
-  yyExpand?.addEventListener("change", render);
-  yyPivot?.addEventListener("input", render);
   render();
 }
 
