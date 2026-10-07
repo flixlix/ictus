@@ -1,0 +1,53 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "ictus",
+  "homepage": "https://ictus.luca-felix.com",
+  "items": [
+    {
+      "name": "date-field-shadcn",
+      "type": "registry:component",
+      "title": "Date field (shadcn Input)",
+      "description": "ictus useDateFieldMask wired to a shadcn Input. Installs into your components folder; keep your Input styles.",
+      "dependencies": ["ictus"],
+      "registryDependencies": ["input"],
+      "files": [
+        {
+          "path": "registry/react/date-field-shadcn.tsx",
+          "type": "registry:component",
+          "target": "@components/date-field-shadcn.tsx"
+        }
+      ],
+      "docs": "Requires a shadcn project with Input already available (this item pulls `input`). Then: npx shadcn@latest add flixlix/ictus/date-field-shadcn"
+    },
+    {
+      "name": "date-field-base-ui",
+      "type": "registry:component",
+      "title": "Date field (Base UI)",
+      "description": "ictus useDateFieldMask on Base UI Field + Input. Headless mask, Base UI chrome.",
+      "dependencies": ["ictus", "@base-ui/react"],
+      "files": [
+        {
+          "path": "registry/react/date-field-base-ui.tsx",
+          "type": "registry:component",
+          "target": "@components/date-field-base-ui.tsx"
+        }
+      ],
+      "docs": "Install: npx shadcn@latest add flixlix/ictus/date-field-base-ui"
+    },
+    {
+      "name": "date-field-day-picker",
+      "type": "registry:component",
+      "title": "Date field (Day Picker + popover)",
+      "description": "Masked text input plus a Base UI popover calendar powered by react-day-picker. Typing and picking stay in sync.",
+      "dependencies": ["ictus", "@base-ui/react", "react-day-picker"],
+      "files": [
+        {
+          "path": "registry/react/date-field-day-picker.tsx",
+          "type": "registry:component",
+          "target": "@components/date-field-day-picker.tsx"
+        }
+      ],
+      "docs": "Install: npx shadcn@latest add flixlix/ictus/date-field-day-picker. Import react-day-picker/style.css once in your app if the calendar looks unstyled."
+    }
+  ]
+}

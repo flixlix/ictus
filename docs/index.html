@@ -6,7 +6,7 @@
     <title>ictus — Date input mask for dd/mm/yyyy as you type (2.6 kB)</title>
     <meta
       name="description"
-      content="Headless date input mask for a plain text field. Formats dd/mm/yyyy, mm/dd/yyyy, or yyyy-mm-dd as you type. Zero dependency, 2.6 kB gzipped, optional React hook. No calendar UI."
+      content="Date and time input mask for a plain text field. Formats dd/mm/yyyy, mm/dd/yyyy, yyyy-mm-dd, or HH:mm as you type. Zero dependency, 2.6 kB gzipped, optional React hook."
     />
     <meta
       name="keywords"
@@ -22,7 +22,7 @@
     />
     <meta
       property="og:description"
-      content="Headless as-you-type date mask for a plain input. 2.6 kB gzipped. Vanilla or React. No calendar, no spinbuttons."
+      content="As-you-type date and time mask for a plain input. 2.6 kB gzipped. Vanilla or React."
     />
     <meta name="twitter:card" content="summary" />
     <meta
@@ -31,7 +31,7 @@
     />
     <meta
       name="twitter:description"
-      content="Headless as-you-type date mask for a plain input. 2.6 kB gzipped. Vanilla or React."
+      content="As-you-type date and time mask for a plain input. 2.6 kB gzipped. Vanilla or React."
     />
     <meta name="robots" content="index, follow" />
     <script type="application/ld+json">
@@ -54,7 +54,7 @@
             "url": "https://ictus.luca-felix.com/",
             "downloadUrl": "https://www.npmjs.com/package/ictus",
             "codeRepository": "https://github.com/flixlix/ictus",
-            "description": "Headless date input mask for a plain text input. Formats dates as you type. Zero dependency core with an optional React hook.",
+            "description": "Date input mask for a plain text input. Formats dates as you type. Zero dependency core with an optional React hook.",
             "offers": {
               "@type": "Offer",
               "price": "0",
@@ -96,7 +96,8 @@
     </p>
     <p class="nav">
       <a href="#getting-started">Getting started</a> · <a href="#demos">Demos</a> ·
-      <a href="#when">When to use</a> · <a href="#size">Size</a> · <a href="#api">API</a>
+      <a href="#advanced">With your UI</a> · <a href="#when">When to use</a> ·
+      <a href="#size">Size</a> · <a href="#api">API</a>
     </p>
 
     <p class="hero">
@@ -352,8 +353,8 @@ When done, summarize what you installed, what you changed, and how to try it.</c
 
     <h3>Time</h3>
     <p>
-      Same overflow-advance model for a 24-hour clock. Hours pad <code>3–9</code>; minutes pad
-      <code>6–9</code>. Default precision is <code>HH:mm</code>.
+      Same idea for a 24-hour clock: type the digits and the colon lands for you. Hours pad
+      <code>3–9</code>; minutes pad <code>6–9</code>. Default precision is <code>HH:mm</code>.
     </p>
     <p>
       <label for="demo-time">HH:mm</label><br />
@@ -514,6 +515,85 @@ When done, summarize what you installed, what you changed, and how to try it.</c
         </tr>
       </tbody>
     </table>
+
+    <h2 id="advanced" data-short="With your UI">With your UI library</h2>
+    <p>
+      ictus is the mask layer. These React blocks wire <code>useDateFieldMask</code> into common
+      inputs so you can drop the pattern into a project. Install from the GitHub registry, or copy
+      the source under <code>registry/react/</code>.
+    </p>
+    <p>
+      Install with the shadcn CLI from this GitHub repo, or from the docs registry URL after
+      deploy:
+    </p>
+    <div class="code-block">
+      <pre id="code-registry-add"><code>npx shadcn@latest add flixlix/ictus/date-field-shadcn
+npx shadcn@latest add flixlix/ictus/date-field-base-ui
+npx shadcn@latest add flixlix/ictus/date-field-day-picker
+
+# or from the docs site
+npx shadcn@latest add https://ictus.luca-felix.com/r/date-field-shadcn.json</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-registry-add" aria-label="Copy code"></button>
+    </div>
+
+    <div id="advanced-demos-root"></div>
+
+    <h3 id="advanced-shadcn">shadcn Input</h3>
+    <p>
+      Spreads the hook’s <code>inputProps</code> onto a shadcn <code>Input</code>. The registry
+      item also pulls in shadcn’s <code>input</code>.
+    </p>
+    <p>
+      <button type="button" data-copy-target="code-agent-shadcn">Copy agent prompt</button>
+    </p>
+    <div class="fold-wrap">
+      <pre id="code-agent-shadcn" class="fold"><code>Add an ictus-masked date field using the shadcn Input pattern from https://github.com/flixlix/ictus.
+
+Prefer: `npx shadcn@latest add flixlix/ictus/date-field-shadcn`
+(requires ictus installed and a shadcn Input in the project).
+
+Source of truth: registry/react/date-field-shadcn.tsx in that repo.
+Wire useDateFieldMask from ictus/react; keep the host Input styles. Ask before inventing a new date field.</code></pre>
+      <button type="button" class="fold-toggle" data-expand="code-agent-shadcn" aria-controls="code-agent-shadcn" aria-expanded="false">Show more</button>
+    </div>
+
+    <h3 id="advanced-base-ui">Base UI</h3>
+    <p>
+      Same hook on Base UI <code>Field</code> + <code>Input</code>. Useful when the design system
+      is Base UI rather than shadcn.
+    </p>
+    <p>
+      <button type="button" data-copy-target="code-agent-base-ui">Copy agent prompt</button>
+    </p>
+    <div class="fold-wrap">
+      <pre id="code-agent-base-ui" class="fold"><code>Add an ictus-masked date field using Base UI from https://github.com/flixlix/ictus.
+
+Prefer: `npx shadcn@latest add flixlix/ictus/date-field-base-ui`
+(installs the component file; also needs `ictus` and `@base-ui/react`).
+
+Source: registry/react/date-field-base-ui.tsx.
+Use useDateFieldMask; keep Field/Input composition. Ask before inventing a new date field.</code></pre>
+      <button type="button" class="fold-toggle" data-expand="code-agent-base-ui" aria-controls="code-agent-base-ui" aria-expanded="false">Show more</button>
+    </div>
+
+    <h3 id="advanced-day-picker">Day Picker + popover</h3>
+    <p>
+      Type into the masked field, or open the popover and pick a day. Both paths update the same
+      value. Calendar is <code>react-day-picker</code>; popover is Base UI.
+    </p>
+    <p>
+      <button type="button" data-copy-target="code-agent-day-picker">Copy agent prompt</button>
+    </p>
+    <div class="fold-wrap">
+      <pre id="code-agent-day-picker" class="fold"><code>Add an ictus-masked date field with a react-day-picker popover calendar from https://github.com/flixlix/ictus.
+
+Prefer: `npx shadcn@latest add flixlix/ictus/date-field-day-picker`
+(needs `ictus`, `@base-ui/react`, and `react-day-picker`).
+
+Source: registry/react/date-field-day-picker.tsx.
+Keep typing and calendar selection in sync via useDateFieldMask + formatDate. Import react-day-picker/style.css if the calendar looks unstyled. Ask before inventing a new date field.</code></pre>
+      <button type="button" class="fold-toggle" data-expand="code-agent-day-picker" aria-controls="code-agent-day-picker" aria-expanded="false">Show more</button>
+    </div>
 
     <h2 id="api">API</h2>
     <p>

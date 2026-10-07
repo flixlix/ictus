@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "date-field-base-ui",
+  "title": "Date field (Base UI)",
+  "description": "ictus useDateFieldMask on Base UI Field + Input. Headless mask, Base UI chrome.",
+  "dependencies": [
+    "ictus",
+    "@base-ui/react"
+  ],
+  "files": [
+    {
+      "path": "registry/react/date-field-base-ui.tsx",
+      "content": "import { Field } from \"@base-ui/react/field\";\nimport { Input } from \"@base-ui/react/input\";\nimport { useDateFieldMask } from \"ictus/react\";\nimport type { UseDateFieldMaskOptions } from \"ictus/react\";\n\nexport type DateFieldBaseUiProps = UseDateFieldMaskOptions & {\n  id?: string;\n  label?: string;\n  placeholder?: string;\n  className?: string;\n};\n\nexport function DateFieldBaseUi({\n  id = \"date-base-ui\",\n  label = \"Date\",\n  placeholder = \"dd.mm.yyyy\",\n  className,\n  separator = \".\",\n  ...options\n}: DateFieldBaseUiProps) {\n  const { inputProps, status, parsed, isoValue } = useDateFieldMask({\n    separator,\n    ...options,\n  });\n\n  return (\n    <Field.Root className={className}>\n      <Field.Label htmlFor={id}>{label}</Field.Label>\n      <Input id={id} placeholder={placeholder} className=\"ictus-base-ui-input\" {...inputProps} />\n      <Field.Description data-status={status}>\n        {status === \"valid\" && parsed\n          ? parsed.toLocaleDateString(undefined, {\n              weekday: \"short\",\n              day: \"numeric\",\n              month: \"short\",\n              year: \"numeric\",\n            })\n          : status}\n        {isoValue ? ` · ${isoValue}` : \"\"}\n      </Field.Description>\n    </Field.Root>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "@components/date-field-base-ui.tsx"
+    }
+  ],
+  "docs": "Install: npx shadcn@latest add flixlix/ictus/date-field-base-ui",
+  "type": "registry:component"
+}

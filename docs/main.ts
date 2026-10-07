@@ -17,6 +17,7 @@ import {
 import type { TimeFieldPrecision, TimeStatus } from "../src/time.js";
 import { appendBlurLayers, mountOverflowScrollGradients } from "./overflow-scroll-gradient.js";
 import { mountToc } from "./toc.js";
+import { mountAdvancedDemos } from "./demos/advanced.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
   if (selectionEnd === caret) {
@@ -514,3 +515,4 @@ bindPackageManagers();
 bindFormat();
 bindTable();
 bindParseLive();
+mountAdvancedDemos();

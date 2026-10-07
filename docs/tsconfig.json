@@ -3,13 +3,19 @@
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "noEmit": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
     "verbatimModuleSyntax": true,
     "noUncheckedIndexedAccess": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@/components/ui/input": ["./demos/ui/input.tsx"],
+      "ictus": ["../src/index.ts"],
+      "ictus/react": ["../src/react.ts"]
+    }
   },
-  "include": ["./*.ts"]
+  "include": ["./**/*.ts", "./**/*.tsx", "../registry/**/*.tsx"]
 }
