@@ -222,17 +222,112 @@ function bindPackageManagers(): void {
   const copy = document.querySelector<HTMLButtonElement>("#copy-install");
   if (!(command instanceof HTMLElement) || !copy || tabs.length === 0) return;
 
+  let words = renderWords(command, (command.textContent ?? "").trim().split(" "));
+
   for (const tab of tabs) {
     tab.addEventListener("click", () => {
       const next = tab.dataset.pm;
-      if (!next) return;
+      if (!next || next === copy.dataset.copy) return;
       for (const other of tabs) {
         other.setAttribute("aria-selected", other === tab ? "true" : "false");
       }
-      command.textContent = next;
+      words = morphCommand(command, words, next.split(" "));
       copy.dataset.copy = next;
     });
   }
+}
+
+function wordSpan(text: string): HTMLSpanElement {
+  const span = document.createElement("span");
+  span.className = "install-word";
+  span.textContent = text;
+  return span;
+}
+
+function renderWords(command: HTMLElement, texts: string[]): HTMLSpanElement[] {
+  const spans = texts.map(wordSpan);
+  command.replaceChildren(...spans.flatMap((span, i) => (i === 0 ? [span] : [" ", span])));
+  return spans;
+}
+
+// Words shared with the previous command keep their element and slide into place;
+// only the differing run in between crossfades.
+function morphCommand(command: HTMLElement, current: HTMLSpanElement[], next: string[]): HTMLSpanElement[] {
+  const before = current.map((span) => span.textContent ?? "");
+  let head = 0;
+  while (head < before.length && head < next.length && before[head] === next[head]) head++;
+  let tail = 0;
+  while (
+    tail < before.length - head &&
+    tail < next.length - head &&
+    before[before.length - 1 - tail] === next[next.length - 1 - tail]
+  ) {
+    tail++;
+  }
+
+  const kept = [...current.slice(0, head), ...current.slice(current.length - tail)];
+  const leaving = current.slice(head, current.length - tail);
+  const entering = next.slice(head, next.length - tail).map(wordSpan);
+  const spans = [...current.slice(0, head), ...entering, ...current.slice(current.length - tail)];
+
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const origin = command.getBoundingClientRect();
+  // Rects include any in-flight transform, so an interrupted switch continues from where the eye is.
+  const keptFrom = kept.map((span) => span.getBoundingClientRect().left);
+  const ghosts = leaving.map((span) => {
+    const rect = span.getBoundingClientRect();
+    const opacity = getComputedStyle(span).opacity;
+    const ghost = wordSpan(span.textContent ?? "");
+    ghost.classList.add("is-ghost");
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.style.left = `${rect.left - origin.left}px`;
+    ghost.style.top = `${rect.top - origin.top}px`;
+    ghost.style.opacity = opacity;
+    return ghost;
+  });
+
+  for (const span of current) span.getAnimations().forEach((animation) => animation.cancel());
+  command.querySelectorAll(".is-ghost").forEach((ghost) => ghost.remove());
+  command.replaceChildren(...spans.flatMap((span, i) => (i === 0 ? [span] : [" ", span])), ...ghosts);
+
+  const shift = reduced ? 0 : 4;
+  const blur = reduced ? 0 : 2;
+  const fade = { duration: 200, easing: "cubic-bezier(0.19, 1, 0.22, 1)" };
+
+  for (const ghost of ghosts) {
+    ghost
+      .animate(
+        [
+          { opacity: ghost.style.opacity, transform: "translateY(0)", filter: "blur(0)" },
+          { opacity: 0, transform: `translateY(-${shift}px)`, filter: `blur(${blur}px)` },
+        ],
+        { ...fade, duration: 150, fill: "forwards" },
+      )
+      .finished.then(() => ghost.remove(), () => {});
+  }
+
+  for (const span of entering) {
+    span.animate(
+      [
+        { opacity: 0, transform: `translateY(${shift}px)`, filter: `blur(${blur}px)` },
+        { opacity: 1, transform: "translateY(0)", filter: "blur(0)" },
+      ],
+      fade,
+    );
+  }
+
+  if (!reduced) {
+    kept.forEach((span, i) => {
+      const dx = (keptFrom[i] ?? 0) - span.getBoundingClientRect().left;
+      if (Math.abs(dx) < 0.5) return;
+      span.animate([{ transform: `translateX(${dx}px)` }, { transform: "translateX(0)" }], {
+        duration: 250,
+        easing: "cubic-bezier(0.645, 0.045, 0.355, 1)",
+      });
+    });
+  }
+
+  return spans;
 }
 
 function bindFormat(): void {

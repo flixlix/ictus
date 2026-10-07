@@ -148,10 +148,21 @@ p {
 }
 
 .install-row code {
+  position: relative;
   flex: 1 1 auto;
   padding: 0;
   background: transparent;
   font-size: 0.92rem;
+}
+
+.install-word {
+  display: inline-block;
+  white-space: pre;
+}
+
+.install-word.is-ghost {
+  position: absolute;
+  pointer-events: none;
 }
 
 .version {
