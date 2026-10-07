@@ -38,7 +38,13 @@ The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the
 ## API
 
 ```ts
-import { apply, parseDate, formatDate, isDateMaskKey } from "ictus";
+import {
+  apply,
+  parseDate,
+  formatDate,
+  expandTwoDigitYear,
+  isDateMaskKey,
+} from "ictus";
 
 apply({
   value: string,          // current masked value
@@ -49,14 +55,19 @@ apply({
   step?: number,          // default 0: ignore ArrowUp/ArrowDown
 }): { value: string; caret: number }
 
-parseDate(masked: string): Date | undefined
-formatDate(date: Date, separator?: string): string
+parseDate(masked: string, options?: { yyExpand?: { pivot?: number } }): Date | undefined
+formatDate(date: Date, separator?: string, options?: { yyExpand?: { pivot?: number } }): string
+expandTwoDigitYear(yy: number, pivot?: number): number
 isDateMaskKey(key: string): boolean
 ```
 
 `parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
 
-`formatDate` writes `dd{sep}mm{sep}yyyy` from the date's local calendar parts.
+By default the year group must be four digits. Pass `yyExpand` to also accept a complete `dd{sep}mm{sep}yy` mask and expand the two-digit year. The pivot (default `50`) chooses the century: `yy < pivot` → `2000 + yy`, otherwise `1900 + yy`. So with the default pivot, `00–49` → `2000–2049` and `50–99` → `1950–1999`. Four-digit years are unchanged when `yyExpand` is set. The as-you-type mask still uses a width-4 year group; expansion is opt-in on parse/format only.
+
+`formatDate` writes `dd{sep}mm{sep}yyyy` from the date's local calendar parts. With `yyExpand`, years that round-trip through that pivot are written as two digits; years outside the window stay four digits.
+
+`expandTwoDigitYear` is the same pivot rule used by `parseDate` / `formatDate`.
 
 ### Optional arrow step
 
