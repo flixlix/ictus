@@ -251,7 +251,7 @@
     </table>
 
     <h2 id="api">API</h2>
-    <p>Four exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
+    <p>Five exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
 
     <h3 id="apply"><code>apply</code></h3>
     <p>
@@ -304,6 +304,18 @@ parseDate("11.12");      // undefined</code></pre>
     </p>
     <pre id="parse-output"></pre>
 
+    <h3 id="dateStatus"><code>dateStatus</code></h3>
+    <p>
+      Classifies a masked string for UI feedback:
+      <code>empty</code>, <code>incomplete</code>, <code>invalid</code>, or
+      <code>valid</code>.
+    </p>
+    <p><button type="button" data-copy-target="code-status">Copy</button></p>
+    <pre id="code-status"><code>dateStatus("");           // "empty"
+dateStatus("11.12");      // "incomplete"
+dateStatus("31.02.2020"); // "invalid"
+dateStatus("11.12.2026"); // "valid"</code></pre>
+
     <h3 id="formatDate"><code>formatDate</code></h3>
     <p>Writes <code>dd{sep}mm{sep}yyyy</code> from the date’s local day, month, and year.</p>
     <p><button type="button" data-copy-target="code-format">Copy</button></p>
@@ -335,7 +347,9 @@ event.preventDefault();</code></pre>
 type ApplyResult = {
   value: string;
   caret: number;
-};</code></pre>
+};
+
+type DateStatus = "empty" | "incomplete" | "invalid" | "valid";</code></pre>
 
     <h3 id="vanilla">Vanilla <code>&lt;input&gt;</code></h3>
     <p><button type="button" data-copy-target="code-vanilla">Copy</button></p>
@@ -359,12 +373,13 @@ input.addEventListener("keydown", (event) => {
     <p>
       Optional React entry. Peer on <code>react</code>. Restores the caret after commit.
       <code>parsed</code> is a local <code>Date</code> or <code>undefined</code>.
+      <code>status</code> is the same classification as <code>dateStatus</code>.
     </p>
     <p><button type="button" data-copy-target="code-react">Copy</button></p>
     <pre id="code-react"><code>import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
-  const { inputProps, parsed } = useDateFieldMask();
+  const { inputProps, parsed, status } = useDateFieldMask();
   return &lt;input {...inputProps} /&gt;;
 }</code></pre>
 
