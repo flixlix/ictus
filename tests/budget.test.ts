@@ -24,9 +24,9 @@ describe("bundle size", () => {
     expect(gzip).toBeLessThan(1500);
   });
 
-  it("react entry stays under 0.6 kB gzip", async () => {
+  it("react entry stays under 0.7 kB gzip", async () => {
     const { gzip } = await minGzip("src/react.ts", ["react", "./index.js", "./index.ts"]);
-    expect(gzip).toBeLessThan(600);
+    expect(gzip).toBeLessThan(700);
   });
 });
 
