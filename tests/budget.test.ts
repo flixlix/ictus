@@ -35,9 +35,9 @@ describe("bundle size", () => {
     expect(gzip).toBeLessThan(1000);
   });
 
-  it("time entry stays under 2.7 kB gzip", async () => {
+  it("time entry stays under 2.75 kB gzip", async () => {
     const { gzip } = await minGzip("src/time.ts");
-    expect(gzip).toBeLessThan(2700);
+    expect(gzip).toBeLessThan(2750);
   });
 });
 

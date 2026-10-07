@@ -565,7 +565,7 @@ if (heroDate instanceof HTMLInputElement && heroRoot instanceof HTMLElement) {
     heroGuideMounted = true;
     void import("./hero-guide.js").then(({ bindHeroGuide }) => {
       bindHeroGuide(heroDate, {
-        press: (key) => applyMaskKey(heroRoot, heroDate, key),
+        press: (key, mods) => applyMaskKey(heroRoot, heroDate, key, mods),
         paste: (text) => applyMaskPaste(heroRoot, heroDate, text),
         clear: () => syncField(heroRoot, "", 0),
       });

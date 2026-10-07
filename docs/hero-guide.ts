@@ -1,5 +1,11 @@
+export type HeroGuideKeyMods = {
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  shiftKey?: boolean;
+};
+
 export type HeroGuideDriver = {
-  press(key: string): void;
+  press(key: string, mods?: HeroGuideKeyMods): void;
   paste(text: string): void;
   clear(): void;
 };
@@ -69,6 +75,13 @@ const script: readonly Beat[] = [
     text: "Pasting is fine too. 2026-12-11 gets flipped into day, month, year.",
   },
   { kind: "paste", text: "2026-12-11", hold: 1300 },
+  {
+    kind: "say",
+    text: "Hold Ctrl or Cmd and press Backspace to clear a whole part, like the year.",
+  },
+  { kind: "keys", keys: ["Ctrl+Backspace"], hold: 700 },
+  { kind: "say", text: "Shift and Backspace clears the whole field." },
+  { kind: "keys", keys: ["Shift+Backspace"], hold: 700 },
   { kind: "say", text: "Your turn.", hold: 0 },
 ];
 
@@ -89,7 +102,24 @@ function wait(ms: number, signal: AbortSignal): Promise<void> {
 }
 
 function isTypingKey(key: string): boolean {
-  return key === "Backspace" || key === "Delete" || key.length === 1;
+  return (
+    key === "Backspace" ||
+    key === "Delete" ||
+    key === "Ctrl+Backspace" ||
+    key === "Shift+Backspace" ||
+    key.length === 1
+  );
+}
+
+function parseGuideKey(raw: string): { key: string; mods: HeroGuideKeyMods } {
+  switch (raw) {
+    case "Ctrl+Backspace":
+      return { key: "Backspace", mods: { ctrlKey: true } };
+    case "Shift+Backspace":
+      return { key: "Backspace", mods: { shiftKey: true } };
+    default:
+      return { key: raw, mods: {} };
+  }
 }
 
 function keyFace(key: string): KeyFace {
@@ -102,6 +132,10 @@ function keyFace(key: string): KeyFace {
       return { glyph: "-", hint: "dash", punct: true, wide: false, word: false };
     case "Backspace":
       return { glyph: "⌫", hint: "backspace", punct: false, wide: true, word: false };
+    case "Ctrl+Backspace":
+      return { glyph: "⌃⌫", hint: "ctrl backspace", punct: false, wide: true, word: false };
+    case "Shift+Backspace":
+      return { glyph: "⇧⌫", hint: "shift backspace", punct: false, wide: true, word: false };
     case "Delete":
       return { glyph: "⌦", hint: "delete", punct: false, wide: true, word: false };
     case "paste":
@@ -311,10 +345,11 @@ function mountGuide(
         return;
       }
       case "keys": {
-        for (const key of beat.keys) {
+        for (const raw of beat.keys) {
           if (signal.aborted) return;
           const arriving = !keyEl.classList.contains("is-shown");
-          paintKey(keyFace(key));
+          const { key, mods } = parseGuideKey(raw);
+          paintKey(keyFace(raw));
           if (!reduced) {
             keyEl.classList.add("is-shown");
             await wait(arriving ? 170 : 90, signal);
@@ -322,7 +357,7 @@ function mountGuide(
           }
           const struck = await strikeKey(signal);
           if (!struck) return;
-          driver.press(key);
+          driver.press(key, mods);
           await wait(reduced ? 70 : KEY_HELD_MS, signal);
           if (signal.aborted) return;
           keyEl.classList.remove("is-down");
