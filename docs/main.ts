@@ -1,4 +1,4 @@
-import { apply, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
+import { apply, applyPaste, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
   if (selectionEnd === caret) {
@@ -73,6 +73,18 @@ function bindMask(root: HTMLElement): void {
     syncField(root, next.value, next.caret, ignored ? "ignored" : "");
   });
 
+  input.addEventListener("paste", (event) => {
+    event.preventDefault();
+    const next = applyPaste({
+      value: input.value,
+      caret: input.selectionStart ?? 0,
+      selectionEnd: input.selectionEnd ?? undefined,
+      pasted: event.clipboardData?.getData("text") ?? "",
+      separator,
+    });
+    syncField(root, next.value, next.caret);
+  });
+
   const paintCaret = () => {
     const caretEl = root.querySelector("[data-caret]");
     if (!caretEl) return;
@@ -81,6 +93,27 @@ function bindMask(root: HTMLElement): void {
   };
   input.addEventListener("click", paintCaret);
   input.addEventListener("select", paintCaret);
+}
+
+function bindPasteSamples(): void {
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-paste]")) {
+    button.addEventListener("click", () => {
+      const pasted = button.dataset.paste ?? "";
+      const targetId = button.dataset.pasteInto ?? "hero-date";
+      const input = document.querySelector<HTMLInputElement>(`#${targetId}`);
+      const root = input?.closest("[data-mask]");
+      if (!(input instanceof HTMLInputElement) || !(root instanceof HTMLElement)) return;
+      const separator = root.dataset.separator || ".";
+      const next = applyPaste({
+        value: "",
+        caret: 0,
+        pasted,
+        separator,
+      });
+      syncField(root, next.value, next.caret);
+      input.focus();
+    });
+  }
 }
 
 function bindCopies(): void {
@@ -190,6 +223,7 @@ for (const root of document.querySelectorAll<HTMLElement>("[data-mask]")) {
 }
 
 bindCopies();
+bindPasteSamples();
 bindFormat();
 bindTable();
 bindParseLive();

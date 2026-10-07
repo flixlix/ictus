@@ -41,6 +41,12 @@
     </p>
     <p>Type 4, then 9, then 2026. Backspace through the separators.</p>
     <p>
+      Paste <code>11/12/2026</code> or <code>2026-12-11</code>, or try a sample:
+      <button type="button" data-paste="11/12/2026" data-paste-into="hero-date">11/12/2026</button>
+      <button type="button" data-paste="11122026" data-paste-into="hero-date">11122026</button>
+      <button type="button" data-paste="2026-12-11" data-paste-into="hero-date">2026-12-11</button>
+    </p>
+    <p>
       <code>npm install ictus</code>
       <button type="button" data-copy="npm install ictus">Copy</button>
     </p>
@@ -251,7 +257,7 @@
     </table>
 
     <h2 id="api">API</h2>
-    <p>Four exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
+    <p>Five exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
 
     <h3 id="apply"><code>apply</code></h3>
     <p>
@@ -284,6 +290,22 @@ apply({
       <dt><code>separator?</code></dt>
       <dd>Written separator. Default <code>"."</code>. Use a single character.</dd>
     </dl>
+
+    <h3 id="applyPaste"><code>applyPaste</code></h3>
+    <p>
+      Normalize clipboard text into the mask with the same group and overflow rules as
+      <code>apply</code>. Accepts <code>11/12/2026</code>, dashed or dotted forms, digit-only
+      <code>11122026</code>, and ISO <code>2026-12-11</code> (remapped to day-month-year).
+    </p>
+    <p><button type="button" data-copy-target="code-paste">Copy</button></p>
+    <pre id="code-paste"><code>import { applyPaste } from "ictus";
+
+applyPaste({
+  value: "",
+  caret: 0,
+  pasted: "2026-12-11",
+});
+// { value: "11.12.2026", caret: 10 }</code></pre>
 
     <h3 id="parseDate"><code>parseDate</code></h3>
     <p>
@@ -332,6 +354,14 @@ event.preventDefault();</code></pre>
   separator?: string;
 };
 
+type ApplyPasteInput = {
+  value: string;
+  caret: number;
+  selectionEnd?: number;
+  pasted: string;
+  separator?: string;
+};
+
 type ApplyResult = {
   value: string;
   caret: number;
@@ -339,7 +369,7 @@ type ApplyResult = {
 
     <h3 id="vanilla">Vanilla <code>&lt;input&gt;</code></h3>
     <p><button type="button" data-copy-target="code-vanilla">Copy</button></p>
-    <pre id="code-vanilla"><code>import { apply, isDateMaskKey } from "ictus";
+    <pre id="code-vanilla"><code>import { apply, applyPaste, isDateMaskKey } from "ictus";
 
 const input = document.querySelector("input");
 input.addEventListener("keydown", (event) => {
@@ -350,6 +380,18 @@ input.addEventListener("keydown", (event) => {
     caret: input.selectionStart ?? 0,
     selectionEnd: input.selectionEnd ?? undefined,
     key: event.key,
+  });
+  input.value = next.value;
+  input.setSelectionRange(next.caret, next.caret);
+});
+
+input.addEventListener("paste", (event) => {
+  event.preventDefault();
+  const next = applyPaste({
+    value: input.value,
+    caret: input.selectionStart ?? 0,
+    selectionEnd: input.selectionEnd ?? undefined,
+    pasted: event.clipboardData?.getData("text") ?? "",
   });
   input.value = next.value;
   input.setSelectionRange(next.caret, next.caret);
