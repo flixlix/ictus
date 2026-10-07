@@ -223,9 +223,11 @@ function insertDigit(
   const complete = digits[g].length >= spec.width && g < 2;
   if (complete) setSep(seps, g);
 
+  const valueOut = assemble(digits, seps, sep);
+  const end = caretAt(digits, seps, sep, g, complete);
   return {
-    value: assemble(digits, seps, sep),
-    caret: caretAt(digits, seps, sep, g, complete),
+    value: valueOut,
+    caret: complete ? end : end - digits[g].length + at + 1,
   };
 }
 

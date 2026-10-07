@@ -118,6 +118,7 @@ describe("applyTime", () => {
     ["14:30:5|", "9", "14:30:59|"],
     ["14:30:6|", "0", "14:30:6|"],
     ["14:30:00|", "1", "14:30:00|"],
+    ["14:30:|5", "1", "14:30:1|5"],
   ] as const)("%s + %s (seconds) → %s", (before, key, after) => {
     const result = type(before, key, { precision: "second" });
     expect(show(result.value, result.caret)).toBe(after);
