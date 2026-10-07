@@ -10,8 +10,8 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 
 | Entry | minify | gzip |
 | --- | ---: | ---: |
-| `ictus` | 2.4 kB | **1.1 kB** |
-| `ictus/react` (react external) | 0.7 kB | **0.4 kB** |
+| `ictus` | 5.2 kB | **2.2 kB** |
+| `ictus/react` (react external) | 1.4 kB | **0.8 kB** |
 
 `apply` is **0.1–0.2 µs** per keystroke (~5–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.4 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
 
@@ -38,7 +38,16 @@ The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the
 ## API
 
 ```ts
-import { apply, parseDate, formatDate, isDateMaskKey } from "ictus";
+import {
+  apply,
+  applyPaste,
+  parseDate,
+  dateStatus,
+  formatDate,
+  expandTwoDigitYear,
+  isDateMaskKey,
+  bindDateMask,
+} from "ictus";
 
 apply({
   value: string,          // current masked value
@@ -49,12 +58,38 @@ apply({
   step?: number,          // default 0: ignore ArrowUp/ArrowDown
 }): { value: string; caret: number }
 
-parseDate(masked: string): Date | undefined
-formatDate(date: Date, separator?: string): string
+applyPaste({
+  value: string,
+  caret: number,
+  selectionEnd?: number,
+  pasted: string,         // clipboard text
+  separator?: string,
+}): { value: string; caret: number }
+
+parseDate(masked: string, options?: {
+  yyExpand?: { pivot?: number };
+  min?: Date;
+  max?: Date;
+}): Date | undefined
+dateStatus(masked: string): "empty" | "incomplete" | "invalid" | "valid"
+formatDate(date: Date, separator?: string, options?: { yyExpand?: { pivot?: number } }): string
+expandTwoDigitYear(yy: number, pivot?: number): number
 isDateMaskKey(key: string): boolean
+
+bindDateMask(input: HTMLInputElement, options?: {
+  separator?: string;
+  step?: number;              // default 0: ignore ArrowUp/ArrowDown
+  onValueChange?: (value: string) => void;
+  getValue?: () => string;
+  setValue?: (value: string) => void;
+}): () => void               // unsubscribe
 ```
 
-`parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
+`applyPaste` normalizes common clipboard shapes (`11/12/2026`, `11-12-2026`, `11.12.2026`, digit-only `11122026`, ISO `2026-12-11`) into the mask via the same group and overflow rules as `apply`. Non-date characters are ignored. ISO year-month-day with separators is remapped to day-month-year; digit-only strings stay DMY order.
+
+`parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Optional `min` / `max` reject complete dates outside that local calendar-day range (still `undefined`). Partial and impossible strings stay in the input and parse to `undefined` without range checks. Reject never clears the box; selecting the value and deleting does.
+
+`dateStatus` classifies a masked string for UI feedback: `""` → `empty`, a partial mask → `incomplete`, a complete `dd{sep}mm{sep}yyyy` that is not a calendar date → `invalid`, and a value `parseDate` accepts → `valid`.
 
 `formatDate` writes `dd{sep}mm{sep}yyyy` from the date's local calendar parts.
 
@@ -100,29 +135,21 @@ Empty current group + separator is a no-op (`Blank + . → ""`). Backspace/Delet
 ## Vanilla `<input>`
 
 ```js
-import { apply, isDateMaskKey } from "ictus";
+import { bindDateMask } from "ictus";
 
-const step = 0; // set > 0 to enable ArrowUp/ArrowDown segment step
 const input = document.querySelector("input");
-input.addEventListener("keydown", (event) => {
-  if (
-    !isDateMaskKey(event.key) &&
-    !(step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown"))
-  ) {
-    return;
-  }
-  event.preventDefault();
-  const next = apply({
-    value: input.value,
-    caret: input.selectionStart ?? 0,
-    selectionEnd: input.selectionEnd ?? undefined,
-    key: event.key,
-    step,
-  });
-  input.value = next.value;
-  input.setSelectionRange(next.caret, next.caret);
+const unbind = bindDateMask(input, {
+  separator: ".",
+  // step: 1, // optional; off by default
+  onValueChange: (value) => console.log(value),
 });
+
+// later: unbind();
 ```
+
+`bindDateMask` wires `keydown` (and paste) to `apply`, writes the result back to the input, and restores the caret. It returns a cleanup function that removes the listeners. Pass `getValue` / `setValue` when the masked string is owned outside the DOM.
+
+For a one-off keystroke without attaching listeners, call `apply` and `isDateMaskKey` yourself.
 
 Live demos and the full API live in [`docs/`](docs/) (`pnpm docs`).
 
@@ -134,10 +161,13 @@ Live demos and the full API live in [`docs/`](docs/) (`pnpm docs`).
 import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
-  const { inputProps, hiddenInputProps, isoValue, parsed } = useDateFieldMask({
+  const { inputProps, hiddenInputProps, isoValue, parsed, status } =
+    useDateFieldMask({
     separator: ".",
+    min: new Date(1900, 0, 1),
+    max: new Date(2100, 11, 31),
     // step: 1, // optional; off by default
-    onValueChange: (value) => console.log(value, parsed),
+    onValueChange: (value) => console.log(value, parsed, status),
     onParsedChange: (date) => console.log(date),
   });
 
@@ -150,7 +180,7 @@ function DateInput() {
 }
 ```
 
-`inputProps` is `ref`, `value`, `onKeyDown`, a no-op `onChange` (value is owned by `apply`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`. Pass `step` to enable ArrowUp/ArrowDown segment increment; it stays off when omitted.
+`inputProps` is `ref`, `value`, `onKeyDown`, `onPaste` (`preventDefault` + `applyPaste`), a no-op `onChange` (value is owned by `apply` / `applyPaste`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`. `status` is the same classification as `dateStatus`. Pass `step` to enable ArrowUp/ArrowDown segment increment; it stays off when omitted.
 
 `onParsedChange` runs when the parsed calendar day changes (`undefined` ↔ `Date`, or a different day)—not on every keystroke while the value stays incomplete. `isoValue` is `YYYY-MM-DD` when `parsed` is set, otherwise `""`. `hiddenInputProps` is `{ type: "hidden", value: isoValue }` for a native form field you can spread and name yourself.
 

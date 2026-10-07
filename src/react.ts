@@ -1,12 +1,15 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
-import { apply, isDateMaskKey, parseDate } from "./index.js";
+import type { ChangeEvent, ClipboardEvent, KeyboardEvent, RefObject } from "react";
+import { apply, applyPaste, dateStatus, isDateMaskKey, parseDate } from "./index.js";
+import type { DateStatus } from "./index.js";
 
 export type UseDateFieldMaskOptions = {
   separator?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
   onParsedChange?: (date: Date | undefined) => void;
+  min?: Date;
+  max?: Date;
   step?: number;
 };
 
@@ -14,6 +17,7 @@ export type DateFieldInputProps = {
   ref: RefObject<HTMLInputElement | null>;
   value: string;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+  onPaste: (event: ClipboardEvent<HTMLInputElement>) => void;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   inputMode: "numeric";
   autoComplete: "off";
@@ -24,8 +28,10 @@ export type UseDateFieldMaskReturn = {
   ref: RefObject<HTMLInputElement | null>;
   value: string;
   parsed: Date | undefined;
+  status: DateStatus;
   isoValue: string;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+  onPaste: (event: ClipboardEvent<HTMLInputElement>) => void;
   inputProps: DateFieldInputProps;
   hiddenInputProps: { type: "hidden"; value: string };
 };
@@ -46,13 +52,37 @@ export function useDateFieldMask(
     defaultValue = "",
     onValueChange,
     onParsedChange,
+    min,
+    max,
     step = 0,
   } = options;
   const ref = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState(defaultValue);
-  const parsed = useMemo(() => parseDate(value), [value]);
+  const parsed = useMemo(
+    () => parseDate(value, { min, max }),
+    [value, min, max],
+  );
+  const status = useMemo(() => dateStatus(value), [value]);
   const isoValue = iso(parsed);
-  const prev = useRef(isoValue);
+  const prevIso = useRef(isoValue);
+
+  const commit = useCallback(
+    (next: { value: string; caret: number }) => {
+      setValue(next.value);
+      onValueChange?.(next.value);
+      const d = parseDate(next.value, { min, max });
+      const k = iso(d);
+      if (k !== prevIso.current) {
+        prevIso.current = k;
+        onParsedChange?.(d);
+      }
+      const caret = next.caret;
+      requestAnimationFrame(() => {
+        ref.current?.setSelectionRange(caret, caret);
+      });
+    },
+    [onValueChange, onParsedChange, min, max],
+  );
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
@@ -61,39 +91,49 @@ export function useDateFieldMask(
         step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown");
       if (!isDateMaskKey(event.key) && !isStepArrow) return;
       event.preventDefault();
-      const next = apply({
-        value: event.currentTarget.value,
-        caret: event.currentTarget.selectionStart ?? 0,
-        selectionEnd: event.currentTarget.selectionEnd ?? undefined,
-        key: event.key,
-        separator,
-        step,
-      });
-      setValue(next.value);
-      onValueChange?.(next.value);
-      const d = parseDate(next.value);
-      const k = iso(d);
-      if (k !== prev.current) {
-        prev.current = k;
-        onParsedChange?.(d);
-      }
-      requestAnimationFrame(() => {
-        ref.current?.setSelectionRange(next.caret, next.caret);
-      });
+      commit(
+        apply({
+          value: event.currentTarget.value,
+          caret: event.currentTarget.selectionStart ?? 0,
+          selectionEnd: event.currentTarget.selectionEnd ?? undefined,
+          key: event.key,
+          separator,
+          step,
+        }),
+      );
     },
-    [separator, onValueChange, onParsedChange, step],
+    [separator, commit, step],
+  );
+
+  const onPaste = useCallback(
+    (event: ClipboardEvent<HTMLInputElement>) => {
+      event.preventDefault();
+      commit(
+        applyPaste({
+          value: event.currentTarget.value,
+          caret: event.currentTarget.selectionStart ?? 0,
+          selectionEnd: event.currentTarget.selectionEnd ?? undefined,
+          pasted: event.clipboardData.getData("text"),
+          separator,
+        }),
+      );
+    },
+    [separator, commit],
   );
 
   return {
     ref,
     value,
     parsed,
+    status,
     isoValue,
     onKeyDown,
+    onPaste,
     inputProps: {
       ref,
       value,
       onKeyDown,
+      onPaste,
       onChange: noopChange,
       inputMode: "numeric",
       autoComplete: "off",

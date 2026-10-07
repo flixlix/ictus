@@ -20,7 +20,10 @@
       Headless as-you-type behavior for a single <code>&lt;input&gt;</code> date field. Day-month-year,
       zero dependencies, no calendar, no React in the core.
     </p>
-    <p><a href="#demos">Demos</a> · <a href="#size">Size</a> · <a href="#api">API</a></p>
+    <p>
+      <a href="#demos">Demos</a> · <a href="#agent">Prompt your agent</a> ·
+      <a href="#size">Size</a> · <a href="#api">API</a>
+    </p>
 
     <p>
       <label for="hero-date">Try it</label><br />
@@ -39,11 +42,53 @@
         <span data-hint></span>
       </span>
     </p>
-    <p>Type 4, then 9, then 2026. Backspace through the separators.</p>
     <p>
       <code>npm install ictus</code>
       <button type="button" data-copy="npm install ictus">Copy</button>
     </p>
+
+    <h2 id="agent">Prompt your agent</h2>
+    <p>
+      Drop this into Cursor, Claude Code, or similar. It finds date fields in the current repo,
+      asks before changing code, then installs and wires ictus from the docs.
+    </p>
+    <p>
+      <button type="button" data-copy-target="code-agent-prompt">Copy</button>
+      <button type="button" data-expand="code-agent-prompt" aria-expanded="false">Show more</button>
+    </p>
+    <pre id="code-agent-prompt" class="fold"><code>Integrate the `ictus` date-mask library into this project.
+
+Docs: https://ictus.luca-felix.com
+Package: https://www.npmjs.com/package/ictus
+Repo: https://github.com/flixlix/ictus
+
+ictus is a headless as-you-type mask for a single &lt;input&gt; day-month-year field. It does not render a calendar, popover, or segmented spinbuttons. Attach it to an existing text input (vanilla `apply` / `applyPaste`, or React `useDateFieldMask` from `ictus/react`).
+
+## 1. Find opportunities first
+Scan this repo for places a date is entered as text (or should be), for example:
+- date / birthdate / DOB / expiry / start–end date inputs
+- &lt;input&gt; fields with date placeholders or masks (dd.mm.yyyy, mm/dd/yyyy, etc.)
+- custom or design-system Input wrappers used for dates
+- forms that parse free-text dates today
+
+Do NOT invent a new date field if none belongs here.
+
+Then stop and ask me before changing code:
+- If you find none: say so, and ask where I want ictus added (path / component / form).
+- If you find exactly one good place: briefly say where and why, and ask for OK to proceed there.
+- If you find more than one: list them (file + short reason) and ask whether to do one, several, or all.
+
+## 2. Install (only after I confirm where)
+Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun` — match lockfiles). Install `ictus`. Follow current docs for the right entry (`ictus` vs `ictus/react`).
+
+## 3. Implement in the confirmed place(s)
+- Wire the mask per the docs (keydown + paste for vanilla; `inputProps` for React).
+- Keep the host app’s Input / styling / labels; only add ictus behavior.
+- Match separator and date order to the product locale or existing UX (see docs for supported options).
+- Use `parseDate` (and status helpers if useful) at the form boundary; do not add a calendar UI.
+- Leave unrelated date pickers alone unless I asked to replace them.
+
+When done, summarize what you installed, what you changed, and how to try it.</code></pre>
 
     <h2 id="size">Size and speed</h2>
     <p>Min+gzip, as a bundler ships it. Reproduce with <code>pnpm measure</code>.</p>
@@ -58,13 +103,13 @@
       <tbody>
         <tr>
           <td><code>ictus</code></td>
-          <td>2.4 kB</td>
-          <td>1.1 kB</td>
+          <td>5.2 kB</td>
+          <td>2.2 kB</td>
         </tr>
         <tr>
           <td><code>ictus/react</code> (react external)</td>
-          <td>0.7 kB</td>
-          <td>0.4 kB</td>
+          <td>1.4 kB</td>
+          <td>0.8 kB</td>
         </tr>
       </tbody>
     </table>
@@ -275,7 +320,7 @@
     </table>
 
     <h2 id="api">API</h2>
-    <p>Four exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
+    <p>Five exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
 
     <h3 id="apply"><code>apply</code></h3>
     <p>
@@ -326,16 +371,35 @@ if (
   apply({ value, caret, key: event.key, step });
 }</code></pre>
 
+    <h3 id="applyPaste"><code>applyPaste</code></h3>
+    <p>
+      Normalize clipboard text into the mask with the same group and overflow rules as
+      <code>apply</code>. Accepts <code>11/12/2026</code>, dashed or dotted forms, digit-only
+      <code>11122026</code>, and ISO <code>2026-12-11</code> (remapped to day-month-year).
+    </p>
+    <p><button type="button" data-copy-target="code-paste">Copy</button></p>
+    <pre id="code-paste"><code>import { applyPaste } from "ictus";
+
+applyPaste({
+  value: "",
+  caret: 0,
+  pasted: "2026-12-11",
+});
+// { value: "11.12.2026", caret: 10 }</code></pre>
+
     <h3 id="parseDate"><code>parseDate</code></h3>
     <p>
       Returns a <strong>local</strong> <code>Date</code>
       (<code>new Date(year, monthIndex, day)</code>) only for a complete, calendar-valid triple.
       Partial strings and impossible dates return <code>undefined</code>. Separators
       <code>.</code>, <code>/</code>, and <code>-</code> are all accepted.
+      Optional <code>min</code> / <code>max</code> Dates bound complete calendar days; partials
+      ignore bounds.
     </p>
     <p><button type="button" data-copy-target="code-parse">Copy</button></p>
     <pre id="code-parse"><code>parseDate("11.12.2026"); // local Date
 parseDate("11/12/2026"); // same
+parseDate("11.12.2026", { min, max });
 parseDate("32.01.2020"); // undefined
 parseDate("31.02.2020"); // undefined
 parseDate("11.12");      // undefined</code></pre>
@@ -344,6 +408,18 @@ parseDate("11.12");      // undefined</code></pre>
       <input id="parse-input" size="16" value="11.12.2026" spellcheck="false" />
     </p>
     <pre id="parse-output"></pre>
+
+    <h3 id="dateStatus"><code>dateStatus</code></h3>
+    <p>
+      Classifies a masked string for UI feedback:
+      <code>empty</code>, <code>incomplete</code>, <code>invalid</code>, or
+      <code>valid</code>.
+    </p>
+    <p><button type="button" data-copy-target="code-status">Copy</button></p>
+    <pre id="code-status"><code>dateStatus("");           // "empty"
+dateStatus("11.12");      // "incomplete"
+dateStatus("31.02.2020"); // "invalid"
+dateStatus("11.12.2026"); // "valid"</code></pre>
 
     <h3 id="formatDate"><code>formatDate</code></h3>
     <p>Writes <code>dd{sep}mm{sep}yyyy</code> from the date’s local day, month, and year.</p>
@@ -363,6 +439,17 @@ formatDate(new Date(2026, 11, 11), "/");
     <pre id="code-key"><code>if (!isDateMaskKey(event.key)) return;
 event.preventDefault();</code></pre>
 
+    <h3 id="bindDateMask"><code>bindDateMask</code></h3>
+    <p>
+      Wires <code>keydown</code> and paste to <code>apply</code>, writes the result back, and
+      restores the caret. Returns a cleanup function that removes the listeners.
+    </p>
+    <p><button type="button" data-copy-target="code-bind">Copy</button></p>
+    <pre id="code-bind"><code>import { bindDateMask } from "ictus";
+
+const unbind = bindDateMask(input, { separator: "." });
+// later: unbind();</code></pre>
+
     <h3 id="types">Types</h3>
     <p><button type="button" data-copy-target="code-types">Copy</button></p>
     <pre id="code-types"><code>type ApplyInput = {
@@ -374,32 +461,44 @@ event.preventDefault();</code></pre>
   step?: number; // default 0 (off)
 };
 
+type ApplyPasteInput = {
+  value: string;
+  caret: number;
+  selectionEnd?: number;
+  pasted: string;
+  separator?: string;
+};
+
 type ApplyResult = {
   value: string;
   caret: number;
-};</code></pre>
+};
+
+type DateStatus = "empty" | "incomplete" | "invalid" | "valid";</code></pre>
 
     <h3 id="vanilla">Vanilla <code>&lt;input&gt;</code></h3>
+    <p>
+      Prefer <code>bindDateMask</code>. For a one-off keystroke without listeners, call
+      <code>apply</code> and <code>isDateMaskKey</code> yourself.
+    </p>
     <p><button type="button" data-copy-target="code-vanilla">Copy</button></p>
-    <pre id="code-vanilla"><code>import { apply, isDateMaskKey } from "ictus";
+    <pre id="code-vanilla"><code>import { bindDateMask } from "ictus";
 
 const input = document.querySelector("input");
-input.addEventListener("keydown", (event) => {
-  if (!isDateMaskKey(event.key)) return;
-  event.preventDefault();
-  const next = apply({
-    value: input.value,
-    caret: input.selectionStart ?? 0,
-    selectionEnd: input.selectionEnd ?? undefined,
-    key: event.key,
-  });
-  input.value = next.value;
-  input.setSelectionRange(next.caret, next.caret);
-});</code></pre>
+const unbind = bindDateMask(input, {
+  separator: ".",
+  onValueChange: (value) => console.log(value),
+});
+
+// later: unbind();</code></pre>
 
     <h3 id="react"><code>useDateFieldMask</code></h3>
     <p>
       Optional React entry. Peer on <code>react</code>. Restores the caret after commit.
+      <code>parsed</code> is a local <code>Date</code> or <code>undefined</code>.
+      <code>status</code> is the same classification as <code>dateStatus</code>.
+      The hook accepts the same optional <code>min</code> / <code>max</code> as
+      <code>parseDate</code>.
       <code>onParsedChange</code> fires when the calendar day changes;
       <code>isoValue</code> / <code>hiddenInputProps</code> expose <code>YYYY-MM-DD</code> for forms.
     </p>
@@ -407,9 +506,10 @@ input.addEventListener("keydown", (event) => {
     <pre id="code-react"><code>import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
-  const { inputProps, hiddenInputProps, isoValue, parsed } = useDateFieldMask({
-    onParsedChange: (date) => console.log(date, isoValue),
-  });
+  const { inputProps, hiddenInputProps, isoValue, parsed, status } =
+    useDateFieldMask({
+      onParsedChange: (date) => console.log(date, isoValue),
+    });
   return (
     &lt;&gt;
       &lt;input {...inputProps} /&gt;

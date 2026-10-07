@@ -1,4 +1,5 @@
-import { apply, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
+import { apply, applyPaste, dateStatus, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
+import type { DateStatus } from "../src/index.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
   if (selectionEnd === caret) {
@@ -14,21 +15,31 @@ function at(marked: string): { value: string; caret: number } {
   return { value: marked.replace("|", ""), caret };
 }
 
-function parseKind(masked: string): { kind: "valid" | "invalid" | "incomplete"; label: string } {
-  const date = parseDate(masked);
-  if (date) {
-    const label = new Intl.DateTimeFormat(undefined, {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }).format(date);
-    return { kind: "valid", label };
+function parseKind(masked: string): { kind: DateStatus; label: string } {
+  const status = dateStatus(masked);
+  switch (status) {
+    case "valid": {
+      const date = parseDate(masked);
+      if (!date) return { kind: "incomplete", label: "incomplete" };
+      const label = new Intl.DateTimeFormat(undefined, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(date);
+      return { kind: "valid", label };
+    }
+    case "invalid":
+      return { kind: "invalid", label: "not a calendar date" };
+    case "incomplete":
+      return { kind: "incomplete", label: "incomplete" };
+    case "empty":
+      return { kind: "empty", label: "empty" };
+    default: {
+      const _exhaustive: never = status;
+      return _exhaustive;
+    }
   }
-  if (/^\d{2}[./-]\d{2}[./-]\d{4}$/.test(masked)) {
-    return { kind: "invalid", label: "not a calendar date" };
-  }
-  return { kind: "incomplete", label: "incomplete" };
 }
 
 function syncField(root: HTMLElement, value: string, caret: number, hint = ""): void {
@@ -77,6 +88,18 @@ function bindMask(root: HTMLElement): void {
     syncField(root, next.value, next.caret, ignored ? "ignored" : "");
   });
 
+  input.addEventListener("paste", (event) => {
+    event.preventDefault();
+    const next = applyPaste({
+      value: input.value,
+      caret: input.selectionStart ?? 0,
+      selectionEnd: input.selectionEnd ?? undefined,
+      pasted: event.clipboardData?.getData("text") ?? "",
+      separator,
+    });
+    syncField(root, next.value, next.caret);
+  });
+
   const paintCaret = () => {
     const caretEl = root.querySelector("[data-caret]");
     if (!caretEl) return;
@@ -102,6 +125,19 @@ function bindCopies(): void {
         button.dataset.copied = "false";
         button.textContent = previous;
       }, 1200);
+    });
+  }
+}
+
+function bindFolds(): void {
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-expand]")) {
+    button.addEventListener("click", () => {
+      const id = button.dataset.expand;
+      const target = id ? document.getElementById(id) : null;
+      if (!(target instanceof HTMLElement)) return;
+      const open = target.classList.toggle("is-open");
+      button.setAttribute("aria-expanded", open ? "true" : "false");
+      button.textContent = open ? "Show less" : "Show more";
     });
   }
 }
@@ -194,6 +230,7 @@ for (const root of document.querySelectorAll<HTMLElement>("[data-mask]")) {
 }
 
 bindCopies();
+bindFolds();
 bindFormat();
 bindTable();
 bindParseLive();
