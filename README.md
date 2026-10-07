@@ -10,8 +10,8 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 
 | Entry | minify | gzip |
 | --- | ---: | ---: |
-| `ictus` | 2.4 kB | **1.1 kB** |
-| `ictus/react` (react external) | 0.7 kB | **0.4 kB** |
+| `ictus` | 4.3 kB | **1.8 kB** |
+| `ictus/react` (react external) | 1.1 kB | **0.6 kB** |
 
 `apply` is **0.1–0.2 µs** per keystroke (~5–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.4 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
 
@@ -40,6 +40,7 @@ The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the
 ```ts
 import {
   apply,
+  applyPaste,
   parseDate,
   formatDate,
   expandTwoDigitYear,
@@ -55,11 +56,21 @@ apply({
   step?: number,          // default 0: ignore ArrowUp/ArrowDown
 }): { value: string; caret: number }
 
+applyPaste({
+  value: string,
+  caret: number,
+  selectionEnd?: number,
+  pasted: string,         // clipboard text
+  separator?: string,
+}): { value: string; caret: number }
+
 parseDate(masked: string, options?: { yyExpand?: { pivot?: number } }): Date | undefined
 formatDate(date: Date, separator?: string, options?: { yyExpand?: { pivot?: number } }): string
 expandTwoDigitYear(yy: number, pivot?: number): number
 isDateMaskKey(key: string): boolean
 ```
+
+`applyPaste` normalizes common clipboard shapes (`11/12/2026`, `11-12-2026`, `11.12.2026`, digit-only `11122026`, ISO `2026-12-11`) into the mask via the same group and overflow rules as `apply`. Non-date characters are ignored. ISO year-month-day with separators is remapped to day-month-year; digit-only strings stay DMY order.
 
 `parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
 
@@ -111,7 +122,7 @@ Empty current group + separator is a no-op (`Blank + . → ""`). Backspace/Delet
 ## Vanilla `<input>`
 
 ```js
-import { apply, isDateMaskKey } from "ictus";
+import { apply, applyPaste, isDateMaskKey } from "ictus";
 
 const step = 0; // set > 0 to enable ArrowUp/ArrowDown segment step
 const input = document.querySelector("input");
@@ -129,6 +140,18 @@ input.addEventListener("keydown", (event) => {
     selectionEnd: input.selectionEnd ?? undefined,
     key: event.key,
     step,
+  });
+  input.value = next.value;
+  input.setSelectionRange(next.caret, next.caret);
+});
+
+input.addEventListener("paste", (event) => {
+  event.preventDefault();
+  const next = applyPaste({
+    value: input.value,
+    caret: input.selectionStart ?? 0,
+    selectionEnd: input.selectionEnd ?? undefined,
+    pasted: event.clipboardData?.getData("text") ?? "",
   });
   input.value = next.value;
   input.setSelectionRange(next.caret, next.caret);
@@ -155,7 +178,7 @@ function DateInput() {
 }
 ```
 
-`inputProps` is `ref`, `value`, `onKeyDown`, a no-op `onChange` (value is owned by `apply`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`. Pass `step` to enable ArrowUp/ArrowDown segment increment; it stays off when omitted.
+`inputProps` is `ref`, `value`, `onKeyDown`, `onPaste` (`preventDefault` + `applyPaste`), a no-op `onChange` (value is owned by `apply` / `applyPaste`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`. Pass `step` to enable ArrowUp/ArrowDown segment increment; it stays off when omitted.
 
 ## Releasing
 
