@@ -19,9 +19,9 @@ async function minGzip(entry: string, external: string[] = []) {
 }
 
 describe("bundle size", () => {
-  it("core stays under 2.9 kB gzip", async () => {
+  it("core stays under 3.1 kB gzip", async () => {
     const { gzip } = await minGzip("src/index.ts");
-    expect(gzip).toBeLessThan(2900);
+    expect(gzip).toBeLessThan(3100);
   });
 
   it("react entry stays under 1.0 kB gzip", async () => {
@@ -35,9 +35,9 @@ describe("bundle size", () => {
     expect(gzip).toBeLessThan(1000);
   });
 
-  it("time entry stays under 2.55 kB gzip", async () => {
+  it("time entry stays under 2.75 kB gzip", async () => {
     const { gzip } = await minGzip("src/time.ts");
-    expect(gzip).toBeLessThan(2550);
+    expect(gzip).toBeLessThan(2750);
   });
 });
 

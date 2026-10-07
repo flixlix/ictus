@@ -8,6 +8,9 @@ export type ApplyInput = {
   separator?: string;
   mode?: DateFieldMode;
   step?: number;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  shiftKey?: boolean;
 };
 
 export type ApplyPasteInput = {
@@ -292,6 +295,64 @@ function dropRejected(value: string, caret: number, sep: string): ApplyResult {
   return { value: out, caret: nextCaret };
 }
 
+function clearAll(): ApplyResult {
+  return { value: "", caret: 0 };
+}
+
+function clearGroupAt(
+  digits: [string, string, string],
+  seps: [boolean, boolean],
+  sep: string,
+  target: GroupIndex,
+): ApplyResult {
+  digits[target] = "";
+  if (target === 0) seps[0] = false;
+  if (target === 1) seps[1] = false;
+  return {
+    value: assemble(digits, seps, sep),
+    caret: caretAt(digits, seps, sep, target, false),
+  };
+}
+
+function deleteGroupBackward(
+  value: string,
+  caret: number,
+  sep: string,
+  groups: Groups,
+): ApplyResult {
+  const { digits, seps, groupIndex, offset } = parseState(value, caret, sep, groups);
+  if (offset === 0 && groupIndex === 0) return { value, caret };
+  if (offset === 0 && groupIndex > 0) {
+    const target = (groupIndex - 1) as GroupIndex;
+    digits[target] = "";
+    if (target === 0) seps[0] = false;
+    if (target === 1) seps[1] = false;
+    return {
+      value: assemble(digits, seps, sep),
+      caret: caretAt(digits, seps, sep, target, false),
+    };
+  }
+  if (digits[groupIndex].length === 0) return { value, caret };
+  return clearGroupAt(digits, seps, sep, groupIndex);
+}
+
+function deleteGroupForward(
+  value: string,
+  caret: number,
+  sep: string,
+  groups: Groups,
+): ApplyResult {
+  const { digits, seps, groupIndex, offset } = parseState(value, caret, sep, groups);
+  if (digits[groupIndex].length > 0 && offset < digits[groupIndex].length) {
+    return clearGroupAt(digits, seps, sep, groupIndex);
+  }
+  const next = nextGroup(groupIndex);
+  if (next !== undefined && digits[next].length > 0) {
+    return clearGroupAt(digits, seps, sep, next);
+  }
+  return { value, caret };
+}
+
 function todaySeed(kind: GroupSpec["kind"]): number {
   const now = new Date();
   switch (kind) {
@@ -347,6 +408,8 @@ export function apply(input: ApplyInput): ApplyResult {
   const mode = resolveMode(input.mode);
   const groups = groupsForMode(mode);
   const step = input.step ?? 0;
+  const ctrlLike = Boolean(input.ctrlKey || input.metaKey);
+  const shift = Boolean(input.shiftKey);
   const from = clampIndex(value, caret);
   const to = clampIndex(value, input.selectionEnd ?? caret);
   const start = Math.min(from, to);
@@ -365,6 +428,15 @@ export function apply(input: ApplyInput): ApplyResult {
     }
   } else {
     caret = start;
+  }
+
+  if (key === "Backspace" || key === "Delete") {
+    if (shift) return clearAll();
+    if (ctrlLike) {
+      return key === "Backspace"
+        ? deleteGroupBackward(value, caret, separator, groups)
+        : deleteGroupForward(value, caret, separator, groups);
+    }
   }
 
   if (key === "Backspace") {

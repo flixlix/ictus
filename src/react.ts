@@ -124,6 +124,9 @@ export function useDateFieldMask(
           separator,
           mode,
           step,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          shiftKey: event.shiftKey,
         }),
       );
     },
@@ -259,6 +262,9 @@ export function useTimeFieldMask(
           separator,
           precision,
           step,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          shiftKey: event.shiftKey,
         }),
       );
     },

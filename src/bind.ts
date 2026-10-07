@@ -45,6 +45,9 @@ export function bindDateMask(
         separator,
         mode,
         step,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
       }),
     );
   };

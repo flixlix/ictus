@@ -638,8 +638,9 @@ Keep typing and calendar selection in sync via useDateFieldMask + formatDate. Im
     <p>
       The core of ictus. Pass the current value, the selection, and the key that was pressed, and
       get back the next value and caret. Unknown keys and rejected digits leave the value as it
-      was. Backspace and Delete also strip any non-mask characters from the result. If text is
-      selected, Backspace and Delete remove it and a digit replaces it.
+      was. Backspace and Delete remove one character (and strip any non-mask junk). Ctrl or Cmd
+      with Backspace or Delete clears a whole group. Shift with Backspace or Delete clears the
+      field. If text is selected, Backspace and Delete remove it and a digit replaces it.
     </p>
     <div class="code-block">
       <pre id="code-apply"><code>import { apply } from "ictus";
@@ -665,6 +666,12 @@ apply({
         The <code>KeyboardEvent.key</code> value: a digit, <code>.</code>, <code>/</code>,
         <code>-</code>, <code>Backspace</code>, or <code>Delete</code>.
       </dd>
+      <dt><code>ctrlKey?</code> / <code>metaKey?</code></dt>
+      <dd>
+        When either is true with Backspace or Delete, clear a group instead of one character.
+      </dd>
+      <dt><code>shiftKey?</code></dt>
+      <dd>When true with Backspace or Delete, clear the whole value.</dd>
       <dt><code>separator?</code></dt>
       <dd>The single character to write between groups. Defaults to <code>"."</code>.</dd>
       <dt><code>mode?</code></dt>

@@ -24,9 +24,21 @@ function type(
   separator?: string,
   mode?: "dmy" | "mdy" | "ymd",
   step?: number,
+  mods?: { ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean },
 ) {
   const { value, caret, selectionEnd } = at(before);
-  return apply({ value, caret, selectionEnd, key, separator, mode, step });
+  return apply({
+    value,
+    caret,
+    selectionEnd,
+    key,
+    separator,
+    mode,
+    step,
+    ctrlKey: mods?.ctrlKey,
+    metaKey: mods?.metaKey,
+    shiftKey: mods?.shiftKey,
+  });
 }
 
 describe("acceptance table", () => {
@@ -263,6 +275,73 @@ describe("mode defaults to dmy", () => {
     const withExplicit = type("|", "4", ".", "dmy");
     expect(show(withDefault.value, withDefault.caret)).toBe("04.|");
     expect(show(withExplicit.value, withExplicit.caret)).toBe("04.|");
+  });
+});
+
+describe("modifier Backspace/Delete", () => {
+  it.each([
+    ["11.12.2026|", "11.12.|"],
+    ["11.12.20|26", "11.12.|"],
+    ["11.12.|", "11.|"],
+    ["11.|12.2026", "|12.2026"],
+    ["11.|", "|"],
+    ["3|", "|"],
+    ["|11.12.2026", "|11.12.2026"],
+  ] as const)("Ctrl+Backspace: %s → %s", (before, after) => {
+    const result = type(before, "Backspace", undefined, undefined, undefined, {
+      ctrlKey: true,
+    });
+    expect(show(result.value, result.caret)).toBe(after);
+  });
+
+  it("Meta+Backspace clears the active group like Ctrl", () => {
+    const result = type("11.12.2026|", "Backspace", undefined, undefined, undefined, {
+      metaKey: true,
+    });
+    expect(show(result.value, result.caret)).toBe("11.12.|");
+  });
+
+  it.each([
+    ["|11.12.2026", "|12.2026"],
+    ["11.|12.2026", "11.|2026"],
+    ["11.12.|2026", "11.12.|"],
+    ["11.12.2026|", "11.12.2026|"],
+  ] as const)("Ctrl+Delete: %s → %s", (before, after) => {
+    const result = type(before, "Delete", undefined, undefined, undefined, {
+      ctrlKey: true,
+    });
+    expect(show(result.value, result.caret)).toBe(after);
+  });
+
+  it.each([
+    ["11.12.2026|", "|"],
+    ["11.|12.2026", "|"],
+    ["|11.12.2026", "|"],
+    ["3|", "|"],
+  ] as const)("Shift+Backspace clears all: %s → %s", (before, after) => {
+    const result = type(before, "Backspace", undefined, undefined, undefined, {
+      shiftKey: true,
+    });
+    expect(show(result.value, result.caret)).toBe(after);
+  });
+
+  it("Shift+Delete clears all", () => {
+    const result = type("11.12.2026|", "Delete", undefined, undefined, undefined, {
+      shiftKey: true,
+    });
+    expect(show(result.value, result.caret)).toBe("|");
+  });
+
+  it("plain Backspace still removes one character", () => {
+    const result = type("11.12.|", "Backspace");
+    expect(show(result.value, result.caret)).toBe("11.12|");
+  });
+
+  it("selection + Ctrl+Backspace still deletes the selection only", () => {
+    const result = type("|11.12.2026|", "Backspace", undefined, undefined, undefined, {
+      ctrlKey: true,
+    });
+    expect(show(result.value, result.caret)).toBe("|");
   });
 });
 

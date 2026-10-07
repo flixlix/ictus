@@ -130,7 +130,18 @@ function maskOptions(root: HTMLElement): {
   };
 }
 
-function applyMaskKey(root: HTMLElement, input: HTMLInputElement, key: string): void {
+type MaskKeyMods = {
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  shiftKey?: boolean;
+};
+
+function applyMaskKey(
+  root: HTMLElement,
+  input: HTMLInputElement,
+  key: string,
+  mods: MaskKeyMods = {},
+): void {
   const { time, separator, precision, step } = maskOptions(root);
   const arrow = step > 0 && (key === "ArrowUp" || key === "ArrowDown");
   const isMaskKey = time ? isTimeMaskKey(key) : isDateMaskKey(key);
@@ -145,6 +156,9 @@ function applyMaskKey(root: HTMLElement, input: HTMLInputElement, key: string): 
         separator,
         precision,
         step,
+        ctrlKey: mods.ctrlKey,
+        metaKey: mods.metaKey,
+        shiftKey: mods.shiftKey,
       })
     : apply({
         value: input.value,
@@ -153,6 +167,9 @@ function applyMaskKey(root: HTMLElement, input: HTMLInputElement, key: string): 
         key,
         separator,
         step,
+        ctrlKey: mods.ctrlKey,
+        metaKey: mods.metaKey,
+        shiftKey: mods.shiftKey,
       });
   const ignored =
     next.value === input.value &&
@@ -205,7 +222,11 @@ function bindMask(root: HTMLElement): void {
       return;
     }
     event.preventDefault();
-    applyMaskKey(root, input, event.key);
+    applyMaskKey(root, input, event.key, {
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      shiftKey: event.shiftKey,
+    });
   });
 
   input.addEventListener("paste", (event) => {
@@ -544,7 +565,7 @@ if (heroDate instanceof HTMLInputElement && heroRoot instanceof HTMLElement) {
     heroGuideMounted = true;
     void import("./hero-guide.js").then(({ bindHeroGuide }) => {
       bindHeroGuide(heroDate, {
-        press: (key) => applyMaskKey(heroRoot, heroDate, key),
+        press: (key, mods) => applyMaskKey(heroRoot, heroDate, key, mods),
         paste: (text) => applyMaskPaste(heroRoot, heroDate, text),
         clear: () => syncField(heroRoot, "", 0),
       });
