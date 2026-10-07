@@ -42,7 +42,14 @@ function typeDate() {
 }
 
 const core = await bundle("src/index.ts");
-const react = await bundle("src/react.ts", ["react", "./index.js", "./index.ts"]);
+const time = await bundle("src/time.ts");
+const react = await bundle("src/react.ts", [
+  "react",
+  "./index.js",
+  "./index.ts",
+  "./time.js",
+  "./time.ts",
+]);
 
 const N = 200_000;
 const applyDigit = bench("apply digit on empty", N, () => apply({ value: "", caret: 0, key: "4" }));
@@ -66,6 +73,7 @@ if (typeDate() !== "11.12.2026") {
 const report = {
   size: {
     core: { min: core.min, gzip: core.gzip },
+    time: { min: time.min, gzip: time.gzip },
     react: { min: react.min, gzip: react.gzip },
   },
   bench: [applyDigit, applyReject, applyFull, applyBackspace, typeFull, parseValid, parseInvalid],
@@ -74,7 +82,8 @@ const report = {
 console.log(JSON.stringify(report, null, 2));
 console.log("");
 console.log(`core   ${fmtBytes(core.min)} min  ·  ${fmtBytes(core.gzip)} gzip`);
-console.log(`react  ${fmtBytes(react.min)} min  ·  ${fmtBytes(react.gzip)} gzip  (react external)`);
+console.log(`time   ${fmtBytes(time.min)} min  ·  ${fmtBytes(time.gzip)} gzip`);
+console.log(`react  ${fmtBytes(react.min)} min  ·  ${fmtBytes(react.gzip)} gzip  (react/core/time external)`);
 console.log("");
 for (const row of report.bench) {
   console.log(

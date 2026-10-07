@@ -6,7 +6,7 @@
   },
   "homepage": "https://ictus.luca-felix.com",
   "version": "1.0.0",
-  "description": "Date input mask for a plain text field — formats dd/mm/yyyy, mm/dd/yyyy, or yyyy-mm-dd as you type. Headless, 2.6 kB, optional React hook.",
+  "description": "Date and time input mask for a plain text field. Formats dd/mm/yyyy, mm/dd/yyyy, yyyy-mm-dd, or HH:mm as you type. Headless, 2.6 kB, optional React hook.",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",
@@ -15,6 +15,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./time": {
+      "types": "./dist/time.d.ts",
+      "import": "./dist/time.js"
     },
     "./react": {
       "types": "./dist/react.d.ts",
@@ -37,13 +41,17 @@
     "docs:build": "vite build --config docs/vite.config.ts",
     "measure": "pnpm build && node scripts/measure.mjs",
     "changeset": "changeset",
-    "release": "changeset publish"
+    "release": "changeset publish",
+    "demo:gif": "node scripts/demo-gif.mjs"
   },
   "keywords": [
     "date",
+    "time",
     "date-input",
     "date-mask",
     "date-input-mask",
+    "time-input",
+    "time-mask",
     "input-mask",
     "inputmask",
     "masked-input",
@@ -56,6 +64,8 @@
     "ddmmyyyy",
     "caret",
     "headless",
+    "hh-mm",
+    "hh:mm",
     "react",
     "react-hook",
     "typescript",
@@ -90,6 +100,7 @@
     "@types/react-dom": "^19.1.9",
     "esbuild": "^0.28.2",
     "jsdom": "^26.1.0",
+    "playwright": "^1.63.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "typescript": "^5.9.2",

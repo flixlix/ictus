@@ -90,10 +90,11 @@
       <p class="version"><a href="https://github.com/flixlix/ictus/releases">v%ICTUS_VERSION%</a></p>
     </header>
     <p>
-      <strong>Date input mask</strong> for a plain <code>&lt;input&gt;</code>: formats
-      <code>dd/mm/yyyy</code>, <code>mm/dd/yyyy</code>, or <code>yyyy-mm-dd</code>
-      <strong>as you type</strong>. Keep the input and styles you already have. Core is 2.6&nbsp;kB
-      gzipped; optional React hook. No calendar UI, no contentEditable spinbuttons.
+      <strong>Date and time input mask</strong> for a plain <code>&lt;input&gt;</code>: formats
+      <code>dd/mm/yyyy</code>, <code>mm/dd/yyyy</code>, or <code>yyyy-mm-dd</code> dates and
+      <code>HH:mm</code> times <strong>as you type</strong>. Keep the input and styles you already
+      have. Core is 2.6&nbsp;kB gzipped; optional React hook. No calendar UI, no contentEditable
+      spinbuttons.
     </p>
     <p class="nav">
       <a href="#getting-started">Getting started</a> · <a href="#demos">Demos</a> ·
@@ -182,7 +183,7 @@ Then stop and ask me before changing code:
 - If you find more than one: list them (file + short reason) and ask whether to do one, several, or all.
 
 ## 2. Install (only after I confirm where)
-Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun`, matching the lockfile). Install `ictus`. Follow current docs for the right entry (`ictus` vs `ictus/react`).
+Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun`, matching the lockfile). Install `ictus`. Follow current docs for the right entry (`ictus`, `ictus/time`, or `ictus/react`).
 
 ## 3. Implement in the confirmed place(s)
 - Wire the mask per the docs (keydown + paste for vanilla; `inputProps` for React).
@@ -220,8 +221,8 @@ When done, summarize what you installed, what you changed, and how to try it.</c
 
     <h2 id="size" data-short="Size">Size and speed</h2>
     <p>
-      ictus is tiny and does a lot. The whole core is 2.6 kB gzipped, and the React hook adds
-      0.8 kB on top.
+      ictus is tiny and does a lot. The date core is 2.6 kB gzipped, time is a separate 2.3 kB
+      entry, and the React hooks add 0.9 kB on top.
     </p>
     <table>
       <thead>
@@ -238,9 +239,14 @@ When done, summarize what you installed, what you changed, and how to try it.</c
           <td>2.6 kB</td>
         </tr>
         <tr>
-          <td><code>ictus/react</code> (excluding React)</td>
-          <td>1.5 kB</td>
-          <td>0.8 kB</td>
+          <td><code>ictus/time</code></td>
+          <td>5.7 kB</td>
+          <td>2.3 kB</td>
+        </tr>
+        <tr>
+          <td><code>ictus/react</code> (excluding React, core, time)</td>
+          <td>2.9 kB</td>
+          <td>0.9 kB</td>
         </tr>
       </tbody>
     </table>
@@ -342,6 +348,52 @@ When done, summarize what you installed, what you changed, and how to try it.</c
         <br />
         <code data-caret>11.12.2026|</code>
         <span data-parse data-kind="valid">valid</span>
+        <span data-hint></span>
+      </span>
+    </p>
+
+    <h3>Time</h3>
+    <p>
+      Same overflow-advance model for a 24-hour clock. Hours pad <code>3–9</code>; minutes pad
+      <code>6–9</code>. Default precision is <code>HH:mm</code>.
+    </p>
+    <p>
+      <label for="demo-time">HH:mm</label><br />
+      <span data-mask data-kind="time" data-separator=":">
+        <input
+          id="demo-time"
+          size="8"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="HH:mm"
+        />
+        <br />
+        <code data-caret>|</code>
+        <span data-parse data-kind="incomplete">incomplete</span>
+        <span data-hint></span>
+      </span>
+    </p>
+
+    <h3>Time with seconds</h3>
+    <p>
+      Pass <code>precision: "second"</code> for <code>HH:mm:ss</code>. Arrow step wraps hours 0–23
+      and minutes/seconds 0–59.
+    </p>
+    <p>
+      <label for="demo-time-seconds">HH:mm:ss</label><br />
+      <span data-mask data-kind="time" data-separator=":" data-precision="second" data-step="1">
+        <input
+          id="demo-time-seconds"
+          size="10"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          value="14:30:00"
+        />
+        <br />
+        <code data-caret>14:30:00|</code>
+        <span data-parse data-kind="valid">14:30:00</span>
         <span data-hint></span>
       </span>
     </p>
@@ -467,8 +519,10 @@ When done, summarize what you installed, what you changed, and how to try it.</c
 
     <h2 id="api">API</h2>
     <p>
-      Most apps need one call: <a href="#bindDateMask"><code>bindDateMask</code></a> for a plain
-      input, or <a href="#react"><code>useDateFieldMask</code></a> in React. The rest are pure
+      Most apps need one call: <a href="#bindDateMask"><code>bindDateMask</code></a> /
+      <a href="#bindTimeMask"><code>bindTimeMask</code></a> for a plain input, or
+      <a href="#react"><code>useDateFieldMask</code></a> /
+      <a href="#useTimeFieldMask"><code>useTimeFieldMask</code></a> in React. The rest are pure
       functions on strings, for when you handle events yourself.
     </p>
 
@@ -621,6 +675,55 @@ const unbind = bindDateMask(input, { separator: "." });
       <button type="button" class="copy-icon" data-copy-target="code-bind" aria-label="Copy code"></button>
     </div>
 
+    <h3 id="applyTime"><code>applyTime</code> / <code>applyTimePaste</code></h3>
+    <p>
+      The time mask mirrors <code>apply</code>. Default shape is <code>HH:mm</code> with separator
+      <code>:</code>. Pass <code>precision: "second"</code> for <code>HH:mm:ss</code>. Users may type
+      <code>:</code>, <code>.</code>, or <code>-</code> to commit a group; the field always writes
+      the configured separator.
+    </p>
+    <div class="code-block">
+      <pre id="code-apply-time"><code>import { applyTime, applyTimePaste } from "ictus/time";
+
+applyTime({ value: "", caret: 0, key: "9" });
+// { value: "09:", caret: 3 }
+
+applyTimePaste({ value: "", caret: 0, pasted: "14:30" });
+// { value: "14:30", caret: 5 }</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-apply-time" aria-label="Copy code"></button>
+    </div>
+
+    <h3 id="parseTime"><code>parseTime</code> / <code>timeStatus</code> / <code>formatTime</code></h3>
+    <p>
+      <code>parseTime</code> returns a <code>TimeValue</code>
+      (<code>{ hours, minutes, seconds }</code>) for a complete clock-valid mask, or
+      <code>undefined</code>. With minute precision, <code>seconds</code> is <code>0</code>.
+      <code>timeStatus</code> classifies like <code>dateStatus</code>.
+      <code>formatTime</code> accepts a <code>Date</code> or <code>TimeValue</code>.
+    </p>
+    <div class="code-block">
+      <pre id="code-parse-time"><code>parseTime("14:30");
+// { hours: 14, minutes: 30, seconds: 0 }
+
+timeStatus("24:00"); // "invalid"
+formatTime({ hours: 9, minutes: 5, seconds: 0 }, "."); // "09.05"</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-parse-time" aria-label="Copy code"></button>
+    </div>
+
+    <h3 id="bindTimeMask"><code>bindTimeMask</code></h3>
+    <p>
+      Same wiring as <code>bindDateMask</code>, for time fields.
+    </p>
+    <div class="code-block">
+      <pre id="code-bind-time"><code>import { bindTimeMask } from "ictus/time";
+
+const unbind = bindTimeMask(input, {
+  separator: ":",
+  // precision: "second",
+});</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-bind-time" aria-label="Copy code"></button>
+    </div>
+
     <h3 id="types">Types</h3>
     <div class="code-block">
       <pre id="code-types"><code>type ApplyInput = {
@@ -647,7 +750,17 @@ type ApplyResult = {
   caret: number;
 };
 
-type DateStatus = "empty" | "incomplete" | "invalid" | "valid";</code></pre>
+type DateStatus = "empty" | "incomplete" | "invalid" | "valid";
+
+type TimeFieldPrecision = "minute" | "second";
+
+type TimeValue = {
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
+
+type TimeStatus = "empty" | "incomplete" | "invalid" | "valid";</code></pre>
       <button type="button" class="copy-icon" data-copy-target="code-types" aria-label="Copy code"></button>
     </div>
 
@@ -710,6 +823,29 @@ function DateInput() {
   );
 }</code></pre>
       <button type="button" class="copy-icon" data-copy-target="code-react" aria-label="Copy code"></button>
+    </div>
+
+    <h3 id="useTimeFieldMask"><code>useTimeFieldMask</code></h3>
+    <p>
+      Same shape as <code>useDateFieldMask</code>, for time. <code>isoValue</code> is always
+      colon-separated (<code>HH:mm</code> or <code>HH:mm:ss</code>). <code>parsed</code> is a
+      <code>TimeValue</code> or <code>undefined</code>.
+    </p>
+    <div class="code-block">
+      <pre id="code-react-time"><code>import { useTimeFieldMask } from "ictus/react";
+
+function TimeInput() {
+  const { inputProps, hiddenInputProps, parsed, status } = useTimeFieldMask({
+    onParsedChange: (time) => console.log(time),
+  });
+  return (
+    &lt;&gt;
+      &lt;input {...inputProps} /&gt;
+      &lt;input name="time" {...hiddenInputProps} /&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-react-time" aria-label="Copy code"></button>
     </div>
 
     <hr />

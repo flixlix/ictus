@@ -1,6 +1,8 @@
 # ictus
 
-**Date input mask** for a plain `<input>` — formats `dd/mm/yyyy`, `mm/dd/yyyy`, or `yyyy-mm-dd` **as you type**. Headless, zero-dependency, **2.6 kB** gzipped. Optional React hook (`ictus/react`).
+**Date and time input mask** for a plain `<input>`. Formats `dd/mm/yyyy`, `mm/dd/yyyy`, or `yyyy-mm-dd` dates and `HH:mm` or `HH:mm:ss` times **as you type**. Headless, zero-dependency, **2.6 kB** gzipped. Optional React hook (`ictus/react`).
+
+![Typing 4122026 into a date field becomes 04.12.2026, and 945 into a time field becomes 09:45](assets/demo.gif)
 
 Use it when you need a **text date field** with caret-aware masking (overflow-advance, paste normalization, parse/format) without a calendar picker, contentEditable spinbuttons, or a general-purpose input-mask library.
 
@@ -15,7 +17,8 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 | Entry | minify | gzip |
 | --- | ---: | ---: |
 | `ictus` | 7.0 kB | **2.6 kB** |
-| `ictus/react` (react external) | 1.5 kB | **0.8 kB** |
+| `ictus/time` | 5.7 kB | **2.3 kB** |
+| `ictus/react` (react + core + time external) | 2.9 kB | **0.9 kB** |
 
 `apply` is **0.1–0.2 µs** per keystroke (~5–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.4 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
 
@@ -232,8 +235,95 @@ Merging to `main` opens a Version Packages PR. Merging that PR publishes to npm 
 
 Publishing needs an `NPM_TOKEN` repository secret. In the repo’s Actions settings, enable **Allow GitHub Actions to create and approve pull requests**.
 
+## Time
+
+Same headless mask model for a 24-hour clock. Default shape is `HH:mm`; pass `precision: "second"` for `HH:mm:ss`. Separator defaults to `:`.
+
+```ts
+import {
+  applyTime,
+  applyTimePaste,
+  parseTime,
+  timeStatus,
+  formatTime,
+  isTimeMaskKey,
+  bindTimeMask,
+} from "ictus/time";
+
+applyTime({
+  value: string,
+  caret: number,
+  selectionEnd?: number,
+  key: string,
+  separator?: string,           // default ':'
+  precision?: "minute" | "second", // default 'minute'
+  step?: number,                // default 0
+}): { value: string; caret: number }
+
+parseTime(masked: string, options?: {
+  precision?: "minute" | "second";
+  min?: { hours: number; minutes: number; seconds: number };
+  max?: { hours: number; minutes: number; seconds: number };
+}): { hours: number; minutes: number; seconds: number } | undefined
+
+timeStatus(masked: string, options?: { precision?: "minute" | "second" }):
+  "empty" | "incomplete" | "invalid" | "valid"
+
+formatTime(time: Date | TimeValue, separator?: string, options?: {
+  precision?: "minute" | "second";
+}): string
+
+bindTimeMask(input: HTMLInputElement, options?: {
+  separator?: string;
+  precision?: "minute" | "second";
+  step?: number;
+  onValueChange?: (value: string) => void;
+  getValue?: () => string;
+  setValue?: (value: string) => void;
+}): () => void
+```
+
+Hour overflow-pads `3–9` to `0N:`. Minute and second overflow-pad `6–9`. Hours wrap 0–23 under `step`; minutes and seconds wrap 0–59. `parseTime` returns a `TimeValue` only for a complete, clock-valid mask (`seconds` is `0` when `precision` is `"minute"`).
+
+```tsx
+import { useTimeFieldMask } from "ictus/react";
+
+function TimeInput() {
+  const { inputProps, hiddenInputProps, isoValue, parsed, status } =
+    useTimeFieldMask({
+      separator: ":",
+      // precision: "second",
+      onParsedChange: (time) => console.log(time),
+    });
+
+  return (
+    <>
+      <input {...inputProps} />
+      <input name="time" {...hiddenInputProps} />
+    </>
+  );
+}
+```
+
+`isoValue` is always colon-separated (`HH:mm` or `HH:mm:ss`) for form posts, regardless of the display separator.
+
+### Time acceptance table
+
+`separator = ':'`, `precision = "minute"`. `|` is the caret after the keystroke.
+
+| Before | Key | After |
+| --- | --- | --- |
+| `\|` | `9` | `09:\|` |
+| `\|` | `1` | `1\|` |
+| `1\|` | `4` | `14:\|` |
+| `2\|` | `4` | `2\|` |
+| `1\|` | `:` | `01:\|` |
+| `14:\|` | `6` | `14:06\|` |
+| `14:5\|` | `9` | `14:59\|` |
+| `14:6\|` | `0` | `14:6\|` |
+
 ## Out of scope
 
-Segmented/spinbutton fields. Calendar/popover. Locale-driven field order (explicit `mode` is supported). Time, date-time, ranges. IME / non-Latin numerals. Wrapping Maskito, IMask, Cleave, React Aria, or `@internationalized/date`.
+Segmented/spinbutton fields. Calendar/popover. Locale-driven field order (explicit `mode` is supported). Date-time combined fields, ranges, 12-hour / AM-PM. IME / non-Latin numerals. Wrapping Maskito, IMask, Cleave, React Aria, or `@internationalized/date`.
 
-Default is `dd.mm.yyyy` (`dmy`). Pass `mode: "mdy"` or `mode: "ymd"` for the other orders.
+Default date order is `dd.mm.yyyy` (`dmy`). Pass `mode: "mdy"` or `mode: "ymd"` for the other orders.
