@@ -2,6 +2,8 @@
 
 Headless as-you-type behavior for a single `<input>` date or time field. One string, day-month-year or hour-minute(-second). No UI, no calendar, no React in the core.
 
+![Typing 4122026 into a date field becomes 04.12.2026, and 945 into a time field becomes 09:45](assets/demo.gif)
+
 Segmented date fields already own overflow-advance, but they replace the input with contentEditable spinbuttons. This library is a tiny, zero-dependency state machine other design systems can attach to their own Input primitive.
 
 ## Size and speed

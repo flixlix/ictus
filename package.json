@@ -41,7 +41,8 @@
     "docs:build": "vite build --config docs/vite.config.ts",
     "measure": "pnpm build && node scripts/measure.mjs",
     "changeset": "changeset",
-    "release": "changeset publish"
+    "release": "changeset publish",
+    "demo:gif": "node scripts/demo-gif.mjs"
   },
   "keywords": [
     "date",
@@ -79,6 +80,7 @@
     "@types/react-dom": "^19.1.9",
     "esbuild": "^0.28.2",
     "jsdom": "^26.1.0",
+    "playwright": "^1.63.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "typescript": "^5.9.2",
