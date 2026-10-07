@@ -1,6 +1,6 @@
 import { apply, applyPaste, dateStatus, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
 import type { DateStatus } from "../src/index.js";
-import { mountOverflowScrollGradients } from "./overflow-scroll-gradient.js";
+import { appendBlurLayers, mountOverflowScrollGradients } from "./overflow-scroll-gradient.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
   if (selectionEnd === caret) {
@@ -113,30 +113,87 @@ function bindMask(root: HTMLElement): void {
 
 function bindCopies(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-copy], [data-copy-target]")) {
+    const idle = document.createElement("span");
+    idle.className = "copy-label";
+    idle.dataset.label = "idle";
+    idle.textContent = button.textContent;
+    const done = document.createElement("span");
+    done.className = "copy-label";
+    done.dataset.label = "done";
+    done.textContent = "Copied";
+    done.setAttribute("aria-hidden", "true");
+    button.replaceChildren(idle, done);
+
+    let reset: number | undefined;
+    const setCopied = (copied: boolean) => {
+      button.dataset.copied = String(copied);
+      idle.setAttribute("aria-hidden", String(copied));
+      done.setAttribute("aria-hidden", String(!copied));
+    };
+
     button.addEventListener("click", async () => {
       const direct = button.dataset.copy;
       const targetId = button.dataset.copyTarget;
       const target = targetId ? document.getElementById(targetId) : null;
       const text = direct ?? target?.textContent ?? "";
       await navigator.clipboard.writeText(text);
-      button.dataset.copied = "true";
-      const previous = button.textContent;
-      button.textContent = "Copied";
-      window.setTimeout(() => {
-        button.dataset.copied = "false";
-        button.textContent = previous;
-      }, 1200);
+      setCopied(true);
+      window.clearTimeout(reset);
+      reset = window.setTimeout(() => setCopied(false), 1200);
     });
   }
 }
 
 function bindFolds(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-expand]")) {
+    const fold = button.dataset.expand ? document.getElementById(button.dataset.expand) : null;
+    if (fold) {
+      const blur = document.createElement("div");
+      blur.className = "fold-blur";
+      blur.setAttribute("aria-hidden", "true");
+      appendBlurLayers(blur, "to top", "--surface");
+      fold.after(blur);
+    }
+
+    let pending: AbortController | undefined;
     button.addEventListener("click", () => {
       const id = button.dataset.expand;
       const target = id ? document.getElementById(id) : null;
       if (!(target instanceof HTMLElement)) return;
+
+      // Height can't transition to/from `auto`, so pin both ends in px for the duration.
+      // Measuring with transitions off keeps a mid-flight click from reading the animated value.
+      pending?.abort();
+      const from = target.getBoundingClientRect().height;
+      target.classList.add("is-animating");
       const open = target.classList.toggle("is-open");
+      target.style.transition = "none";
+      target.style.height = "";
+      const to = open ? target.scrollHeight : target.getBoundingClientRect().height;
+      target.style.height = `${from}px`;
+      void target.offsetHeight;
+      target.style.transition = "";
+      target.style.height = `${to}px`;
+
+      const done = () => {
+        target.classList.remove("is-animating");
+        target.style.height = "";
+      };
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches || from === to) {
+        done();
+      } else {
+        pending = new AbortController();
+        target.addEventListener(
+          "transitionend",
+          (event) => {
+            if (event.target !== target || event.propertyName !== "height") return;
+            pending?.abort();
+            done();
+          },
+          { signal: pending.signal },
+        );
+      }
+
       button.setAttribute("aria-expanded", open ? "true" : "false");
       button.textContent = open ? "Show less" : "Show more";
     });

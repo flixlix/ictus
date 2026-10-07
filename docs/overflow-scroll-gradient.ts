@@ -13,34 +13,44 @@ function layer(
   return el;
 }
 
+const steps: Array<[number, number, number, number]> = [
+  [0.1, 1, 70, 100],
+  [0.2, 1, 50, 80],
+  [0.3, 1, 40, 70],
+  [0.4, 1.5, 30, 60],
+  [0.5, 2, 20, 50],
+  [0.6, 3, 10, 40],
+  [0.7, 4, 0, 30],
+];
+
+export function appendBlurLayers(
+  root: HTMLElement,
+  direction: "to top" | "to bottom",
+  colorToken: string,
+  className = "",
+): void {
+  for (const [alpha, blur, solidEnd, fadeEnd] of steps) {
+    const mask =
+      fadeEnd === 30
+        ? `linear-gradient(${direction}, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) ${fadeEnd}%)`
+        : `linear-gradient(${direction}, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) ${solidEnd}%, rgba(0, 0, 0, 0) ${fadeEnd}%)`;
+    root.append(
+      layer(
+        `linear-gradient(${direction}, hsl(var(${colorToken}) / ${alpha}), transparent)`,
+        mask,
+        `blur(${blur}px)`,
+        className,
+      ),
+    );
+  }
+}
+
 export function createOverflowTopScrollGradient(): HTMLDivElement {
   const root = document.createElement("div");
   root.className = "overflow-scroll-gradient overflow-scroll-gradient--top";
   root.setAttribute("aria-hidden", "true");
 
-  const steps: Array<[number, number, number, number]> = [
-    [0.1, 1, 70, 100],
-    [0.2, 1, 50, 80],
-    [0.3, 1, 40, 70],
-    [0.4, 1.5, 30, 60],
-    [0.5, 2, 20, 50],
-    [0.6, 3, 10, 40],
-    [0.7, 4, 0, 30],
-  ];
-
-  for (const [alpha, blur, solidEnd, fadeEnd] of steps) {
-    const mask =
-      fadeEnd === 30
-        ? `linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) ${fadeEnd}%)`
-        : `linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) ${solidEnd}%, rgba(0, 0, 0, 0) ${fadeEnd}%)`;
-    root.append(
-      layer(
-        `linear-gradient(to bottom, hsl(var(--background) / ${alpha}), transparent)`,
-        mask,
-        `blur(${blur}px)`,
-      ),
-    );
-  }
+  appendBlurLayers(root, "to bottom", "--background");
 
   const wash = document.createElement("div");
   wash.className = "overflow-scroll-gradient__wash overflow-scroll-gradient__wash--top";
@@ -53,30 +63,7 @@ export function createOverflowBottomScrollGradient(): HTMLDivElement {
   root.className = "overflow-scroll-gradient overflow-scroll-gradient--bottom";
   root.setAttribute("aria-hidden", "true");
 
-  const steps: Array<[number, number, number, number]> = [
-    [0.1, 1, 70, 100],
-    [0.2, 1, 50, 80],
-    [0.3, 1, 40, 70],
-    [0.4, 1.5, 30, 60],
-    [0.5, 2, 20, 50],
-    [0.6, 3, 10, 40],
-    [0.7, 4, 0, 30],
-  ];
-
-  for (const [alpha, blur, solidEnd, fadeEnd] of steps) {
-    const mask =
-      fadeEnd === 30
-        ? `linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) ${fadeEnd}%)`
-        : `linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) ${solidEnd}%, rgba(0, 0, 0, 0) ${fadeEnd}%)`;
-    root.append(
-      layer(
-        `linear-gradient(to top, hsl(var(--background) / ${alpha}), transparent)`,
-        mask,
-        `blur(${blur}px)`,
-        "overflow-scroll-gradient__layer--bottom",
-      ),
-    );
-  }
+  appendBlurLayers(root, "to top", "--background", "overflow-scroll-gradient__layer--bottom");
 
   const wash = document.createElement("div");
   wash.className = "overflow-scroll-gradient__wash overflow-scroll-gradient__wash--bottom";

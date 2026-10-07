@@ -211,14 +211,66 @@ pre code {
   font-size: inherit;
 }
 
-pre.fold {
-  max-height: 6.5em;
+.fold-wrap {
+  position: relative;
+  margin: 0.75rem 0 1rem;
+}
+
+.fold-blur {
+  position: absolute;
+  inset: auto 1px 1px;
+  height: 5.5em;
   overflow: hidden;
+  border-radius: 0 0 var(--radius) var(--radius);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.fold-blur > div {
+  position: absolute;
+  inset: 0;
+}
+
+.fold-blur::after {
+  content: "";
+  position: absolute;
+  inset: 40% 0 0;
+  background: linear-gradient(hsl(var(--surface) / 0), hsl(var(--surface)) 85%);
+}
+
+.fold-wrap:has(.is-open) .fold-blur {
+  opacity: 0;
+}
+
+pre.fold {
+  margin: 0;
+  height: 9em;
+  overflow: hidden;
+  transition: height 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 pre.fold.is-open {
-  max-height: none;
+  padding-bottom: 3.25rem;
+}
+
+pre.fold.is-open:not(.is-animating) {
+  height: auto;
   overflow: auto;
+}
+
+.fold-toggle {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 0.75rem;
+  translate: -50% 0;
+  box-shadow: 0 1px 2px hsl(220 18% 14% / 0.06), 0 2px 8px hsl(220 18% 14% / 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  pre.fold {
+    transition: none;
+  }
 }
 
 label {
@@ -273,6 +325,48 @@ button:hover {
 button[data-copied="true"] {
   color: hsl(var(--valid));
   border-color: hsl(152 30% 70%);
+}
+
+/* Both labels share one grid cell so the button keeps the wider label's width and never shifts. */
+button:has(> .copy-label) {
+  display: inline-grid;
+  overflow: hidden;
+}
+
+.copy-label {
+  grid-area: 1 / 1;
+  text-align: center;
+  transition:
+    opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    transform 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    filter 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.copy-label[data-label="done"],
+button[data-copied="true"] .copy-label[data-label="idle"] {
+  opacity: 0;
+  filter: blur(2px);
+}
+
+.copy-label[data-label="done"] {
+  transform: translateY(0.45em);
+}
+
+button[data-copied="true"] .copy-label[data-label="idle"] {
+  transform: translateY(-0.45em);
+}
+
+button[data-copied="true"] .copy-label[data-label="done"] {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-label {
+    transform: none !important;
+    filter: none !important;
+  }
 }
 
 [data-mask] {
