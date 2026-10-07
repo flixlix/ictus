@@ -2,6 +2,8 @@
 
 **Date and time input mask** for a plain `<input>`. Formats `dd/mm/yyyy`, `mm/dd/yyyy`, or `yyyy-mm-dd` dates and `HH:mm` or `HH:mm:ss` times **as you type**. Headless, zero-dependency, **2.6 kB** gzipped. Optional React hook (`ictus/react`).
 
+![Typing 4122026 into a date field becomes 04.12.2026, and 945 into a time field becomes 09:45](assets/demo.gif)
+
 Use it when you need a **text date field** with caret-aware masking (overflow-advance, paste normalization, parse/format) without a calendar picker, contentEditable spinbuttons, or a general-purpose input-mask library.
 
 Segmented date fields already own overflow-advance, but they replace the input with contentEditable spinbuttons. ictus is a tiny state machine other design systems can attach to their own Input primitive.
