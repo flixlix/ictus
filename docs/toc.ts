@@ -66,9 +66,15 @@ export function mountToc(shell: HTMLElement): void {
   const list = document.createElement("ol");
   list.className = "toc-list";
 
-  const indicator = document.createElement("span");
-  indicator.className = "toc-indicator";
-  indicator.setAttribute("aria-hidden", "true");
+  const svgNs = "http://www.w3.org/2000/svg";
+  const rail = document.createElementNS(svgNs, "svg");
+  rail.classList.add("toc-rail");
+  rail.setAttribute("aria-hidden", "true");
+  const track = document.createElementNS(svgNs, "path");
+  track.classList.add("toc-track");
+  const indicator = document.createElementNS(svgNs, "path");
+  indicator.classList.add("toc-indicator");
+  rail.append(track, indicator);
 
   const links: HTMLAnchorElement[] = [];
   let section = "";
@@ -88,7 +94,7 @@ export function mountToc(shell: HTMLElement): void {
     links.push(link);
   }
 
-  list.append(indicator);
+  list.append(rail);
   nav.append(title, list);
   shell.append(nav);
 
@@ -116,6 +122,56 @@ export function mountToc(shell: HTMLElement): void {
     tabs.highlight.style.opacity = "1";
   };
 
+  // Each link's span along the rail path, so the indicator is a dash that slides along it.
+  let spans: { start: number; end: number }[] = [];
+  let railLength = 0;
+  const layoutRail = () => {
+    const topLink = links.find((l) => !l.classList.contains("toc-link--sub"));
+    const subLink = links.find((l) => l.classList.contains("toc-link--sub"));
+    // Indent the rail by the same amount sub links indent their text.
+    const indent =
+      topLink && subLink
+        ? parseFloat(getComputedStyle(subLink).paddingLeft) - parseFloat(getComputedStyle(topLink).paddingLeft)
+        : 0;
+    const xs = links.map((l) => (l.classList.contains("toc-link--sub") ? indent + 1 : 1));
+    const bend = 6;
+
+    let d = "";
+    // Curves have no closed-form length, so measure the path as it is built.
+    const measure = () => {
+      track.setAttribute("d", d);
+      return track.getTotalLength();
+    };
+
+    spans = links.map((link, i) => {
+      const x = xs[i] ?? 1;
+      const prevX = xs[i - 1];
+      const top = link.offsetTop + (prevX !== undefined && prevX !== x ? bend : 0);
+      const bottom = link.offsetTop + link.offsetHeight - (i < xs.length - 1 && xs[i + 1] !== x ? bend : 0);
+      if (!d) d = `M${x} ${top}`;
+      else if (prevX !== x) {
+        // S-curve with vertical tangents at both ends, so the step reads as one smooth bend.
+        d += `C${prevX} ${link.offsetTop} ${x} ${link.offsetTop} ${x} ${top}`;
+      } else d += `L${x} ${top}`;
+      const start = measure();
+      d += `L${x} ${bottom}`;
+      return { start, end: measure() };
+    });
+    railLength = spans.at(-1)?.end ?? 0;
+
+    rail.setAttribute("width", String(indent + 2));
+    rail.setAttribute("height", String(list.scrollHeight));
+    indicator.setAttribute("d", d);
+  };
+
+  const placeIndicator = () => {
+    const span = spans[active];
+    if (!span) return;
+    indicator.style.strokeDasharray = `${span.end - span.start} ${railLength}`;
+    indicator.style.strokeDashoffset = String(-span.start);
+    indicator.style.opacity = "1";
+  };
+
   let active = -1;
   const setActive = (index: number) => {
     setActiveTab(index);
@@ -125,8 +181,7 @@ export function mountToc(shell: HTMLElement): void {
     const link = links[index];
     if (!link) return;
     link.setAttribute("aria-current", "location");
-    indicator.style.transform = `translateY(${link.offsetTop}px) scaleY(${link.offsetHeight})`;
-    indicator.style.opacity = "1";
+    placeIndicator();
 
     // Scroll the list by hand: scrollIntoView would also scroll the page shell the nav lives in.
     if (link.offsetTop < list.scrollTop) {
@@ -188,11 +243,17 @@ export function mountToc(shell: HTMLElement): void {
 
   shell.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", () => {
+    layoutRail();
     const current = active;
     active = -1;
     activeTab = -1;
     setActive(current);
     schedule();
+  });
+  layoutRail();
+  void document.fonts.ready.then(() => {
+    layoutRail();
+    placeIndicator();
   });
   update();
   // Enable the indicator transition only after the first placement so it doesn't slide in from the top.
