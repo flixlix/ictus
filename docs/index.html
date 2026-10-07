@@ -151,29 +151,30 @@
     <h3 id="agent">Or prompt your agent</h3>
     <p>
       Let your coding agent handle the install and setup. Paste this into Cursor, Claude Code, or
-      any other agent. It finds the date fields in your project, asks which ones you want, then
-      installs ictus and wires it up.
+      any other agent. It finds date and time text fields in your project, asks which ones you
+      want, then installs ictus and wires it up.
     </p>
     <p>
       <button type="button" data-copy-target="code-agent-prompt">Copy</button>
     </p>
     <div class="fold-wrap">
-      <pre id="code-agent-prompt" class="fold"><code>Integrate the `ictus` date-mask library into this project.
+      <pre id="code-agent-prompt" class="fold"><code>Integrate the `ictus` library into this project for masked date and/or time text inputs.
 
 Docs: https://ictus.luca-felix.com
 Package: https://www.npmjs.com/package/ictus
 Repo: https://github.com/flixlix/ictus
 
-ictus is a headless as-you-type mask for a single &lt;input&gt; day-month-year field. It does not render a calendar, popover, or segmented spinbuttons. Attach it to an existing text input (vanilla `apply` / `applyPaste`, or React `useDateFieldMask` from `ictus/react`).
+ictus is a headless as-you-type mask for a plain &lt;input&gt;. Use it for day-month-year dates (`apply` / `applyPaste`, or React `useDateFieldMask`) and for 24-hour times (`ictus/time`: `applyTime` / `bindTimeMask`, or React `useTimeFieldMask`). Attach it to an existing text input; keep the host app’s UI.
 
 ## 1. Find opportunities first
-Scan this repo for places a date is entered as text (or should be), for example:
-- date / birthdate / DOB / expiry / start–end date inputs
-- &lt;input&gt; fields with date placeholders or masks (dd.mm.yyyy, mm/dd/yyyy, etc.)
-- custom or design-system Input wrappers used for dates
-- forms that parse free-text dates today
+Scan this repo for places a date or time is entered as text (or should be), for example:
+- date / birthdate / DOB / expiry / start/end date inputs
+- time / clock / duration-as-clock / HH:mm inputs
+- &lt;input&gt; fields with date or time placeholders or masks (dd.mm.yyyy, mm/dd/yyyy, HH:mm, etc.)
+- custom or design-system Input wrappers used for dates or times
+- forms that parse free-text dates or times today
 
-Do NOT invent a new date field if none belongs here.
+Do NOT invent a new date or time field if none belongs here.
 
 Then stop and ask me before changing code:
 - If you find none: say so, and ask where I want ictus added (path / component / form).
@@ -186,9 +187,9 @@ Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun`, matching 
 ## 3. Implement in the confirmed place(s)
 - Wire the mask per the docs (keydown + paste for vanilla; `inputProps` for React).
 - Keep the host app’s Input / styling / labels; only add ictus behavior.
-- Match separator and date order to the product locale or existing UX (see docs for supported options).
-- Use `parseDate` (and status helpers if useful) at the form boundary; do not add a calendar UI.
-- Leave unrelated date pickers alone unless I asked to replace them.
+- Match separator and date order (or time precision) to the product locale or existing UX.
+- Use `parseDate` / `parseTime` (and status helpers if useful) at the form boundary.
+- Leave unrelated pickers alone unless I asked to replace them.
 
 When done, summarize what you installed, what you changed, and how to try it.</code></pre>
       <button type="button" class="fold-toggle" data-expand="code-agent-prompt" aria-controls="code-agent-prompt" aria-expanded="false">Show more</button>
