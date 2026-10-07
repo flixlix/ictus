@@ -3,11 +3,76 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ictus</title>
+    <title>ictus — Date input mask for dd/mm/yyyy as you type (2.6 kB)</title>
     <meta
       name="description"
-      content="Turn a plain text input into a date field that formats as you type. Works with the input you already have, 2.6 kB gzipped."
+      content="Headless date input mask for a plain text field. Formats dd/mm/yyyy, mm/dd/yyyy, or yyyy-mm-dd as you type. Zero dependency, 2.6 kB gzipped, optional React hook. No calendar UI."
     />
+    <meta
+      name="keywords"
+      content="date input mask, dd/mm/yyyy, mm/dd/yyyy, as you type, input mask, react date mask, headless, javascript, typescript"
+    />
+    <link rel="canonical" href="https://ictus.luca-felix.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ictus" />
+    <meta property="og:url" content="https://ictus.luca-felix.com/" />
+    <meta
+      property="og:title"
+      content="ictus — Date input mask for dd/mm/yyyy as you type"
+    />
+    <meta
+      property="og:description"
+      content="Headless as-you-type date mask for a plain input. 2.6 kB gzipped. Vanilla or React. No calendar, no spinbuttons."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="ictus — Date input mask for dd/mm/yyyy as you type"
+    />
+    <meta
+      name="twitter:description"
+      content="Headless as-you-type date mask for a plain input. 2.6 kB gzipped. Vanilla or React."
+    />
+    <meta name="robots" content="index, follow" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "name": "ictus",
+            "url": "https://ictus.luca-felix.com/",
+            "description": "Date input mask that formats dd/mm/yyyy, mm/dd/yyyy, or yyyy-mm-dd as you type."
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "ictus",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Web",
+            "softwareVersion": "%ICTUS_VERSION%",
+            "license": "https://opensource.org/licenses/MIT",
+            "url": "https://ictus.luca-felix.com/",
+            "downloadUrl": "https://www.npmjs.com/package/ictus",
+            "codeRepository": "https://github.com/flixlix/ictus",
+            "description": "Headless date input mask for a plain text input. Formats dates as you type. Zero dependency core with an optional React hook.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "keywords": [
+              "date input mask",
+              "dd/mm/yyyy",
+              "mm/dd/yyyy",
+              "as you type",
+              "react",
+              "headless",
+              "javascript"
+            ]
+          }
+        ]
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -25,13 +90,14 @@
       <p class="version"><a href="https://github.com/flixlix/ictus/releases">v%ICTUS_VERSION%</a></p>
     </header>
     <p>
-      Turn a plain <code>&lt;input&gt;</code> into a date field that formats as you type. It works
-      with the input and styles you already have, weighs 2.6 kB gzipped, and comes with an optional
-      React hook.
+      <strong>Date input mask</strong> for a plain <code>&lt;input&gt;</code>: formats
+      <code>dd/mm/yyyy</code>, <code>mm/dd/yyyy</code>, or <code>yyyy-mm-dd</code>
+      <strong>as you type</strong>. Keep the input and styles you already have. Core is 2.6&nbsp;kB
+      gzipped; optional React hook. No calendar UI, no contentEditable spinbuttons.
     </p>
     <p class="nav">
       <a href="#getting-started">Getting started</a> · <a href="#demos">Demos</a> ·
-      <a href="#size">Size</a> · <a href="#api">API</a>
+      <a href="#when">When to use</a> · <a href="#size">Size</a> · <a href="#api">API</a>
     </p>
 
     <p class="hero">
@@ -128,6 +194,29 @@ Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun`, matching 
 When done, summarize what you installed, what you changed, and how to try it.</code></pre>
       <button type="button" class="fold-toggle" data-expand="code-agent-prompt" aria-controls="code-agent-prompt" aria-expanded="false">Show more</button>
     </div>
+
+    <h2 id="when" data-short="When">When to use a date input mask</h2>
+    <p>
+      Reach for ictus when the product needs a <strong>masked date text field</strong>—birthdates,
+      expiry, start/end dates—and a native <code>type=&quot;date&quot;</code> picker or a segmented
+      spinbutton field is the wrong UX. It is a dedicated <strong>date mask</strong>, not a
+      general phone/credit-card input-mask library.
+    </p>
+    <ul>
+      <li>
+        <strong>Formats:</strong> <code>dd.mm.yyyy</code>, <code>dd/mm/yyyy</code>,
+        <code>dd-mm-yyyy</code>, plus <code>mm/dd/yyyy</code> and <code>yyyy-mm-dd</code> via
+        <code>mode</code>
+      </li>
+      <li>
+        <strong>Stack:</strong> vanilla JavaScript/TypeScript, or React with
+        <code>useDateFieldMask</code>
+      </li>
+      <li>
+        <strong>Compared to:</strong> lighter than wiring IMask, Cleave, Maskito, or
+        <code>react-input-mask</code> just for dates; keeps your design-system Input
+      </li>
+    </ul>
 
     <h2 id="size" data-short="Size">Size and speed</h2>
     <p>
