@@ -527,9 +527,8 @@ When done, summarize what you installed, what you changed, and how to try it.</c
     <p>
       The core of ictus. Pass the current value, the selection, and the key that was pressed, and
       get back the next value and caret. Unknown keys and rejected digits leave the value as it
-      was. Backspace and Delete never leave non-mask characters in the result (so a letter that
-      somehow sat in the DOM cannot leak into mask state). If text is selected, Backspace and
-      Delete remove it and a digit replaces it.
+      was. Backspace and Delete also strip any non-mask characters from the result. If text is
+      selected, Backspace and Delete remove it and a digit replaces it.
     </p>
     <div class="code-block">
       <pre id="code-apply"><code>import { apply } from "ictus";
