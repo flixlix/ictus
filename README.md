@@ -10,8 +10,8 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 
 | Entry | minify | gzip |
 | --- | ---: | ---: |
-| `ictus` | 2.4 kB | **1.1 kB** |
-| `ictus/react` (react external) | 0.7 kB | **0.4 kB** |
+| `ictus` | 4.3 kB | **1.8 kB** |
+| `ictus/react` (react external) | 1.1 kB | **0.6 kB** |
 
 `apply` is **0.1–0.2 µs** per keystroke (~5–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.4 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
 
