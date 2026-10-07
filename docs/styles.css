@@ -391,7 +391,6 @@ input:not([type]),
 input[inputmode="numeric"],
 select {
   font: inherit;
-  font-family: var(--font-mono);
   font-size: 0.95rem;
   color: hsl(var(--foreground));
   background: hsl(var(--surface));
@@ -480,6 +479,12 @@ button[data-copied="true"] .copy-label[data-label="done"] {
 
 [data-mask] input {
   min-width: 9.5rem;
+}
+
+[data-mask] input,
+input[type="date"],
+#parse-input {
+  font-variant-numeric: tabular-nums;
 }
 
 [data-caret] {
