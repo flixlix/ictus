@@ -29,7 +29,7 @@
       zero dependencies, no calendar, no React in the core.
     </p>
     <p class="nav">
-      <a href="#demos">Demos</a> · <a href="#agent">Prompt your agent</a> ·
+      <a href="#getting-started">Getting started</a> · <a href="#demos">Demos</a> ·
       <a href="#size">Size</a> · <a href="#api">API</a>
     </p>
 
@@ -50,12 +50,31 @@
         <span data-hint></span>
       </span>
     </p>
-    <p>
-      <code>npm install ictus</code>
-      <button type="button" data-copy="npm install ictus">Copy</button>
-    </p>
 
-    <h2 id="agent">Prompt your agent</h2>
+    <h2 id="getting-started">Getting started</h2>
+    <p>Install it yourself, or hand a prompt to your agent.</p>
+
+    <h3>Install</h3>
+    <div class="pm-tabs" role="tablist" aria-label="Package manager">
+      <button type="button" role="tab" id="pm-npm" aria-selected="true" data-pm="npm install ictus">
+        npm
+      </button>
+      <button type="button" role="tab" id="pm-pnpm" aria-selected="false" data-pm="pnpm add ictus">
+        pnpm
+      </button>
+      <button type="button" role="tab" id="pm-yarn" aria-selected="false" data-pm="yarn add ictus">
+        yarn
+      </button>
+      <button type="button" role="tab" id="pm-bun" aria-selected="false" data-pm="bun add ictus">
+        bun
+      </button>
+    </div>
+    <div class="install-row">
+      <code id="install-command">npm install ictus</code>
+      <button type="button" id="copy-install" data-copy="npm install ictus">Copy</button>
+    </div>
+
+    <h3 id="agent">Prompt your agent</h3>
     <p>
       Drop this into Cursor, Claude Code, or similar. It finds date fields in the current repo,
       asks before changing code, then installs and wires ictus from the docs.

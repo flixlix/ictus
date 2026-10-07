@@ -143,6 +143,25 @@ function bindFolds(): void {
   }
 }
 
+function bindPackageManagers(): void {
+  const tabs = document.querySelectorAll<HTMLButtonElement>(".pm-tabs [data-pm]");
+  const command = document.querySelector("#install-command");
+  const copy = document.querySelector<HTMLButtonElement>("#copy-install");
+  if (!(command instanceof HTMLElement) || !copy || tabs.length === 0) return;
+
+  for (const tab of tabs) {
+    tab.addEventListener("click", () => {
+      const next = tab.dataset.pm;
+      if (!next) return;
+      for (const other of tabs) {
+        other.setAttribute("aria-selected", other === tab ? "true" : "false");
+      }
+      command.textContent = next;
+      copy.dataset.copy = next;
+    });
+  }
+}
+
 function bindFormat(): void {
   const native = document.querySelector<HTMLInputElement>("#native-date");
   const sep = document.querySelector<HTMLSelectElement>("#format-sep");
@@ -237,6 +256,7 @@ for (const root of document.querySelectorAll<HTMLElement>("[data-mask]")) {
 
 bindCopies();
 bindFolds();
+bindPackageManagers();
 bindFormat();
 bindTable();
 bindParseLive();
