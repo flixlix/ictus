@@ -38,7 +38,8 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p docs/tsconfig.json",
     "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build",
     "docs": "vite --config docs/vite.config.ts",
-    "docs:build": "vite build --config docs/vite.config.ts",
+    "registry:build": "pnpm dlx shadcn@latest build registry.json --output docs/public/r",
+    "docs:build": "pnpm registry:build && vite build --config docs/vite.config.ts",
     "measure": "pnpm build && node scripts/measure.mjs",
     "changeset": "changeset",
     "release": "changeset publish",
@@ -89,19 +90,25 @@
     }
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   },
   "devDependencies": {
+    "@base-ui/react": "^1.8.0",
     "@changesets/changelog-github": "^1.0.0",
     "@changesets/cli": "^3.0.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^26.4.1",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^4.7.0",
+    "date-fns": "^4.4.0",
     "esbuild": "^0.28.2",
     "jsdom": "^26.1.0",
     "playwright": "^1.63.0",
     "react": "^19.1.1",
+    "react-day-picker": "^10.0.2",
     "react-dom": "^19.1.1",
     "typescript": "^5.9.2",
     "vite": "^7.3.6",
