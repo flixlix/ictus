@@ -6,12 +6,12 @@
     <title>ictus</title>
     <meta
       name="description"
-      content="Headless as-you-type mask for a single day-month-year input. Live demos and API."
+      content="Turn a plain text input into a date field that formats as you type. Works with the input you already have, 2.6 kB gzipped."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
@@ -25,16 +25,25 @@
       <p class="version"><a href="https://github.com/flixlix/ictus/releases">v%ICTUS_VERSION%</a></p>
     </header>
     <p>
-      Headless as-you-type behavior for a single <code>&lt;input&gt;</code> date field. Day-month-year,
-      zero dependencies, no calendar, no React in the core.
+      Turn a plain <code>&lt;input&gt;</code> into a date field that formats as you type. It works
+      with the input and styles you already have, weighs 2.6 kB gzipped, and comes with an optional
+      React hook.
     </p>
     <p class="nav">
       <a href="#getting-started">Getting started</a> · <a href="#demos">Demos</a> ·
       <a href="#size">Size</a> · <a href="#api">API</a>
     </p>
 
-    <p>
-      <label for="hero-date">Try it</label><br />
+    <p class="hero">
+      <span class="try-cue" aria-hidden="true">
+        <span class="try-cue-text">Give it a go</span>
+        <svg viewBox="0 0 110 42" fill="currentColor">
+          <path d="M 7.0 2.0 Q 7.0 2.0 7.4 3.2 7.9 4.4 8.1 6.1 8.3 7.9 8.6 9.4 9.0 10.9 9.7 12.3 10.3 13.7 11.2 15.0 12.1 16.3 13.3 17.5 14.4 18.7 15.9 19.9 17.3 21.0 18.1 21.6 18.9 22.1 19.8 22.6 20.7 23.2 21.7 23.6 22.6 24.1 23.6 24.6 24.7 25.1 25.8 25.5 26.9 26.0 28.0 26.4 29.2 26.8 30.4 27.2 31.6 27.6 32.9 27.9 34.2 28.3 35.5 28.6 36.9 28.9 38.3 29.2 39.7 29.5 41.2 29.7 42.7 30.0 44.3 30.2 45.8 30.4 47.4 30.6 49.0 30.8 50.7 30.9 52.4 31.0 54.1 31.1 55.8 31.2 57.6 31.2 59.4 31.2 61.3 31.2 63.1 31.2 65.0 31.1 67.0 31.1 68.9 31.0 70.9 30.9 72.9 30.7 74.9 30.6 77.0 30.4 79.1 30.2 81.2 30.0 83.3 29.7 85.5 29.4 87.7 29.1 90.0 28.8 92.2 28.5 94.5 28.1 96.8 27.8 99.2 27.6 101.6 27.4 101.6 27.4 101.6 27.5 101.6 27.5 101.6 27.5 99.3 28.2 97.0 28.9 94.7 29.3 92.4 29.7 90.1 30.1 87.9 30.4 85.7 30.7 83.5 31.0 81.4 31.2 79.2 31.5 77.1 31.7 75.0 31.9 73.0 32.1 71.0 32.2 69.0 32.3 67.0 32.4 65.1 32.5 63.2 32.6 61.3 32.6 59.4 32.6 57.6 32.6 55.8 32.6 54.0 32.6 52.3 32.5 50.6 32.4 48.9 32.3 47.3 32.2 45.6 32.1 44.0 32.0 42.4 31.8 40.9 31.6 39.4 31.4 37.9 31.2 36.5 31.0 35.1 30.7 33.6 30.4 32.3 30.1 31.0 29.8 29.7 29.5 28.4 29.1 27.2 28.7 25.9 28.4 24.8 27.9 23.6 27.5 22.5 27.0 21.4 26.6 20.4 26.1 19.3 25.6 18.4 25.0 17.4 24.5 16.5 23.9 15.6 23.3 14.8 22.7 13.9 22.1 13.2 21.5 12.4 20.8 11.7 20.1 11.0 19.4 9.8 18.0 8.7 16.5 7.8 14.9 7.0 13.3 6.4 11.6 5.9 9.9 5.7 8.1 5.5 6.2 5.6 5.2 5.7 4.2 6.4 3.1 7.0 2.0 7.0 2.0 Z" />
+          <path d="M 92.0 18.5 Q 92.0 18.5 93.3 18.7 94.5 18.9 95.4 19.4 96.3 19.9 97.9 21.0 99.4 22.1 101.3 24.3 103.2 26.4 103.2 26.4 103.2 26.4 103.2 26.4 103.2 26.4 100.6 25.2 98.0 24.1 96.5 23.0 95.0 21.9 94.2 21.3 93.4 20.6 92.7 19.6 92.0 18.5 92.0 18.5 Z" />
+          <path d="M 104.0 27.0 Q 104.0 27.0 103.4 28.3 102.9 29.5 102.2 30.3 101.5 31.1 100.3 32.4 99.0 33.7 97.0 35.5 95.0 37.3 95.0 37.3 95.0 37.2 95.0 37.2 95.0 37.2 95.7 35.5 96.3 33.8 97.4 32.3 98.5 30.8 99.1 30.1 99.8 29.3 100.6 28.7 101.4 28.0 102.7 27.5 104.0 27.0 104.0 27.0 Z" />
+        </svg>
+      </span>
+      <label for="hero-date">Try it: type a date, or paste one</label><br />
       <span data-mask data-separator=".">
         <input
           id="hero-date"
@@ -52,7 +61,7 @@
     </p>
 
     <h2 id="getting-started" data-short="Start">Getting started</h2>
-    <p>Install it yourself, or hand a prompt to your agent.</p>
+    <p>Install the package yourself, or let your coding agent do it.</p>
 
     <h3>Install</h3>
     <div class="pm-tabs" role="tablist" aria-label="Package manager">
@@ -74,10 +83,11 @@
       <button type="button" id="copy-install" data-copy="npm install ictus">Copy</button>
     </div>
 
-    <h3 id="agent">Prompt your agent</h3>
+    <h3 id="agent">Or prompt your agent</h3>
     <p>
-      Drop this into Cursor, Claude Code, or similar. It finds date fields in the current repo,
-      asks before changing code, then installs and wires ictus from the docs.
+      Let your coding agent handle the install and setup. Paste this into Cursor, Claude Code, or
+      any other agent. It finds the date fields in your project, asks which ones you want, then
+      installs ictus and wires it up.
     </p>
     <p>
       <button type="button" data-copy-target="code-agent-prompt">Copy</button>
@@ -106,7 +116,7 @@ Then stop and ask me before changing code:
 - If you find more than one: list them (file + short reason) and ask whether to do one, several, or all.
 
 ## 2. Install (only after I confirm where)
-Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun` — match lockfiles). Install `ictus`. Follow current docs for the right entry (`ictus` vs `ictus/react`).
+Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun`, matching the lockfile). Install `ictus`. Follow current docs for the right entry (`ictus` vs `ictus/react`).
 
 ## 3. Implement in the confirmed place(s)
 - Wire the mask per the docs (keydown + paste for vanilla; `inputProps` for React).
@@ -120,13 +130,16 @@ When done, summarize what you installed, what you changed, and how to try it.</c
     </div>
 
     <h2 id="size" data-short="Size">Size and speed</h2>
-    <p>Min+gzip, as a bundler ships it. Reproduce with <code>pnpm measure</code>.</p>
+    <p>
+      ictus is tiny and does a lot. The whole core is 2.6 kB gzipped, and the React hook adds
+      0.8 kB on top.
+    </p>
     <table>
       <thead>
         <tr>
-          <th>Entry</th>
-          <th>minify</th>
-          <th>gzip</th>
+          <th>Import</th>
+          <th>Minified</th>
+          <th>Gzipped</th>
         </tr>
       </thead>
       <tbody>
@@ -136,23 +149,29 @@ When done, summarize what you installed, what you changed, and how to try it.</c
           <td>2.6 kB</td>
         </tr>
         <tr>
-          <td><code>ictus/react</code> (react external)</td>
+          <td><code>ictus/react</code> (excluding React)</td>
           <td>1.5 kB</td>
           <td>0.8 kB</td>
         </tr>
       </tbody>
     </table>
     <p>
-      <code>apply</code> is 0.1–0.2 µs per keystroke (about 5–8 million ops/s). Typing
-      <code>11.12.2026</code> is about 2 µs. <code>parseDate</code> is about 0.4 µs. A 16 ms frame is
-      tens of thousands of keystrokes. The machine walks at most ten characters and does not touch
-      the DOM.
+      It’s fast, too. Each keystroke takes about 0.2 microseconds. Your screen redraws every
+      16 milliseconds, so ictus could handle around 80,000 keystrokes before you’d see a single
+      frame of delay.
     </p>
     <h2 id="demos">Demos</h2>
-    <p>Same machine, different separators, and the parse/format seam.</p>
+    <p>
+      Every field below runs the same mask with different options. Under each one you see the caret
+      position (<code>|</code>) and what the value parses to.
+    </p>
 
     <h3>Dot</h3>
-    <p>Default separator. Day overflow-pads <code>4–9</code>, month <code>2–9</code>.</p>
+    <p>
+      The default. A day can’t start with <code>4</code> to <code>9</code>, so typing one pads it and
+      jumps ahead: <code>4</code> becomes <code>04.</code>. Months do the same for <code>2</code> to
+      <code>9</code>.
+    </p>
     <p>
       <label for="demo-dot">dd.mm.yyyy</label><br />
       <span data-mask data-separator=".">
@@ -172,7 +191,10 @@ When done, summarize what you installed, what you changed, and how to try it.</c
     </p>
 
     <h3>Slash</h3>
-    <p>Typing <code>.</code>, <code>/</code>, or <code>-</code> still writes <code>/</code>.</p>
+    <p>
+      Users can type any of <code>.</code>, <code>/</code>, or <code>-</code>. The field always writes
+      the separator you configured, here <code>/</code>.
+    </p>
     <p>
       <label for="demo-slash">dd/mm/yyyy</label><br />
       <span data-mask data-separator="/">
@@ -192,7 +214,7 @@ When done, summarize what you installed, what you changed, and how to try it.</c
     </p>
 
     <h3>Dash</h3>
-    <p>Still day-month-year. Year never pads on the first digit.</p>
+    <p>Same day-month-year order. The year waits for all four digits.</p>
     <p>
       <label for="demo-dash">dd-mm-yyyy</label><br />
       <span data-mask data-separator="-">
@@ -213,9 +235,9 @@ When done, summarize what you installed, what you changed, and how to try it.</c
 
     <h3>Arrow step</h3>
     <p>
-      Opt-in <code>step: 1</code>. Click into a group, then
-      <code>ArrowUp</code> / <code>ArrowDown</code>. The caret keeps its place in
-      the group. Other demos leave arrows alone.
+      Off by default. With <code>step: 1</code>, click into the day, month, or year and press
+      <code>ArrowUp</code> or <code>ArrowDown</code> to change it. The caret stays put. The other
+      demos ignore arrow keys.
     </p>
     <p>
       <label for="demo-step">dd.mm.yyyy</label><br />
@@ -236,7 +258,10 @@ When done, summarize what you installed, what you changed, and how to try it.</c
     </p>
 
     <h3>formatDate</h3>
-    <p>Local calendar parts, padded, with the separator you pass.</p>
+    <p>
+      Going the other way: turn a <code>Date</code> into a masked string. Pick a date and a
+      separator, then load the result into the matching demo above.
+    </p>
     <p>
       <label for="native-date">Date</label>
       <input id="native-date" type="date" />
@@ -249,13 +274,16 @@ When done, summarize what you installed, what you changed, and how to try it.</c
         <option value="-">-</option>
       </select>
     </p>
-    <p>formatDate = <code id="format-result"></code></p>
-    <p><button type="button" id="load-formatted">Load into field</button></p>
+    <p>Result: <code id="format-result"></code></p>
+    <p><button type="button" id="load-formatted">Load into demo</button></p>
 
-    <h3>Acceptance table</h3>
-    <p>Click a row to run that keystroke. <code>|</code> is the caret.</p>
+    <h3>Every keystroke rule</h3>
     <p>
-      <label for="demo-table">Table target</label><br />
+      This table is the spec, and the test suite checks every row. Click one to replay it in the
+      field below. <code>|</code> is the caret.
+    </p>
+    <p>
+      <label for="demo-table">Replay field</label><br />
       <span id="table-field" data-mask data-separator=".">
         <input
           id="demo-table"
@@ -349,13 +377,18 @@ When done, summarize what you installed, what you changed, and how to try it.</c
     </table>
 
     <h2 id="api">API</h2>
-    <p>Five exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
+    <p>
+      Most apps need one call: <a href="#bindDateMask"><code>bindDateMask</code></a> for a plain
+      input, or <a href="#react"><code>useDateFieldMask</code></a> in React. The rest are pure
+      functions on strings, for when you handle events yourself.
+    </p>
 
     <h3 id="apply"><code>apply</code></h3>
     <p>
-      Take the previous masked value, the selection, and the key just pressed. Returns the next
-      value and caret. Unknown keys are a no-op. The box is never cleared on reject. A non-empty
-      selection is replaced: Backspace and Delete remove it, a digit types into the hole.
+      The core of ictus. Pass the current value, the selection, and the key that was pressed, and
+      get back the next value and caret. Unknown keys and rejected digits leave the value as it
+      was. If text is selected, Backspace and Delete remove it and a digit
+      replaces it.
     </p>
     <div class="code-block">
       <pre id="code-apply"><code>import { apply } from "ictus";
@@ -371,25 +404,27 @@ apply({
     </div>
     <dl>
       <dt><code>value</code></dt>
-      <dd>Current masked string.</dd>
+      <dd>The current masked string.</dd>
       <dt><code>caret</code></dt>
-      <dd>Selection start (or the collapsed caret).</dd>
+      <dd>Where the selection starts, or the caret position if nothing is selected.</dd>
       <dt><code>selectionEnd?</code></dt>
-      <dd>Selection end. Defaults to <code>caret</code>.</dd>
+      <dd>Where the selection ends. Defaults to <code>caret</code>.</dd>
       <dt><code>key</code></dt>
       <dd>
-        A digit, <code>.</code> <code>/</code> <code>-</code>, <code>Backspace</code>, or
-        <code>Delete</code> — the <code>KeyboardEvent.key</code> values.
+        The <code>KeyboardEvent.key</code> value: a digit, <code>.</code>, <code>/</code>,
+        <code>-</code>, <code>Backspace</code>, or <code>Delete</code>.
       </dd>
       <dt><code>separator?</code></dt>
-      <dd>Written separator. Default <code>"."</code>. Use a single character.</dd>
+      <dd>The single character to write between groups. Defaults to <code>"."</code>.</dd>
+      <dt><code>mode?</code></dt>
+      <dd>
+        Field order: <code>"dmy"</code> (default), <code>"mdy"</code>, or <code>"ymd"</code>.
+      </dd>
       <dt><code>step?</code></dt>
       <dd>
-        Optional segment step size. Default off (<code>0</code>). When
-        <code>step &gt; 0</code>, <code>ArrowUp</code> / <code>ArrowDown</code> change
-        the caret’s group by that amount. Those keys are
-        <strong>not</strong> in <code>isDateMaskKey</code> — callers must handle them
-        when opting in.
+        How much <code>ArrowUp</code> and <code>ArrowDown</code> change the group under the caret.
+        Defaults to <code>0</code>, which ignores arrows. <code>isDateMaskKey</code> returns
+        <code>false</code> for arrow keys, so handle them yourself when you turn this on:
       </dd>
     </dl>
     <div class="code-block">
@@ -406,9 +441,9 @@ if (
 
     <h3 id="applyPaste"><code>applyPaste</code></h3>
     <p>
-      Normalize clipboard text into the mask with the same group and overflow rules as
-      <code>apply</code>. Accepts <code>11/12/2026</code>, dashed or dotted forms, digit-only
-      <code>11122026</code>, and ISO <code>2026-12-11</code> (remapped to day-month-year).
+      Like <code>apply</code>, but for pasted text. It understands <code>11/12/2026</code>, the
+      dotted and dashed versions, bare digits like <code>11122026</code>, and ISO
+      <code>2026-12-11</code>, which it reorders to day-month-year.
     </p>
     <div class="code-block">
       <pre id="code-paste"><code>import { applyPaste } from "ictus";
@@ -424,12 +459,10 @@ applyPaste({
 
     <h3 id="parseDate"><code>parseDate</code></h3>
     <p>
-      Returns a <strong>local</strong> <code>Date</code>
-      (<code>new Date(year, monthIndex, day)</code>) only for a complete, calendar-valid triple.
-      Partial strings and impossible dates return <code>undefined</code>. Separators
-      <code>.</code>, <code>/</code>, and <code>-</code> are all accepted.
-      Optional <code>min</code> / <code>max</code> Dates bound complete calendar days; partials
-      ignore bounds.
+      Turns a finished value into a <code>Date</code> at <strong>local</strong> midnight. Anything
+      partial or impossible, like 31 February, returns <code>undefined</code>. Any of
+      <code>.</code>, <code>/</code>, and <code>-</code> works as the separator. Pass
+      <code>min</code> and <code>max</code> to also reject days outside a range.
     </p>
     <div class="code-block">
       <pre id="code-parse"><code>parseDate("11.12.2026"); // local Date
@@ -441,16 +474,15 @@ parseDate("11.12");      // undefined</code></pre>
       <button type="button" class="copy-icon" data-copy-target="code-parse" aria-label="Copy code"></button>
     </div>
     <p>
-      <label for="parse-input">Masked string</label><br />
+      <label for="parse-input">Try a value</label><br />
       <input id="parse-input" size="16" value="11.12.2026" spellcheck="false" />
     </p>
     <pre id="parse-output"></pre>
 
     <h3 id="dateStatus"><code>dateStatus</code></h3>
     <p>
-      Classifies a masked string for UI feedback:
-      <code>empty</code>, <code>incomplete</code>, <code>invalid</code>, or
-      <code>valid</code>.
+      Tells you what feedback to show. Returns <code>"empty"</code>, <code>"incomplete"</code>,
+      <code>"invalid"</code> (complete, but not a real date), or <code>"valid"</code>.
     </p>
     <div class="code-block">
       <pre id="code-status"><code>dateStatus("");           // "empty"
@@ -461,7 +493,10 @@ dateStatus("11.12.2026"); // "valid"</code></pre>
     </div>
 
     <h3 id="formatDate"><code>formatDate</code></h3>
-    <p>Writes <code>dd{sep}mm{sep}yyyy</code> from the date’s local day, month, and year.</p>
+    <p>
+      The reverse of <code>parseDate</code>. Writes a <code>Date</code> as
+      <code>dd.mm.yyyy</code> from its local day, month, and year, with the separator you pass.
+    </p>
     <div class="code-block">
       <pre id="code-format"><code>formatDate(new Date(2026, 11, 11));
 // "11.12.2026"
@@ -473,8 +508,9 @@ formatDate(new Date(2026, 11, 11), "/");
 
     <h3 id="isDateMaskKey"><code>isDateMaskKey</code></h3>
     <p>
-      True for keys <code>apply</code> handles. Use it to <code>preventDefault</code> in
-      <code>keydown</code> without swallowing arrows, tab, or shortcuts.
+      Returns <code>true</code> for keys <code>apply</code> handles. Check it in
+      <code>keydown</code> before calling <code>preventDefault</code>, so arrows, Tab, and
+      shortcuts keep working.
     </p>
     <div class="code-block">
       <pre id="code-key"><code>if (!isDateMaskKey(event.key)) return;
@@ -484,8 +520,9 @@ event.preventDefault();</code></pre>
 
     <h3 id="bindDateMask"><code>bindDateMask</code></h3>
     <p>
-      Wires <code>keydown</code> and paste to <code>apply</code>, writes the result back, and
-      restores the caret. Returns a cleanup function that removes the listeners.
+      The simplest way to use ictus without a framework. It listens for typing and pasting on an
+      input, applies the mask, and keeps the caret in place. Call the function it returns to
+      remove the listeners.
     </p>
     <div class="code-block">
       <pre id="code-bind"><code>import { bindDateMask } from "ictus";
@@ -503,6 +540,7 @@ const unbind = bindDateMask(input, { separator: "." });
   selectionEnd?: number;
   key: string;
   separator?: string;
+  mode?: "dmy" | "mdy" | "ymd";
   step?: number; // default 0 (off)
 };
 
@@ -512,6 +550,7 @@ type ApplyPasteInput = {
   selectionEnd?: number;
   pasted: string;
   separator?: string;
+  mode?: "dmy" | "mdy" | "ymd";
 };
 
 type ApplyResult = {
@@ -525,8 +564,9 @@ type DateStatus = "empty" | "incomplete" | "invalid" | "valid";</code></pre>
 
     <h3 id="vanilla">Vanilla <code>&lt;input&gt;</code></h3>
     <p>
-      Prefer <code>bindDateMask</code>. For a one-off keystroke without listeners, call
-      <code>apply</code> and <code>isDateMaskKey</code> yourself.
+      Use <code>bindDateMask</code>. If the value lives outside the input, pass
+      <code>getValue</code> and <code>setValue</code>. To handle events entirely yourself, call
+      <code>apply</code> and <code>isDateMaskKey</code> directly.
     </p>
     <div class="code-block">
       <pre id="code-vanilla"><code>import { bindDateMask } from "ictus";
@@ -543,15 +583,23 @@ const unbind = bindDateMask(input, {
 
     <h3 id="react"><code>useDateFieldMask</code></h3>
     <p>
-      Optional React entry. Peer on <code>react</code>. Restores the caret after commit.
-      <code>parsed</code> is a local <code>Date</code> or <code>undefined</code>.
-      <code>status</code> is the same classification as <code>dateStatus</code>.
-      The hook accepts the same optional <code>min</code> / <code>max</code> as
+      Import from <code>ictus/react</code>. React is an optional peer dependency, so the core stays
+      dependency-free. Spread <code>inputProps</code> onto your input and the hook handles typing,
+      pasting, and the caret.
+    </p>
+    <dl>
+      <dt><code>parsed</code></dt>
+      <dd>The local <code>Date</code>, or <code>undefined</code> until the value is complete and valid.</dd>
+      <dt><code>status</code></dt>
+      <dd>The same result as <code>dateStatus</code>.</dd>
+      <dt><code>isoValue</code>, <code>hiddenInputProps</code></dt>
+      <dd>The date as <code>YYYY-MM-DD</code>, ready to submit with a form.</dd>
+    </dl>
+    <p>
+      Pass <code>value</code> and <code>onValueChange</code> for a controlled field, or
+      <code>defaultValue</code> for an uncontrolled one. <code>onParsedChange</code> fires when the
+      date itself changes. <code>min</code> and <code>max</code> work as in
       <code>parseDate</code>.
-      <code>onParsedChange</code> fires when the calendar day changes;
-      <code>isoValue</code> / <code>hiddenInputProps</code> expose <code>YYYY-MM-DD</code> for forms.
-      Pass <code>value</code> + <code>onValueChange</code> to control it, or omit
-      <code>value</code> and use <code>defaultValue</code> uncontrolled.
     </p>
     <div class="code-block">
       <pre id="code-react"><code>import { useState } from "react";

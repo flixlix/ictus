@@ -116,6 +116,7 @@ export function mountToc(shell: HTMLElement): void {
       return;
     }
     link.setAttribute("aria-current", "location");
+    placeIndicator();
     const left = link.offsetLeft - tabs.highlight.offsetLeft;
     const right = tabs.highlight.offsetWidth - left - link.offsetWidth;
     tabs.highlight.style.clipPath = `inset(0 ${right}px 0 ${left}px round 999px)`;
