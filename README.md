@@ -11,7 +11,7 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 | Entry | minify | gzip |
 | --- | ---: | ---: |
 | `ictus` | 5.2 kB | **2.2 kB** |
-| `ictus/react` (react external) | 1.4 kB | **0.8 kB** |
+| `ictus/react` (react external) | 1.5 kB | **0.8 kB** |
 
 `apply` is **0.1–0.2 µs** per keystroke (~5–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.4 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
 
@@ -177,6 +177,20 @@ function DateInput() {
       <input name="date" {...hiddenInputProps} />
     </>
   );
+}
+```
+
+Pass `value` for controlled mode (with `onValueChange` to update parent state). Omit `value` and use `defaultValue` for uncontrolled mode.
+
+```tsx
+function ControlledDateInput() {
+  const [value, setValue] = useState("");
+  const { inputProps, parsed } = useDateFieldMask({
+    value,
+    onValueChange: setValue,
+  });
+
+  return <input {...inputProps} />;
 }
 ```
 

@@ -6,6 +6,7 @@ import type { DateStatus } from "./index.js";
 export type UseDateFieldMaskOptions = {
   separator?: string;
   defaultValue?: string;
+  value?: string;
   onValueChange?: (value: string) => void;
   onParsedChange?: (date: Date | undefined) => void;
   min?: Date;
@@ -50,14 +51,17 @@ export function useDateFieldMask(
   const {
     separator,
     defaultValue = "",
+    value: valueProp,
     onValueChange,
     onParsedChange,
     min,
     max,
     step = 0,
   } = options;
+  const isControlled = valueProp !== undefined;
   const ref = useRef<HTMLInputElement | null>(null);
-  const [value, setValue] = useState(defaultValue);
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
+  const value = isControlled ? valueProp : uncontrolledValue;
   const parsed = useMemo(
     () => parseDate(value, { min, max }),
     [value, min, max],
@@ -68,7 +72,9 @@ export function useDateFieldMask(
 
   const commit = useCallback(
     (next: { value: string; caret: number }) => {
-      setValue(next.value);
+      if (!isControlled) {
+        setUncontrolledValue(next.value);
+      }
       onValueChange?.(next.value);
       const d = parseDate(next.value, { min, max });
       const k = iso(d);
@@ -81,7 +87,7 @@ export function useDateFieldMask(
         ref.current?.setSelectionRange(caret, caret);
       });
     },
-    [onValueChange, onParsedChange, min, max],
+    [isControlled, onValueChange, onParsedChange, min, max],
   );
 
   const onKeyDown = useCallback(

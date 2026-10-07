@@ -108,7 +108,7 @@ When done, summarize what you installed, what you changed, and how to try it.</c
         </tr>
         <tr>
           <td><code>ictus/react</code> (react external)</td>
-          <td>1.4 kB</td>
+          <td>1.5 kB</td>
           <td>0.8 kB</td>
         </tr>
       </tbody>
@@ -501,13 +501,19 @@ const unbind = bindDateMask(input, {
       <code>parseDate</code>.
       <code>onParsedChange</code> fires when the calendar day changes;
       <code>isoValue</code> / <code>hiddenInputProps</code> expose <code>YYYY-MM-DD</code> for forms.
+      Pass <code>value</code> + <code>onValueChange</code> to control it, or omit
+      <code>value</code> and use <code>defaultValue</code> uncontrolled.
     </p>
     <p><button type="button" data-copy-target="code-react">Copy</button></p>
-    <pre id="code-react"><code>import { useDateFieldMask } from "ictus/react";
+    <pre id="code-react"><code>import { useState } from "react";
+import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
+  const [value, setValue] = useState("");
   const { inputProps, hiddenInputProps, isoValue, parsed, status } =
     useDateFieldMask({
+      value,
+      onValueChange: setValue,
       onParsedChange: (date) => console.log(date, isoValue),
     });
   return (
