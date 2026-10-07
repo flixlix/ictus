@@ -1,7 +1,9 @@
 import { apply, applyPaste, isDateMaskKey } from "./index.js";
+import type { DateFieldMode } from "./index.js";
 
 export type BindDateMaskOptions = {
   separator?: string;
+  mode?: DateFieldMode;
   step?: number;
   onValueChange?: (value: string) => void;
   getValue?: () => string;
@@ -12,7 +14,7 @@ export function bindDateMask(
   input: HTMLInputElement,
   options: BindDateMaskOptions = {},
 ): () => void {
-  const { separator, onValueChange, step = 0 } = options;
+  const { separator, mode, onValueChange, step = 0 } = options;
   const getValue = options.getValue ?? (() => input.value);
   const setValue =
     options.setValue ??
@@ -41,6 +43,7 @@ export function bindDateMask(
         selectionEnd: input.selectionEnd ?? undefined,
         key: event.key,
         separator,
+        mode,
         step,
       }),
     );
@@ -55,6 +58,7 @@ export function bindDateMask(
         selectionEnd: input.selectionEnd ?? undefined,
         pasted: event.clipboardData?.getData("text") ?? "",
         separator,
+        mode,
       }),
     );
   };

@@ -18,9 +18,15 @@ function at(marked: string): { value: string; caret: number; selectionEnd?: numb
   };
 }
 
-function type(before: string, key: string, separator?: string, step?: number) {
+function type(
+  before: string,
+  key: string,
+  separator?: string,
+  mode?: "dmy" | "mdy" | "ymd",
+  step?: number,
+) {
   const { value, caret, selectionEnd } = at(before);
-  return apply({ value, caret, selectionEnd, key, separator, step });
+  return apply({ value, caret, selectionEnd, key, separator, mode, step });
 }
 
 describe("acceptance table", () => {
@@ -98,7 +104,7 @@ describe("apply step", () => {
   it("ignores ArrowUp/ArrowDown when step is omitted or 0", () => {
     const omitted = type("11.12.2026|", "ArrowUp");
     expect(show(omitted.value, omitted.caret)).toBe("11.12.2026|");
-    const zero = type("11.12.2026|", "ArrowDown", undefined, 0);
+    const zero = type("11.12.2026|", "ArrowDown", undefined, undefined, 0);
     expect(show(zero.value, zero.caret)).toBe("11.12.2026|");
   });
 
@@ -126,32 +132,88 @@ describe("apply step", () => {
     ["12.02.20|27", "ArrowUp", "12.02.20|28"],
     ["12.02.20|27", "ArrowDown", "12.02.20|26"],
   ] as const)("%s + %s (step 1) → %s", (before, key, after) => {
-    const result = type(before, key, undefined, 1);
+    const result = type(before, key, undefined, undefined, 1);
     expect(show(result.value, result.caret)).toBe(after);
   });
 
   it("steps by the configured amount", () => {
-    const result = type("10|.12.2026", "ArrowUp", undefined, 5);
+    const result = type("10|.12.2026", "ArrowUp", undefined, undefined, 5);
     expect(show(result.value, result.caret)).toBe("15|.12.2026");
   });
 
   it("seeds empty groups from local today", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 9, 7));
-    const day = type("|", "ArrowUp", undefined, 1);
+    const day = type("|", "ArrowUp", undefined, undefined, 1);
     expect(show(day.value, day.caret)).toBe("08|");
-    const month = type("07.|", "ArrowUp", undefined, 1);
+    const month = type("07.|", "ArrowUp", undefined, undefined, 1);
     expect(show(month.value, month.caret)).toBe("07.11|");
-    const year = type("07.10.|", "ArrowDown", undefined, 1);
+    const year = type("07.10.|", "ArrowDown", undefined, undefined, 1);
     expect(show(year.value, year.caret)).toBe("07.10.2025|");
   });
 
   it("keeps caret offset inside the group (empty seed still ends the group)", () => {
-    const result = type("11.12.|2026", "ArrowUp", undefined, 1);
+    const result = type("11.12.|2026", "ArrowUp", undefined, undefined, 1);
     expect(show(result.value, result.caret)).toBe("11.12.|2027");
     for (const key of ["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"]) {
-      const left = type("11.12.2026|", key, undefined, 1);
+      const left = type("11.12.2026|", key, undefined, undefined, 1);
       expect(show(left.value, left.caret)).toBe("11.12.2026|");
     }
   });
 });
+
+describe("mode mdy", () => {
+  it.each([
+    ["|", "4", "04/|"],
+    ["|", "1", "1|"],
+    ["1|", "/", "01/|"],
+    ["|", "9", "09/|"],
+    ["04/|", "3", "04/3|"],
+    ["04/|", "9", "04/09/|"],
+    ["04/3|", "2", "04/3|"],
+    ["04/1|", "5", "04/15/|"],
+    ["12/|", "4", "12/04/|"],
+    ["12/25/|", "2", "12/25/2|"],
+    ["12/25/202|", "6", "12/25/2026|"],
+    ["3|", "9", "3|"],
+    ["1|", "2", "12/|"],
+    ["1|", "3", "1|"],
+  ] as const)("%s + %s → %s", (before, key, after) => {
+    const result = type(before, key, "/", "mdy");
+    expect(show(result.value, result.caret)).toBe(after);
+  });
+});
+
+describe("mode ymd", () => {
+  it.each([
+    ["|", "2", "2|"],
+    ["2026|", "/", "2026/|"],
+    ["2026/|", "4", "2026/04/|"],
+    ["2026/|", "1", "2026/1|"],
+    ["2026/1|", "2", "2026/12/|"],
+    ["2026/12/|", "9", "2026/12/09|"],
+    ["2026/12/|", "3", "2026/12/3|"],
+    ["2026/12/3|", "1", "2026/12/31|"],
+    ["2026/12/3|", "9", "2026/12/3|"],
+    ["2026/1|", "3", "2026/1|"],
+    ["|", "0", "0|"],
+  ] as const)("%s + %s → %s", (before, key, after) => {
+    const result = type(before, key, "/", "ymd");
+    expect(show(result.value, result.caret)).toBe(after);
+  });
+
+  it("does not overflow-pad the year first digit", () => {
+    const result = type("|", "4", "/", "ymd");
+    expect(show(result.value, result.caret)).toBe("4|");
+  });
+});
+
+describe("mode defaults to dmy", () => {
+  it("treats omitted mode like dmy", () => {
+    const withDefault = type("|", "4");
+    const withExplicit = type("|", "4", ".", "dmy");
+    expect(show(withDefault.value, withDefault.caret)).toBe("04.|");
+    expect(show(withExplicit.value, withExplicit.caret)).toBe("04.|");
+  });
+});
+

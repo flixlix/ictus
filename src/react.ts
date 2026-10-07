@@ -1,10 +1,17 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, ClipboardEvent, KeyboardEvent, RefObject } from "react";
-import { apply, applyPaste, dateStatus, isDateMaskKey, parseDate } from "./index.js";
-import type { DateStatus } from "./index.js";
+import {
+  apply,
+  applyPaste,
+  dateStatus,
+  isDateMaskKey,
+  parseDate,
+} from "./index.js";
+import type { DateFieldMode, DateStatus } from "./index.js";
 
 export type UseDateFieldMaskOptions = {
   separator?: string;
+  mode?: DateFieldMode;
   defaultValue?: string;
   value?: string;
   onValueChange?: (value: string) => void;
@@ -50,6 +57,7 @@ export function useDateFieldMask(
 ): UseDateFieldMaskReturn {
   const {
     separator,
+    mode,
     defaultValue = "",
     value: valueProp,
     onValueChange,
@@ -62,11 +70,12 @@ export function useDateFieldMask(
   const ref = useRef<HTMLInputElement | null>(null);
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const value = isControlled ? valueProp : uncontrolledValue;
+  const parseOpts = { mode, min, max };
   const parsed = useMemo(
-    () => parseDate(value, { min, max }),
-    [value, min, max],
+    () => parseDate(value, parseOpts),
+    [value, mode, min, max],
   );
-  const status = useMemo(() => dateStatus(value), [value]);
+  const status = useMemo(() => dateStatus(value, { mode }), [value, mode]);
   const isoValue = iso(parsed);
   const prevIso = useRef(isoValue);
 
@@ -76,7 +85,7 @@ export function useDateFieldMask(
         setUncontrolledValue(next.value);
       }
       onValueChange?.(next.value);
-      const d = parseDate(next.value, { min, max });
+      const d = parseDate(next.value, { mode, min, max });
       const k = iso(d);
       if (k !== prevIso.current) {
         prevIso.current = k;
@@ -87,7 +96,7 @@ export function useDateFieldMask(
         ref.current?.setSelectionRange(caret, caret);
       });
     },
-    [isControlled, onValueChange, onParsedChange, min, max],
+    [isControlled, onValueChange, onParsedChange, mode, min, max],
   );
 
   const onKeyDown = useCallback(
@@ -104,11 +113,12 @@ export function useDateFieldMask(
           selectionEnd: event.currentTarget.selectionEnd ?? undefined,
           key: event.key,
           separator,
+          mode,
           step,
         }),
       );
     },
-    [separator, commit, step],
+    [separator, mode, commit, step],
   );
 
   const onPaste = useCallback(
@@ -121,10 +131,11 @@ export function useDateFieldMask(
           selectionEnd: event.currentTarget.selectionEnd ?? undefined,
           pasted: event.clipboardData.getData("text"),
           separator,
+          mode,
         }),
       );
     },
-    [separator, commit],
+    [separator, mode, commit],
   );
 
   return {

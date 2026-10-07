@@ -10,7 +10,7 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 
 | Entry | minify | gzip |
 | --- | ---: | ---: |
-| `ictus` | 5.2 kB | **2.2 kB** |
+| `ictus` | 7.0 kB | **2.6 kB** |
 | `ictus/react` (react external) | 1.5 kB | **0.8 kB** |
 
 `apply` is **0.1–0.2 µs** per keystroke (~5–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.4 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
@@ -35,6 +35,8 @@ npm install ictus
 
 The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the current group and writes the configured separator.
 
+`mode` selects field order: `dmy` (default), `mdy`, or `ymd`. `parseDate` / `formatDate` accept the same `mode` (also as a positional second/third argument for the string form).
+
 ## API
 
 ```ts
@@ -55,6 +57,7 @@ apply({
   selectionEnd?: number,  // selection end, defaults to caret
   key: string,            // digit, `.` `/` `-`, Backspace, Delete
   separator?: string,     // default '.'
+  mode?: "dmy" | "mdy" | "ymd", // default 'dmy'
   step?: number,          // default 0: ignore ArrowUp/ArrowDown
 }): { value: string; caret: number }
 
@@ -67,12 +70,16 @@ applyPaste({
 }): { value: string; caret: number }
 
 parseDate(masked: string, options?: {
+  mode?: "dmy" | "mdy" | "ymd";
   yyExpand?: { pivot?: number };
   min?: Date;
   max?: Date;
 }): Date | undefined
 dateStatus(masked: string): "empty" | "incomplete" | "invalid" | "valid"
-formatDate(date: Date, separator?: string, options?: { yyExpand?: { pivot?: number } }): string
+formatDate(date: Date, separator?: string, options?: {
+  mode?: "dmy" | "mdy" | "ymd";
+  yyExpand?: { pivot?: number };
+}): string
 expandTwoDigitYear(yy: number, pivot?: number): number
 isDateMaskKey(key: string): boolean
 
@@ -212,6 +219,6 @@ Publishing needs an `NPM_TOKEN` repository secret. In the repo’s Actions setti
 
 ## Out of scope
 
-Segmented/spinbutton fields. Calendar/popover. Locale-driven field order. Time, date-time, ranges. IME / non-Latin numerals. Wrapping Maskito, IMask, Cleave, React Aria, or `@internationalized/date`.
+Segmented/spinbutton fields. Calendar/popover. Locale-driven field order (explicit `mode` is supported). Time, date-time, ranges. IME / non-Latin numerals. Wrapping Maskito, IMask, Cleave, React Aria, or `@internationalized/date`.
 
-v0 is `dd.mm.yyyy` only. `mm/dd/yyyy` and `yyyy/mm/dd` can come later.
+Default is `dd.mm.yyyy` (`dmy`). Pass `mode: "mdy"` or `mode: "ymd"` for the other orders.

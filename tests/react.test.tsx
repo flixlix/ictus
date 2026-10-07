@@ -7,6 +7,7 @@ afterEach(cleanup);
 
 function DateInput({
   separator,
+  mode,
   defaultValue,
   value,
   onValueChange,
@@ -16,6 +17,7 @@ function DateInput({
   step,
 }: {
   separator?: string;
+  mode?: "dmy" | "mdy" | "ymd";
   defaultValue?: string;
   value?: string;
   onValueChange?: (value: string) => void;
@@ -27,6 +29,7 @@ function DateInput({
   const { inputProps, hiddenInputProps, isoValue, parsed, status } =
     useDateFieldMask({
       separator,
+      mode,
       defaultValue,
       value,
       onValueChange,
@@ -293,6 +296,26 @@ describe("useDateFieldMask", () => {
     expect(input.value).toBe("04.");
     fireEvent.click(screen.getByRole("button", { name: "set" }));
     expect(input.value).toBe("04.09.2026");
+  });
+
+  it("does not pad year first in ymd mode", () => {
+    render(<DateInput separator="/" mode="ymd" />);
+    typeKey("2");
+    expect((screen.getByLabelText("date") as HTMLInputElement).value).toBe("2");
+  });
+
+  it("applies mdy overflow rules to the first group", () => {
+    render(<DateInput separator="/" mode="mdy" />);
+    const input = screen.getByLabelText("date") as HTMLInputElement;
+    typeKey("4");
+    expect(input.value).toBe("04/");
+    typeKey("9");
+    expect(input.value).toBe("04/09/");
+  });
+
+  it("parses mdy defaultValue", () => {
+    render(<DateInput separator="/" mode="mdy" defaultValue="12/11/2026" />);
+    expect(screen.getByRole("status").textContent).toMatch(/Dec 11/);
   });
 
 });
