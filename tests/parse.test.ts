@@ -45,4 +45,38 @@ describe("parseDate", () => {
     expect(parseDate("11.12.20")).toBeUndefined();
     expect(parseDate("04.")).toBeUndefined();
   });
+
+  it("parses mdy order", () => {
+    expect(ymd(parseDate("12/11/2026", "mdy")!)).toEqual({
+      year: 2026,
+      month: 12,
+      day: 11,
+    });
+    expect(parseDate("13/11/2026", "mdy")).toBeUndefined();
+    expect(parseDate("02/29/2021", "mdy")).toBeUndefined();
+    expect(ymd(parseDate("02/29/2020", "mdy")!)).toEqual({
+      year: 2020,
+      month: 2,
+      day: 29,
+    });
+  });
+
+  it("parses ymd order", () => {
+    expect(ymd(parseDate("2026/12/11", "ymd")!)).toEqual({
+      year: 2026,
+      month: 12,
+      day: 11,
+    });
+    expect(parseDate("2026/13/11", "ymd")).toBeUndefined();
+    expect(parseDate("11.12.2026", "ymd")).toBeUndefined();
+  });
+
+  it("does not reinterpret dmy strings as mdy", () => {
+    expect(ymd(parseDate("11.12.2026")!)).toEqual({ year: 2026, month: 12, day: 11 });
+    expect(ymd(parseDate("11.12.2026", "mdy")!)).toEqual({
+      year: 2026,
+      month: 11,
+      day: 12,
+    });
+  });
 });

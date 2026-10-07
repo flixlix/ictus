@@ -1,9 +1,12 @@
+export type DateFieldMode = "dmy" | "mdy" | "ymd";
+
 export type ApplyInput = {
   value: string;
   caret: number;
   selectionEnd?: number;
   key: string;
   separator?: string;
+  mode?: DateFieldMode;
 };
 
 export type ApplyResult = {
@@ -21,11 +24,44 @@ type GroupSpec = {
   overflowFirst: ReadonlySet<string>;
 };
 
-const GROUPS: readonly [GroupSpec, GroupSpec, GroupSpec] = [
-  { width: 2, max: 31, overflowFirst: new Set(["4", "5", "6", "7", "8", "9"]) },
-  { width: 2, max: 12, overflowFirst: new Set(["2", "3", "4", "5", "6", "7", "8", "9"]) },
-  { width: 4, max: null, overflowFirst: new Set() },
-];
+type Groups = readonly [GroupSpec, GroupSpec, GroupSpec];
+
+const DAY: GroupSpec = {
+  width: 2,
+  max: 31,
+  overflowFirst: new Set(["4", "5", "6", "7", "8", "9"]),
+};
+
+const MONTH: GroupSpec = {
+  width: 2,
+  max: 12,
+  overflowFirst: new Set(["2", "3", "4", "5", "6", "7", "8", "9"]),
+};
+
+const YEAR: GroupSpec = {
+  width: 4,
+  max: null,
+  overflowFirst: new Set(),
+};
+
+function groupsForMode(mode: DateFieldMode): Groups {
+  switch (mode) {
+    case "dmy":
+      return [DAY, MONTH, YEAR];
+    case "mdy":
+      return [MONTH, DAY, YEAR];
+    case "ymd":
+      return [YEAR, MONTH, DAY];
+    default: {
+      const _exhaustive: never = mode;
+      return _exhaustive;
+    }
+  }
+}
+
+function resolveMode(mode: DateFieldMode | undefined): DateFieldMode {
+  return mode ?? "dmy";
+}
 
 function isDigit(key: string): boolean {
   return key.length === 1 && key >= "0" && key <= "9";
@@ -42,7 +78,7 @@ type Parsed = {
   offset: number;
 };
 
-function parseState(value: string, caret: number, sep: string): Parsed {
+function parseState(value: string, caret: number, sep: string, groups: Groups): Parsed {
   const digits: [string, string, string] = ["", "", ""];
   const seps: [boolean, boolean] = [false, false];
   let i = 0;
@@ -52,7 +88,7 @@ function parseState(value: string, caret: number, sep: string): Parsed {
 
   for (const g of [0, 1, 2] as const) {
     const start = i;
-    const spec = GROUPS[g];
+    const spec = groups[g];
     while (i < value.length && value[i] !== sep && digits[g].length < spec.width) {
       const ch = value[i];
       if (ch === undefined) break;
@@ -134,14 +170,15 @@ function insertDigit(
   caret: number,
   digit: string,
   sep: string,
+  groups: Groups,
 ): ApplyResult {
-  const state = parseState(value, caret, sep);
+  const state = parseState(value, caret, sep, groups);
   const digits = state.digits;
   const seps = state.seps;
   let g: GroupIndex | undefined = state.groupIndex;
   let offset = state.offset;
 
-  while (g !== undefined && digits[g].length >= GROUPS[g].width) {
+  while (g !== undefined && digits[g].length >= groups[g].width) {
     if (g === 2) return { value, caret };
     setSep(seps, g);
     g = nextGroup(g);
@@ -150,7 +187,7 @@ function insertDigit(
 
   if (g === undefined) return { value, caret };
 
-  const spec = GROUPS[g];
+  const spec = groups[g];
   const current = digits[g];
   const at = Math.min(Math.max(offset, 0), current.length);
 
@@ -178,13 +215,18 @@ function insertDigit(
   };
 }
 
-function commitSeparator(value: string, caret: number, sep: string): ApplyResult {
-  const { digits, seps, groupIndex } = parseState(value, caret, sep);
+function commitSeparator(
+  value: string,
+  caret: number,
+  sep: string,
+  groups: Groups,
+): ApplyResult {
+  const { digits, seps, groupIndex } = parseState(value, caret, sep, groups);
   if (digits[groupIndex].length === 0 || groupIndex === 2) {
     return { value, caret };
   }
 
-  digits[groupIndex] = digits[groupIndex].padStart(GROUPS[groupIndex].width, "0");
+  digits[groupIndex] = digits[groupIndex].padStart(groups[groupIndex].width, "0");
   setSep(seps, groupIndex);
 
   return {
@@ -200,6 +242,8 @@ function clampIndex(value: string, index: number): number {
 export function apply(input: ApplyInput): ApplyResult {
   let { value, caret, key } = input;
   const separator = input.separator || ".";
+  const mode = resolveMode(input.mode);
+  const groups = groupsForMode(mode);
   const from = clampIndex(value, caret);
   const to = clampIndex(value, input.selectionEnd ?? caret);
   const start = Math.min(from, to);
@@ -232,27 +276,18 @@ export function apply(input: ApplyInput): ApplyResult {
   }
 
   if (SEPARATOR_KEYS.has(key)) {
-    return commitSeparator(value, caret, separator);
+    return commitSeparator(value, caret, separator, groups);
   }
 
   if (isDigit(key)) {
-    return insertDigit(value, caret, key, separator);
+    return insertDigit(value, caret, key, separator, groups);
   }
 
   return { value, caret };
 }
 
-const PARSE_RE = /^(\d{2})[./-](\d{2})[./-](\d{4})$/;
-
-export function parseDate(masked: string): Date | undefined {
-  const match = PARSE_RE.exec(masked);
-  if (!match?.[1] || !match[2] || !match[3]) return undefined;
-
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  const year = Number(match[3]);
+function calendarDate(year: number, month: number, day: number): Date | undefined {
   const date = new Date(year, month - 1, day);
-
   if (
     date.getFullYear() !== year ||
     date.getMonth() !== month - 1 ||
@@ -260,13 +295,54 @@ export function parseDate(masked: string): Date | undefined {
   ) {
     return undefined;
   }
-
   return date;
 }
 
-export function formatDate(date: Date, separator = "."): string {
+const PARSE_DMY_MDY = /^(\d{2})[./-](\d{2})[./-](\d{4})$/;
+const PARSE_YMD = /^(\d{4})[./-](\d{2})[./-](\d{2})$/;
+
+export function parseDate(masked: string, mode: DateFieldMode = "dmy"): Date | undefined {
+  switch (mode) {
+    case "dmy": {
+      const match = PARSE_DMY_MDY.exec(masked);
+      if (!match?.[1] || !match[2] || !match[3]) return undefined;
+      return calendarDate(Number(match[3]), Number(match[2]), Number(match[1]));
+    }
+    case "mdy": {
+      const match = PARSE_DMY_MDY.exec(masked);
+      if (!match?.[1] || !match[2] || !match[3]) return undefined;
+      return calendarDate(Number(match[3]), Number(match[1]), Number(match[2]));
+    }
+    case "ymd": {
+      const match = PARSE_YMD.exec(masked);
+      if (!match?.[1] || !match[2] || !match[3]) return undefined;
+      return calendarDate(Number(match[1]), Number(match[2]), Number(match[3]));
+    }
+    default: {
+      const _exhaustive: never = mode;
+      return _exhaustive;
+    }
+  }
+}
+
+export function formatDate(
+  date: Date,
+  separator = ".",
+  mode: DateFieldMode = "dmy",
+): string {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = String(date.getFullYear()).padStart(4, "0");
-  return `${day}${separator}${month}${separator}${year}`;
+  switch (mode) {
+    case "dmy":
+      return `${day}${separator}${month}${separator}${year}`;
+    case "mdy":
+      return `${month}${separator}${day}${separator}${year}`;
+    case "ymd":
+      return `${year}${separator}${month}${separator}${day}`;
+    default: {
+      const _exhaustive: never = mode;
+      return _exhaustive;
+    }
+  }
 }

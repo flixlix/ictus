@@ -7,15 +7,18 @@ afterEach(cleanup);
 
 function DateInput({
   separator,
+  mode,
   defaultValue,
   onValueChange,
 }: {
   separator?: string;
+  mode?: "dmy" | "mdy" | "ymd";
   defaultValue?: string;
   onValueChange?: (value: string) => void;
 }) {
   const { inputProps, parsed } = useDateFieldMask({
     separator,
+    mode,
     defaultValue,
     onValueChange,
   });
@@ -60,6 +63,26 @@ describe("useDateFieldMask", () => {
     render(<DateInput separator="/" />);
     typeKey("4");
     expect((screen.getByLabelText("date") as HTMLInputElement).value).toBe("04/");
+  });
+
+  it("applies mdy overflow rules to the first group", () => {
+    render(<DateInput separator="/" mode="mdy" />);
+    const input = screen.getByLabelText("date") as HTMLInputElement;
+    typeKey("4");
+    expect(input.value).toBe("04/");
+    typeKey("9");
+    expect(input.value).toBe("04/09/");
+  });
+
+  it("does not pad year first in ymd mode", () => {
+    render(<DateInput separator="/" mode="ymd" />);
+    typeKey("2");
+    expect((screen.getByLabelText("date") as HTMLInputElement).value).toBe("2");
+  });
+
+  it("parses mdy defaultValue", () => {
+    render(<DateInput separator="/" mode="mdy" defaultValue="12/11/2026" />);
+    expect(screen.getByRole("status").textContent).toMatch(/Dec 11/);
   });
 
   it("starts from defaultValue", () => {

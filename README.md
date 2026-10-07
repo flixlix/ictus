@@ -35,10 +35,13 @@ npm install ictus
 
 The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the current group and writes the configured separator.
 
+Field order is an explicit `mode`: `"dmy"` (default), `"mdy"`, or `"ymd"`. Overflow-advance follows the group type (day vs month vs year), not the positional index alone.
+
 ## API
 
 ```ts
 import { apply, parseDate, formatDate, isDateMaskKey } from "ictus";
+import type { DateFieldMode } from "ictus";
 
 apply({
   value: string,          // current masked value
@@ -46,16 +49,17 @@ apply({
   selectionEnd?: number,  // selection end, defaults to caret
   key: string,            // digit, `.` `/` `-`, Backspace, Delete
   separator?: string,     // default '.'
+  mode?: DateFieldMode,   // "dmy" | "mdy" | "ymd", default "dmy"
 }): { value: string; caret: number }
 
-parseDate(masked: string): Date | undefined
-formatDate(date: Date, separator?: string): string
+parseDate(masked: string, mode?: DateFieldMode): Date | undefined
+formatDate(date: Date, separator?: string, mode?: DateFieldMode): string
 isDateMaskKey(key: string): boolean
 ```
 
 `parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
 
-`formatDate` writes `dd{sep}mm{sep}yyyy` from the date's local calendar parts.
+`formatDate` writes the date's local calendar parts in `mode` order (`dd{sep}mm{sep}yyyy` by default).
 
 ## Acceptance table
 
@@ -111,6 +115,7 @@ import { useDateFieldMask } from "ictus/react";
 function DateInput() {
   const { inputProps, parsed } = useDateFieldMask({
     separator: ".",
+    mode: "dmy",
     onValueChange: (value) => console.log(value, parsed),
   });
 
@@ -134,6 +139,4 @@ Publishing needs an `NPM_TOKEN` repository secret. In the repo’s Actions setti
 
 ## Out of scope
 
-Segmented/spinbutton fields. Calendar/popover. Locale-driven field order. Time, date-time, ranges. IME / non-Latin numerals. Wrapping Maskito, IMask, Cleave, React Aria, or `@internationalized/date`.
-
-v0 is `dd.mm.yyyy` only. `mm/dd/yyyy` and `yyyy/mm/dd` can come later.
+Segmented/spinbutton fields. Calendar/popover. Locale-driven field order (pass `mode` explicitly instead). Time, date-time, ranges. IME / non-Latin numerals. Wrapping Maskito, IMask, Cleave, React Aria, or `@internationalized/date`.

@@ -18,9 +18,14 @@ function at(marked: string): { value: string; caret: number; selectionEnd?: numb
   };
 }
 
-function type(before: string, key: string, separator?: string) {
+function type(
+  before: string,
+  key: string,
+  separator?: string,
+  mode?: "dmy" | "mdy" | "ymd",
+) {
   const { value, caret, selectionEnd } = at(before);
-  return apply({ value, caret, selectionEnd, key, separator });
+  return apply({ value, caret, selectionEnd, key, separator, mode });
 }
 
 describe("acceptance table", () => {
@@ -87,6 +92,61 @@ describe("apply", () => {
   ] as const)("%s + %s (separator %s) → %s", (before, key, separator, after) => {
     const result = type(before, key, separator);
     expect(show(result.value, result.caret)).toBe(after);
+  });
+});
+
+describe("mode mdy", () => {
+  it.each([
+    ["|", "4", "04/|"],
+    ["|", "1", "1|"],
+    ["1|", "/", "01/|"],
+    ["|", "9", "09/|"],
+    ["04/|", "3", "04/3|"],
+    ["04/|", "9", "04/09/|"],
+    ["04/3|", "2", "04/3|"],
+    ["04/1|", "5", "04/15/|"],
+    ["12/|", "4", "12/04/|"],
+    ["12/25/|", "2", "12/25/2|"],
+    ["12/25/202|", "6", "12/25/2026|"],
+    ["3|", "9", "3|"],
+    ["1|", "2", "12/|"],
+    ["1|", "3", "1|"],
+  ] as const)("%s + %s → %s", (before, key, after) => {
+    const result = type(before, key, "/", "mdy");
+    expect(show(result.value, result.caret)).toBe(after);
+  });
+});
+
+describe("mode ymd", () => {
+  it.each([
+    ["|", "2", "2|"],
+    ["2026|", "/", "2026/|"],
+    ["2026/|", "4", "2026/04/|"],
+    ["2026/|", "1", "2026/1|"],
+    ["2026/1|", "2", "2026/12/|"],
+    ["2026/12/|", "9", "2026/12/09|"],
+    ["2026/12/|", "3", "2026/12/3|"],
+    ["2026/12/3|", "1", "2026/12/31|"],
+    ["2026/12/3|", "9", "2026/12/3|"],
+    ["2026/1|", "3", "2026/1|"],
+    ["|", "0", "0|"],
+  ] as const)("%s + %s → %s", (before, key, after) => {
+    const result = type(before, key, "/", "ymd");
+    expect(show(result.value, result.caret)).toBe(after);
+  });
+
+  it("does not overflow-pad the year first digit", () => {
+    const result = type("|", "4", "/", "ymd");
+    expect(show(result.value, result.caret)).toBe("4|");
+  });
+});
+
+describe("mode defaults to dmy", () => {
+  it("treats omitted mode like dmy", () => {
+    const withDefault = type("|", "4");
+    const withExplicit = type("|", "4", ".", "dmy");
+    expect(show(withDefault.value, withDefault.caret)).toBe("04.|");
+    expect(show(withExplicit.value, withExplicit.caret)).toBe("04.|");
   });
 });
 

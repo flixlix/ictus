@@ -137,8 +137,52 @@
       </span>
     </p>
 
+    <h3>MDY</h3>
+    <p>
+      <code>mode: "mdy"</code>. Month overflow-pads first (<code>4</code> → <code>04/</code>), then day.
+    </p>
+    <p>
+      <label for="demo-mdy">mm/dd/yyyy</label><br />
+      <span data-mask data-separator="/" data-mode="mdy">
+        <input
+          id="demo-mdy"
+          size="12"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="mm/dd/yyyy"
+        />
+        <br />
+        <code data-caret>|</code>
+        <span data-parse data-kind="incomplete">incomplete</span>
+        <span data-hint></span>
+      </span>
+    </p>
+
+    <h3>YMD</h3>
+    <p>
+      <code>mode: "ymd"</code>. Year is first and never pads on the first digit.
+    </p>
+    <p>
+      <label for="demo-ymd">yyyy/mm/dd</label><br />
+      <span data-mask data-separator="/" data-mode="ymd">
+        <input
+          id="demo-ymd"
+          size="12"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="yyyy/mm/dd"
+        />
+        <br />
+        <code data-caret>|</code>
+        <span data-parse data-kind="incomplete">incomplete</span>
+        <span data-hint></span>
+      </span>
+    </p>
+
     <h3>formatDate</h3>
-    <p>Local calendar parts, padded, with the separator you pass.</p>
+    <p>Local calendar parts, padded, with the separator and mode you pass.</p>
     <p>
       <label for="native-date">Date</label>
       <input id="native-date" type="date" />
@@ -149,6 +193,14 @@
         <option value="." selected>.</option>
         <option value="/">/</option>
         <option value="-">-</option>
+      </select>
+    </p>
+    <p>
+      <label for="format-mode">Mode</label>
+      <select id="format-mode">
+        <option value="dmy" selected>dmy</option>
+        <option value="mdy">mdy</option>
+        <option value="ymd">ymd</option>
       </select>
     </p>
     <p>formatDate = <code id="format-result"></code></p>
@@ -267,6 +319,7 @@ apply({
   caret: 1,
   key: ".",
   separator: ".", // default
+  mode: "dmy",    // "dmy" | "mdy" | "ymd"
 });
 // { value: "01.", caret: 3 }</code></pre>
     <dl>
@@ -283,6 +336,11 @@ apply({
       </dd>
       <dt><code>separator?</code></dt>
       <dd>Written separator. Default <code>"."</code>. Use a single character.</dd>
+      <dt><code>mode?</code></dt>
+      <dd>
+        Field order: <code>"dmy"</code> (default), <code>"mdy"</code>, or <code>"ymd"</code>.
+        Overflow rules follow the group type, not the slot index.
+      </dd>
     </dl>
 
     <h3 id="parseDate"><code>parseDate</code></h3>
@@ -293,8 +351,9 @@ apply({
       <code>.</code>, <code>/</code>, and <code>-</code> are all accepted.
     </p>
     <p><button type="button" data-copy-target="code-parse">Copy</button></p>
-    <pre id="code-parse"><code>parseDate("11.12.2026"); // local Date
-parseDate("11/12/2026"); // same
+    <pre id="code-parse"><code>parseDate("11.12.2026"); // local Date (dmy)
+parseDate("12/11/2026", "mdy"); // same calendar day
+parseDate("2026/12/11", "ymd"); // same
 parseDate("32.01.2020"); // undefined
 parseDate("31.02.2020"); // undefined
 parseDate("11.12");      // undefined</code></pre>
@@ -302,16 +361,30 @@ parseDate("11.12");      // undefined</code></pre>
       <label for="parse-input">Masked string</label><br />
       <input id="parse-input" size="16" value="11.12.2026" spellcheck="false" />
     </p>
+    <p>
+      <label for="parse-mode">Mode</label>
+      <select id="parse-mode">
+        <option value="dmy" selected>dmy</option>
+        <option value="mdy">mdy</option>
+        <option value="ymd">ymd</option>
+      </select>
+    </p>
     <pre id="parse-output"></pre>
 
     <h3 id="formatDate"><code>formatDate</code></h3>
-    <p>Writes <code>dd{sep}mm{sep}yyyy</code> from the date’s local day, month, and year.</p>
+    <p>
+      Writes the date’s local day, month, and year in <code>mode</code> order
+      (<code>dd{sep}mm{sep}yyyy</code> by default).
+    </p>
     <p><button type="button" data-copy-target="code-format">Copy</button></p>
     <pre id="code-format"><code>formatDate(new Date(2026, 11, 11));
 // "11.12.2026"
 
-formatDate(new Date(2026, 11, 11), "/");
-// "11/12/2026"</code></pre>
+formatDate(new Date(2026, 11, 11), "/", "mdy");
+// "12/11/2026"
+
+formatDate(new Date(2026, 11, 11), "/", "ymd");
+// "2026/12/11"</code></pre>
 
     <h3 id="isDateMaskKey"><code>isDateMaskKey</code></h3>
     <p>
@@ -324,12 +397,15 @@ event.preventDefault();</code></pre>
 
     <h3 id="types">Types</h3>
     <p><button type="button" data-copy-target="code-types">Copy</button></p>
-    <pre id="code-types"><code>type ApplyInput = {
+    <pre id="code-types"><code>type DateFieldMode = "dmy" | "mdy" | "ymd";
+
+type ApplyInput = {
   value: string;
   caret: number;
   selectionEnd?: number;
   key: string;
   separator?: string;
+  mode?: DateFieldMode;
 };
 
 type ApplyResult = {
@@ -364,7 +440,7 @@ input.addEventListener("keydown", (event) => {
     <pre id="code-react"><code>import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
-  const { inputProps, parsed } = useDateFieldMask();
+  const { inputProps, parsed } = useDateFieldMask({ mode: "mdy", separator: "/" });
   return &lt;input {...inputProps} /&gt;;
 }</code></pre>
 

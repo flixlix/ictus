@@ -1,4 +1,5 @@
 import { apply, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
+import type { DateFieldMode } from "../src/index.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
   if (selectionEnd === caret) {
@@ -14,8 +15,40 @@ function at(marked: string): { value: string; caret: number } {
   return { value: marked.replace("|", ""), caret };
 }
 
-function parseKind(masked: string): { kind: "valid" | "invalid" | "incomplete"; label: string } {
-  const date = parseDate(masked);
+function readMode(raw: string | undefined): DateFieldMode {
+  switch (raw) {
+    case "mdy":
+      return "mdy";
+    case "ymd":
+      return "ymd";
+    case "dmy":
+    case undefined:
+    case "":
+      return "dmy";
+    default:
+      return "dmy";
+  }
+}
+
+function completePattern(mode: DateFieldMode): RegExp {
+  switch (mode) {
+    case "dmy":
+    case "mdy":
+      return /^\d{2}[./-]\d{2}[./-]\d{4}$/;
+    case "ymd":
+      return /^\d{4}[./-]\d{2}[./-]\d{2}$/;
+    default: {
+      const _exhaustive: never = mode;
+      return _exhaustive;
+    }
+  }
+}
+
+function parseKind(
+  masked: string,
+  mode: DateFieldMode,
+): { kind: "valid" | "invalid" | "incomplete"; label: string } {
+  const date = parseDate(masked, mode);
   if (date) {
     const label = new Intl.DateTimeFormat(undefined, {
       weekday: "short",
@@ -25,7 +58,7 @@ function parseKind(masked: string): { kind: "valid" | "invalid" | "incomplete"; 
     }).format(date);
     return { kind: "valid", label };
   }
-  if (/^\d{2}[./-]\d{2}[./-]\d{4}$/.test(masked)) {
+  if (completePattern(mode).test(masked)) {
     return { kind: "invalid", label: "not a calendar date" };
   }
   return { kind: "incomplete", label: "incomplete" };
@@ -37,11 +70,12 @@ function syncField(root: HTMLElement, value: string, caret: number, hint = ""): 
   const parseEl = root.querySelector("[data-parse]");
   const hintEl = root.querySelector("[data-hint]");
   if (!(input instanceof HTMLInputElement)) return;
+  const mode = readMode(root.dataset.mode);
   input.value = value;
   input.setSelectionRange(caret, caret);
   if (caretEl) caretEl.textContent = show(value, caret);
   if (parseEl instanceof HTMLElement) {
-    const parsed = parseKind(value);
+    const parsed = parseKind(value, mode);
     parseEl.dataset.kind = parsed.kind;
     parseEl.textContent = parsed.label;
   }
@@ -52,6 +86,7 @@ function bindMask(root: HTMLElement): void {
   const input = root.querySelector("input");
   if (!(input instanceof HTMLInputElement)) return;
   const separator = root.dataset.separator || ".";
+  const mode = readMode(root.dataset.mode);
   syncField(root, input.value, input.selectionStart ?? input.value.length);
 
   input.addEventListener("keydown", (event) => {
@@ -64,6 +99,7 @@ function bindMask(root: HTMLElement): void {
       selectionEnd: input.selectionEnd ?? undefined,
       key: event.key,
       separator,
+      mode,
     });
     const ignored =
       next.value === input.value &&
@@ -105,6 +141,7 @@ function bindCopies(): void {
 function bindFormat(): void {
   const native = document.querySelector<HTMLInputElement>("#native-date");
   const sep = document.querySelector<HTMLSelectElement>("#format-sep");
+  const modeEl = document.querySelector<HTMLSelectElement>("#format-mode");
   const result = document.querySelector("#format-result");
   const load = document.querySelector("#load-formatted");
   if (!native || !sep || !result) return;
@@ -119,21 +156,24 @@ function bindFormat(): void {
       result.textContent = "";
       return;
     }
-    result.textContent = formatDate(new Date(year, month - 1, day), sep.value);
+    const mode = readMode(modeEl?.value);
+    result.textContent = formatDate(new Date(year, month - 1, day), sep.value, mode);
   };
 
   native.addEventListener("input", render);
   sep.addEventListener("change", render);
+  modeEl?.addEventListener("change", render);
   render();
 
   load?.addEventListener("click", () => {
     const formatted = result.textContent ?? "";
+    const mode = readMode(modeEl?.value);
     const ids: Record<string, string> = {
-      ".": "demo-dot",
-      "/": "demo-slash",
-      "-": "demo-dash",
+      dmy: "demo-dot",
+      mdy: "demo-mdy",
+      ymd: "demo-ymd",
     };
-    const input = document.querySelector<HTMLInputElement>(`#${ids[sep.value] ?? "demo-dot"}`);
+    const input = document.querySelector<HTMLInputElement>(`#${ids[mode] ?? "demo-dot"}`);
     const root = input?.closest("[data-mask]");
     if (root instanceof HTMLElement) {
       syncField(root, formatted, formatted.length);
@@ -155,7 +195,7 @@ function bindTable(): void {
     if (before === undefined || !key) return;
 
     const start = at(before);
-    const next = apply({ ...start, key, separator: "." });
+    const next = apply({ ...start, key, separator: ".", mode: "dmy" });
     syncField(field, next.value, next.caret);
     for (const other of body.querySelectorAll("tr")) other.removeAttribute("data-on");
     row.dataset.on = "true";
@@ -165,11 +205,13 @@ function bindTable(): void {
 
 function bindParseLive(): void {
   const input = document.querySelector<HTMLInputElement>("#parse-input");
+  const modeEl = document.querySelector<HTMLSelectElement>("#parse-mode");
   const output = document.querySelector("#parse-output");
   if (!input || !output) return;
 
   const render = () => {
-    const date = parseDate(input.value);
+    const mode = readMode(modeEl?.value);
+    const date = parseDate(input.value, mode);
     if (!date) {
       output.textContent = "undefined";
       return;
@@ -182,6 +224,7 @@ function bindParseLive(): void {
   };
 
   input.addEventListener("input", render);
+  modeEl?.addEventListener("change", render);
   render();
 }
 

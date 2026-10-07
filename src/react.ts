@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
+import type { DateFieldMode } from "./index.js";
 import { apply, isDateMaskKey, parseDate } from "./index.js";
 
 export type UseDateFieldMaskOptions = {
   separator?: string;
+  mode?: DateFieldMode;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
 };
@@ -31,10 +33,10 @@ function noopChange(_event: ChangeEvent<HTMLInputElement>) {}
 export function useDateFieldMask(
   options: UseDateFieldMaskOptions = {},
 ): UseDateFieldMaskReturn {
-  const { separator, defaultValue = "", onValueChange } = options;
+  const { separator, mode, defaultValue = "", onValueChange } = options;
   const ref = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState(defaultValue);
-  const parsed = useMemo(() => parseDate(value), [value]);
+  const parsed = useMemo(() => parseDate(value, mode), [value, mode]);
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
@@ -46,6 +48,7 @@ export function useDateFieldMask(
         selectionEnd: event.currentTarget.selectionEnd ?? undefined,
         key: event.key,
         separator,
+        mode,
       });
       setValue(next.value);
       onValueChange?.(next.value);
@@ -54,7 +57,7 @@ export function useDateFieldMask(
         ref.current?.setSelectionRange(caret, caret);
       });
     },
-    [separator, onValueChange],
+    [separator, mode, onValueChange],
   );
 
   return {
