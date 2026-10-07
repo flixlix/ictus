@@ -8,10 +8,18 @@
       name="description"
       content="Headless as-you-type mask for a single day-month-year input. Live demos and API."
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="https://assets.onedollarstats.com/stonks.js"></script>
   </head>
   <body>
+    <div class="scroll-shell" id="scroll-shell">
+    <main class="page">
     <header>
       <h1>ictus</h1>
       <p class="version"><a href="https://github.com/flixlix/ictus/releases">v%ICTUS_VERSION%</a></p>
@@ -20,7 +28,7 @@
       Headless as-you-type behavior for a single <code>&lt;input&gt;</code> date field. Day-month-year,
       zero dependencies, no calendar, no React in the core.
     </p>
-    <p>
+    <p class="nav">
       <a href="#demos">Demos</a> · <a href="#agent">Prompt your agent</a> ·
       <a href="#size">Size</a> · <a href="#api">API</a>
     </p>
@@ -92,7 +100,7 @@ When done, summarize what you installed, what you changed, and how to try it.</c
 
     <h2 id="size">Size and speed</h2>
     <p>Min+gzip, as a bundler ships it. Reproduce with <code>pnpm measure</code>.</p>
-    <table border="1" cellspacing="0" cellpadding="4">
+    <table>
       <thead>
         <tr>
           <th>Entry</th>
@@ -242,7 +250,7 @@ When done, summarize what you installed, what you changed, and how to try it.</c
         <span data-hint></span>
       </span>
     </p>
-    <table border="1" cellspacing="0" cellpadding="4">
+    <table>
       <thead>
         <tr>
           <th>Before</th>
@@ -534,6 +542,8 @@ function DateInput() {
         <a href="https://ictus.luca-felix.com">ictus.luca-felix.com</a>
       </p>
     </footer>
+    </main>
+    </div>
 
     <script type="module" src="./main.ts"></script>
   </body>

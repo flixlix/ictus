@@ -1,5 +1,6 @@
 import { apply, applyPaste, dateStatus, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
 import type { DateStatus } from "../src/index.js";
+import { mountOverflowScrollGradients } from "./overflow-scroll-gradient.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
   if (selectionEnd === caret) {
@@ -223,6 +224,11 @@ function bindParseLive(): void {
 
   input.addEventListener("input", render);
   render();
+}
+
+const scrollShell = document.querySelector("#scroll-shell");
+if (scrollShell instanceof HTMLElement) {
+  mountOverflowScrollGradients(scrollShell);
 }
 
 for (const root of document.querySelectorAll<HTMLElement>("[data-mask]")) {
