@@ -1,4 +1,4 @@
-import { apply, dateStatus, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
+import { apply, applyPaste, dateStatus, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
 import type { DateStatus } from "../src/index.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
@@ -88,6 +88,18 @@ function bindMask(root: HTMLElement): void {
     syncField(root, next.value, next.caret, ignored ? "ignored" : "");
   });
 
+  input.addEventListener("paste", (event) => {
+    event.preventDefault();
+    const next = applyPaste({
+      value: input.value,
+      caret: input.selectionStart ?? 0,
+      selectionEnd: input.selectionEnd ?? undefined,
+      pasted: event.clipboardData?.getData("text") ?? "",
+      separator,
+    });
+    syncField(root, next.value, next.caret);
+  });
+
   const paintCaret = () => {
     const caretEl = root.querySelector("[data-caret]");
     if (!caretEl) return;
@@ -113,6 +125,19 @@ function bindCopies(): void {
         button.dataset.copied = "false";
         button.textContent = previous;
       }, 1200);
+    });
+  }
+}
+
+function bindFolds(): void {
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-expand]")) {
+    button.addEventListener("click", () => {
+      const id = button.dataset.expand;
+      const target = id ? document.getElementById(id) : null;
+      if (!(target instanceof HTMLElement)) return;
+      const open = target.classList.toggle("is-open");
+      button.setAttribute("aria-expanded", open ? "true" : "false");
+      button.textContent = open ? "Show less" : "Show more";
     });
   }
 }
@@ -205,6 +230,7 @@ for (const root of document.querySelectorAll<HTMLElement>("[data-mask]")) {
 }
 
 bindCopies();
+bindFolds();
 bindFormat();
 bindTable();
 bindParseLive();

@@ -7,6 +7,14 @@ export type ApplyInput = {
   step?: number;
 };
 
+export type ApplyPasteInput = {
+  value: string;
+  caret: number;
+  selectionEnd?: number;
+  pasted: string;
+  separator?: string;
+};
+
 export type ApplyResult = {
   value: string;
   caret: number;
@@ -283,6 +291,56 @@ export function apply(input: ApplyInput): ApplyResult {
 
   if (isDigit(key)) {
     return insertDigit(value, caret, key, separator);
+  }
+
+  return { value, caret };
+}
+
+const ISO_PASTE_RE = /^(\d{4})[./-](\d{1,2})[./-](\d{1,2})$/;
+
+function normalizePastedKeys(pasted: string): string[] {
+  const text = pasted.trim();
+  if (!text) return [];
+
+  const iso = ISO_PASTE_RE.exec(text);
+  if (iso?.[1] && iso[2] && iso[3]) {
+    return [...iso[3], ".", ...iso[2], ".", ...iso[1]];
+  }
+
+  const keys: string[] = [];
+  for (const ch of text) {
+    if (isDigit(ch) || SEPARATOR_KEYS.has(ch)) keys.push(ch);
+  }
+  return keys;
+}
+
+export function applyPaste(input: ApplyPasteInput): ApplyResult {
+  const separator = input.separator || ".";
+  const keys = normalizePastedKeys(input.pasted);
+  if (keys.length === 0) {
+    return {
+      value: input.value,
+      caret: clampIndex(input.value, input.caret),
+    };
+  }
+
+  let value = input.value;
+  let caret = input.caret;
+  let selectionEnd = input.selectionEnd;
+
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i];
+    if (key === undefined) continue;
+    const next = apply({
+      value,
+      caret,
+      selectionEnd: i === 0 ? selectionEnd : caret,
+      key,
+      separator,
+    });
+    value = next.value;
+    caret = next.caret;
+    selectionEnd = caret;
   }
 
   return { value, caret };
