@@ -38,7 +38,7 @@ The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the
 ## API
 
 ```ts
-import { apply, parseDate, formatDate, isDateMaskKey } from "ictus";
+import { apply, applyPaste, parseDate, formatDate, isDateMaskKey } from "ictus";
 
 apply({
   value: string,          // current masked value
@@ -48,10 +48,20 @@ apply({
   separator?: string,     // default '.'
 }): { value: string; caret: number }
 
+applyPaste({
+  value: string,
+  caret: number,
+  selectionEnd?: number,
+  pasted: string,         // clipboard text
+  separator?: string,
+}): { value: string; caret: number }
+
 parseDate(masked: string): Date | undefined
 formatDate(date: Date, separator?: string): string
 isDateMaskKey(key: string): boolean
 ```
+
+`applyPaste` normalizes common clipboard shapes (`11/12/2026`, `11-12-2026`, `11.12.2026`, digit-only `11122026`, ISO `2026-12-11`) into the mask via the same group and overflow rules as `apply`. Non-date characters are ignored. ISO year-month-day with separators is remapped to day-month-year; digit-only strings stay DMY order.
 
 `parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
 
@@ -82,7 +92,7 @@ Empty current group + separator is a no-op (`Blank + . → ""`). Backspace/Delet
 ## Vanilla `<input>`
 
 ```js
-import { apply, isDateMaskKey } from "ictus";
+import { apply, applyPaste, isDateMaskKey } from "ictus";
 
 const input = document.querySelector("input");
 input.addEventListener("keydown", (event) => {
@@ -93,6 +103,18 @@ input.addEventListener("keydown", (event) => {
     caret: input.selectionStart ?? 0,
     selectionEnd: input.selectionEnd ?? undefined,
     key: event.key,
+  });
+  input.value = next.value;
+  input.setSelectionRange(next.caret, next.caret);
+});
+
+input.addEventListener("paste", (event) => {
+  event.preventDefault();
+  const next = applyPaste({
+    value: input.value,
+    caret: input.selectionStart ?? 0,
+    selectionEnd: input.selectionEnd ?? undefined,
+    pasted: event.clipboardData?.getData("text") ?? "",
   });
   input.value = next.value;
   input.setSelectionRange(next.caret, next.caret);
@@ -118,7 +140,7 @@ function DateInput() {
 }
 ```
 
-`inputProps` is `ref`, `value`, `onKeyDown`, a no-op `onChange` (value is owned by `apply`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`.
+`inputProps` is `ref`, `value`, `onKeyDown`, `onPaste` (`preventDefault` + `applyPaste`), a no-op `onChange` (value is owned by `apply` / `applyPaste`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`.
 
 ## Releasing
 
