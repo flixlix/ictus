@@ -38,17 +38,14 @@ The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the
 ## API
 
 ```ts
-<<<<<<< HEAD
-import { apply, applyPaste, parseDate, formatDate, isDateMaskKey } from "ictus";
-=======
 import {
   apply,
+  applyPaste,
   parseDate,
   formatDate,
   expandTwoDigitYear,
   isDateMaskKey,
 } from "ictus";
->>>>>>> origin/main
 
 apply({
   value: string,          // current masked value
@@ -59,7 +56,6 @@ apply({
   step?: number,          // default 0: ignore ArrowUp/ArrowDown
 }): { value: string; caret: number }
 
-<<<<<<< HEAD
 applyPaste({
   value: string,
   caret: number,
@@ -68,13 +64,9 @@ applyPaste({
   separator?: string,
 }): { value: string; caret: number }
 
-parseDate(masked: string): Date | undefined
-formatDate(date: Date, separator?: string): string
-=======
 parseDate(masked: string, options?: { yyExpand?: { pivot?: number } }): Date | undefined
 formatDate(date: Date, separator?: string, options?: { yyExpand?: { pivot?: number } }): string
 expandTwoDigitYear(yy: number, pivot?: number): number
->>>>>>> origin/main
 isDateMaskKey(key: string): boolean
 ```
 
