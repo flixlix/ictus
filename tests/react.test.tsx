@@ -16,7 +16,7 @@ function DateInput({
   onValueChange?: (value: string) => void;
   step?: number;
 }) {
-  const { inputProps, parsed } = useDateFieldMask({
+  const { inputProps, parsed, status } = useDateFieldMask({
     separator,
     defaultValue,
     onValueChange,
@@ -26,6 +26,7 @@ function DateInput({
     <>
       <input aria-label="date" {...inputProps} />
       <output>{parsed ? parsed.toDateString() : "incomplete"}</output>
+      <span data-testid="status">{status}</span>
     </>
   );
 }
@@ -74,8 +75,17 @@ describe("useDateFieldMask", () => {
   it("parses only a complete calendar date", () => {
     render(<DateInput defaultValue="11.12.2026" />);
     expect(screen.getByRole("status").textContent).toMatch(/Dec 11/);
+    expect(screen.getByTestId("status").textContent).toBe("valid");
     typeKey("Backspace");
     expect(screen.getByRole("status").textContent).toBe("incomplete");
+    expect(screen.getByTestId("status").textContent).toBe("incomplete");
+  });
+
+  it("exposes dateStatus on the return value", () => {
+    render(<DateInput />);
+    expect(screen.getByTestId("status").textContent).toBe("empty");
+    typeKey("4");
+    expect(screen.getByTestId("status").textContent).toBe("incomplete");
   });
 
   it("calls onValueChange", () => {
@@ -103,6 +113,37 @@ describe("useDateFieldMask", () => {
     expect((input as HTMLInputElement).value).toBe("11");
   });
 
+  it("pastes a slash-separated date into the mask", async () => {
+    render(<DateInput />);
+    const input = screen.getByLabelText("date") as HTMLInputElement;
+    fireEvent.paste(input, {
+      clipboardData: { getData: () => "11/12/2026" },
+    });
+    expect(input.value).toBe("11.12.2026");
+    await nextFrame();
+    expect(input.selectionStart).toBe(10);
+    expect(input.selectionEnd).toBe(10);
+  });
+
+  it("pastes an ISO date remapped to day-month-year", () => {
+    render(<DateInput />);
+    const input = screen.getByLabelText("date") as HTMLInputElement;
+    fireEvent.paste(input, {
+      clipboardData: { getData: () => "2026-12-11" },
+    });
+    expect(input.value).toBe("11.12.2026");
+  });
+
+  it("replaces a selected range on paste", () => {
+    render(<DateInput defaultValue="11.12.2026" />);
+    const input = screen.getByLabelText("date") as HTMLInputElement;
+    input.setSelectionRange(0, input.value.length);
+    fireEvent.paste(input, {
+      clipboardData: { getData: () => "01-02-2025" },
+    });
+    expect(input.value).toBe("01.02.2025");
+  });
+
   it("leaves ArrowUp/ArrowDown to the browser when step is off", () => {
     render(<DateInput defaultValue="11" />);
     const input = screen.getByLabelText("date");
@@ -121,7 +162,6 @@ describe("useDateFieldMask", () => {
     expect(input.selectionStart).toBe(2);
     expect(input.selectionEnd).toBe(2);
   });
-
   it("spreads inputProps onto a controlled field", () => {
     function Wrapper() {
       const { inputProps } = useDateFieldMask();

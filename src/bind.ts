@@ -1,4 +1,4 @@
-import { apply, isDateMaskKey } from "./index.js";
+import { apply, applyPaste, isDateMaskKey } from "./index.js";
 
 export type BindDateMaskOptions = {
   separator?: string;
@@ -20,15 +20,7 @@ export function bindDateMask(
       input.value = value;
     });
 
-  const commit = (key: string): void => {
-    const next = apply({
-      value: getValue(),
-      caret: input.selectionStart ?? 0,
-      selectionEnd: input.selectionEnd ?? undefined,
-      key,
-      separator,
-      step,
-    });
+  const write = (next: { value: string; caret: number }): void => {
     setValue(next.value);
     input.setSelectionRange(next.caret, next.caret);
     onValueChange?.(next.value);
@@ -42,17 +34,29 @@ export function bindDateMask(
       return;
     }
     event.preventDefault();
-    commit(event.key);
+    write(
+      apply({
+        value: getValue(),
+        caret: input.selectionStart ?? 0,
+        selectionEnd: input.selectionEnd ?? undefined,
+        key: event.key,
+        separator,
+        step,
+      }),
+    );
   };
 
   const onPaste = (event: ClipboardEvent): void => {
-    const text = event.clipboardData?.getData("text") ?? "";
-    const keys = [...text].filter((ch) => isDateMaskKey(ch));
-    if (keys.length === 0) return;
     event.preventDefault();
-    for (const key of keys) {
-      commit(key);
-    }
+    write(
+      applyPaste({
+        value: getValue(),
+        caret: input.selectionStart ?? 0,
+        selectionEnd: input.selectionEnd ?? undefined,
+        pasted: event.clipboardData?.getData("text") ?? "",
+        separator,
+      }),
+    );
   };
 
   input.addEventListener("keydown", onKeyDown);
