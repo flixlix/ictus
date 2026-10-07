@@ -10,9 +10,20 @@ function createInput(value = ""): HTMLInputElement {
   return input;
 }
 
-function typeKey(input: HTMLInputElement, key: string) {
+function typeKey(
+  input: HTMLInputElement,
+  key: string,
+  mods?: { ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean },
+) {
   return input.dispatchEvent(
-    new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+    new KeyboardEvent("keydown", {
+      key,
+      bubbles: true,
+      cancelable: true,
+      ctrlKey: mods?.ctrlKey,
+      metaKey: mods?.metaKey,
+      shiftKey: mods?.shiftKey,
+    }),
   );
 }
 
@@ -59,6 +70,22 @@ describe("bindDateMask", () => {
     bindDateMask(input);
     input.setSelectionRange(0, input.value.length);
     typeKey(input, "Backspace");
+    expect(input.value).toBe("");
+  });
+
+  it("Ctrl+Backspace clears the active group", () => {
+    const input = createInput("11.12.2026");
+    bindDateMask(input);
+    input.setSelectionRange(input.value.length, input.value.length);
+    typeKey(input, "Backspace", { ctrlKey: true });
+    expect(input.value).toBe("11.12.");
+  });
+
+  it("Shift+Backspace clears the whole value", () => {
+    const input = createInput("11.12.2026");
+    bindDateMask(input);
+    input.setSelectionRange(input.value.length, input.value.length);
+    typeKey(input, "Backspace", { shiftKey: true });
     expect(input.value).toBe("");
   });
 

@@ -21,7 +21,14 @@ function at(marked: string): { value: string; caret: number; selectionEnd?: numb
 function type(
   before: string,
   key: string,
-  options?: { separator?: string; precision?: "minute" | "second"; step?: number },
+  options?: {
+    separator?: string;
+    precision?: "minute" | "second";
+    step?: number;
+    ctrlKey?: boolean;
+    metaKey?: boolean;
+    shiftKey?: boolean;
+  },
 ) {
   const { value, caret, selectionEnd } = at(before);
   return applyTime({
@@ -32,6 +39,9 @@ function type(
     separator: options?.separator,
     precision: options?.precision,
     step: options?.step,
+    ctrlKey: options?.ctrlKey,
+    metaKey: options?.metaKey,
+    shiftKey: options?.shiftKey,
   });
 }
 
@@ -170,5 +180,27 @@ describe("applyTime step", () => {
   it("steps seconds when precision is second", () => {
     const result = type("14:30:59|", "ArrowUp", { precision: "second", step: 1 });
     expect(show(result.value, result.caret)).toBe("14:30:00|");
+  });
+});
+
+describe("modifier Backspace/Delete (time)", () => {
+  it.each([
+    ["14:30|", "14:|"],
+    ["14:3|0", "14:|"],
+    ["14:|", "|"],
+    ["14|", "|"],
+  ] as const)("Ctrl+Backspace: %s → %s", (before, after) => {
+    const result = type(before, "Backspace", { ctrlKey: true });
+    expect(show(result.value, result.caret)).toBe(after);
+  });
+
+  it("Shift+Backspace clears the whole time", () => {
+    const result = type("14:30|", "Backspace", { shiftKey: true });
+    expect(show(result.value, result.caret)).toBe("|");
+  });
+
+  it("Ctrl+Delete clears the active group forward", () => {
+    const result = type("14:|30", "Delete", { ctrlKey: true });
+    expect(show(result.value, result.caret)).toBe("14:|");
   });
 });

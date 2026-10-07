@@ -150,7 +150,7 @@ if (
 | `11\|` | `1` | `11.1\|` |
 | `11.12.\|` | `⌫` | `11.12\|` |
 
-Empty current group + separator is a no-op (`Blank + . → ""`). Backspace/Delete remove one visible character, including a trailing separator. A selected range is deleted (select-all + delete clears the field).
+Empty current group + separator is a no-op (`Blank + . → ""`). Backspace/Delete remove one visible character, including a trailing separator. Ctrl/Cmd+Backspace clears the active group (or the previous group at a boundary); Ctrl/Cmd+Delete clears the active group forward. Shift+Backspace or Shift+Delete clears the whole value. A selected range is deleted (select-all + delete clears the field).
 
 ## Vanilla `<input>`
 

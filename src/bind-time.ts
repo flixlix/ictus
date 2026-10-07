@@ -45,6 +45,9 @@ export function bindTimeMask(
         separator,
         precision,
         step,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
       }),
     );
   };
