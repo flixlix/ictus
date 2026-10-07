@@ -137,6 +137,29 @@
       </span>
     </p>
 
+    <h3>Arrow step</h3>
+    <p>
+      Opt-in <code>step: 1</code>. Click into a group, then
+      <code>ArrowUp</code> / <code>ArrowDown</code>. Other demos leave arrows alone.
+    </p>
+    <p>
+      <label for="demo-step">dd.mm.yyyy</label><br />
+      <span data-mask data-separator="." data-step="1">
+        <input
+          id="demo-step"
+          size="12"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          value="11.12.2026"
+        />
+        <br />
+        <code data-caret>11.12.2026|</code>
+        <span data-parse data-kind="valid">valid</span>
+        <span data-hint></span>
+      </span>
+    </p>
+
     <h3>formatDate</h3>
     <p>Local calendar parts, padded, with the separator you pass.</p>
     <p>
