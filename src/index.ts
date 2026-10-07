@@ -264,6 +264,16 @@ export function parseDate(masked: string): Date | undefined {
   return date;
 }
 
+export type DateStatus = "empty" | "incomplete" | "invalid" | "valid";
+
+export function dateStatus(masked: string): DateStatus {
+  if (masked === "") return "empty";
+  const date = parseDate(masked);
+  if (date) return "valid";
+  if (PARSE_RE.test(masked)) return "invalid";
+  return "incomplete";
+}
+
 export function formatDate(date: Date, separator = "."): string {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");

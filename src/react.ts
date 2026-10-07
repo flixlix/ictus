@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
-import { apply, isDateMaskKey, parseDate } from "./index.js";
+import { apply, dateStatus, isDateMaskKey, parseDate } from "./index.js";
+import type { DateStatus } from "./index.js";
 
 export type UseDateFieldMaskOptions = {
   separator?: string;
@@ -22,6 +23,7 @@ export type UseDateFieldMaskReturn = {
   ref: RefObject<HTMLInputElement | null>;
   value: string;
   parsed: Date | undefined;
+  status: DateStatus;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   inputProps: DateFieldInputProps;
 };
@@ -35,6 +37,7 @@ export function useDateFieldMask(
   const ref = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState(defaultValue);
   const parsed = useMemo(() => parseDate(value), [value]);
+  const status = useMemo(() => dateStatus(value), [value]);
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
@@ -61,6 +64,7 @@ export function useDateFieldMask(
     ref,
     value,
     parsed,
+    status,
     onKeyDown,
     inputProps: {
       ref,
