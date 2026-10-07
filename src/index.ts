@@ -270,3 +270,6 @@ export function formatDate(date: Date, separator = "."): string {
   const year = String(date.getFullYear()).padStart(4, "0");
   return `${day}${separator}${month}${separator}${year}`;
 }
+
+export { bindDateMask } from "./bind.js";
+export type { BindDateMaskOptions } from "./bind.js";

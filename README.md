@@ -38,7 +38,7 @@ The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the
 ## API
 
 ```ts
-import { apply, parseDate, formatDate, isDateMaskKey } from "ictus";
+import { apply, parseDate, formatDate, isDateMaskKey, bindDateMask } from "ictus";
 
 apply({
   value: string,          // current masked value
@@ -51,6 +51,13 @@ apply({
 parseDate(masked: string): Date | undefined
 formatDate(date: Date, separator?: string): string
 isDateMaskKey(key: string): boolean
+
+bindDateMask(input: HTMLInputElement, options?: {
+  separator?: string;
+  onValueChange?: (value: string) => void;
+  getValue?: () => string;
+  setValue?: (value: string) => void;
+}): () => void               // unsubscribe
 ```
 
 `parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
@@ -82,22 +89,20 @@ Empty current group + separator is a no-op (`Blank + . → ""`). Backspace/Delet
 ## Vanilla `<input>`
 
 ```js
-import { apply, isDateMaskKey } from "ictus";
+import { bindDateMask } from "ictus";
 
 const input = document.querySelector("input");
-input.addEventListener("keydown", (event) => {
-  if (!isDateMaskKey(event.key)) return;
-  event.preventDefault();
-  const next = apply({
-    value: input.value,
-    caret: input.selectionStart ?? 0,
-    selectionEnd: input.selectionEnd ?? undefined,
-    key: event.key,
-  });
-  input.value = next.value;
-  input.setSelectionRange(next.caret, next.caret);
+const unbind = bindDateMask(input, {
+  separator: ".",
+  onValueChange: (value) => console.log(value),
 });
+
+// later: unbind();
 ```
+
+`bindDateMask` wires `keydown` (and paste) to `apply`, writes the result back to the input, and restores the caret. It returns a cleanup function that removes the listeners. Pass `getValue` / `setValue` when the masked string is owned outside the DOM.
+
+For a one-off keystroke without attaching listeners, call `apply` and `isDateMaskKey` yourself.
 
 Live demos and the full API live in [`docs/`](docs/) (`pnpm docs`).
 
