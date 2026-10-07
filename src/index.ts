@@ -198,81 +198,32 @@ function clampIndex(value: string, index: number): number {
   return Math.min(Math.max(index, 0), value.length);
 }
 
-const DAY_MIN = 1;
-const DAY_MAX = 31;
-const MONTH_MIN = 1;
-const MONTH_MAX = 12;
-const YEAR_MIN = 1;
-const YEAR_MAX = 9999;
-
-function wrapInt(n: number, min: number, max: number): number {
-  const range = max - min + 1;
-  return ((((n - min) % range) + range) % range) + min;
-}
-
-function seedGroup(g: GroupIndex, now: Date): number {
-  switch (g) {
-    case 0:
-      return now.getDate();
-    case 1:
-      return now.getMonth() + 1;
-    case 2:
-      return now.getFullYear();
-    default: {
-      const _exhaustive: never = g;
-      return _exhaustive;
-    }
-  }
-}
-
 function stepGroup(
   value: string,
   caret: number,
   delta: number,
   sep: string,
 ): ApplyResult {
-  const state = parseState(value, caret, sep);
-  const digits: [string, string, string] = [
-    state.digits[0],
-    state.digits[1],
-    state.digits[2],
-  ];
-  const seps: [boolean, boolean] = [state.seps[0], state.seps[1]];
-  const g = state.groupIndex;
+  const { digits, seps, groupIndex: g } = parseState(value, caret, sep);
   const now = new Date();
-  const current =
-    digits[g].length === 0 ? seedGroup(g, now) : Number(digits[g]);
-
-  switch (g) {
-    case 0:
-      digits[0] = String(wrapInt(current + delta, DAY_MIN, DAY_MAX)).padStart(
-        2,
-        "0",
-      );
-      break;
-    case 1:
-      digits[1] = String(
-        wrapInt(current + delta, MONTH_MIN, MONTH_MAX),
-      ).padStart(2, "0");
-      break;
-    case 2: {
-      const next = Math.min(YEAR_MAX, Math.max(YEAR_MIN, current + delta));
-      digits[2] = String(next).padStart(4, "0");
-      break;
-    }
-    default: {
-      const _exhaustive: never = g;
-      return _exhaustive;
-    }
+  let n =
+    digits[g].length === 0
+      ? g === 0
+        ? now.getDate()
+        : g === 1
+          ? now.getMonth() + 1
+          : now.getFullYear()
+      : Number(digits[g]);
+  n += delta;
+  if (g === 2) {
+    n = Math.min(9999, Math.max(1, n));
+  } else {
+    const max = g === 0 ? 31 : 12;
+    n = ((((n - 1) % max) + max) % max) + 1;
   }
-
-  if (digits[1].length > 0 || seps[1] || digits[2].length > 0) {
-    seps[0] = true;
-  }
-  if (digits[2].length > 0) {
-    seps[1] = true;
-  }
-
+  digits[g] = String(n).padStart(GROUPS[g].width, "0");
+  if (digits[1] || seps[1] || digits[2]) seps[0] = true;
+  if (digits[2]) seps[1] = true;
   return {
     value: assemble(digits, seps, sep),
     caret: caretAt(digits, seps, sep, g, false),
