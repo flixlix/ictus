@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
 import { apply, isDateMaskKey, parseDate } from "./index.js";
 
@@ -19,11 +19,6 @@ export type DateFieldInputProps = {
   spellCheck: false;
 };
 
-export type DateFieldHiddenInputProps = {
-  type: "hidden";
-  value: string;
-};
-
 export type UseDateFieldMaskReturn = {
   ref: RefObject<HTMLInputElement | null>;
   value: string;
@@ -31,17 +26,15 @@ export type UseDateFieldMaskReturn = {
   isoValue: string;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   inputProps: DateFieldInputProps;
-  hiddenInputProps: DateFieldHiddenInputProps;
+  hiddenInputProps: { type: "hidden"; value: string };
 };
 
 function noopChange(_event: ChangeEvent<HTMLInputElement>) {}
 
-function toIsoValue(date: Date | undefined): string {
-  if (!date) return "";
-  const year = String(date.getFullYear()).padStart(4, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function iso(date: Date | undefined) {
+  return date
+    ? `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, "0")}-${`${date.getDate()}`.padStart(2, "0")}`
+    : "";
 }
 
 export function useDateFieldMask(
@@ -51,19 +44,8 @@ export function useDateFieldMask(
   const ref = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState(defaultValue);
   const parsed = useMemo(() => parseDate(value), [value]);
-  const isoValue = toIsoValue(parsed);
-  const prevParsedKey = useRef<string | undefined>(undefined);
-
-  useEffect(() => {
-    const nextKey = toIsoValue(parsed);
-    if (prevParsedKey.current === undefined) {
-      prevParsedKey.current = nextKey;
-      return;
-    }
-    if (prevParsedKey.current === nextKey) return;
-    prevParsedKey.current = nextKey;
-    onParsedChange?.(parsed);
-  }, [parsed, onParsedChange]);
+  const isoValue = iso(parsed);
+  const prev = useRef(isoValue);
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
@@ -78,12 +60,17 @@ export function useDateFieldMask(
       });
       setValue(next.value);
       onValueChange?.(next.value);
-      const caret = next.caret;
+      const d = parseDate(next.value);
+      const k = iso(d);
+      if (k !== prev.current) {
+        prev.current = k;
+        onParsedChange?.(d);
+      }
       requestAnimationFrame(() => {
-        ref.current?.setSelectionRange(caret, caret);
+        ref.current?.setSelectionRange(next.caret, next.caret);
       });
     },
-    [separator, onValueChange],
+    [separator, onValueChange, onParsedChange],
   );
 
   return {
@@ -101,9 +88,6 @@ export function useDateFieldMask(
       autoComplete: "off",
       spellCheck: false,
     },
-    hiddenInputProps: {
-      type: "hidden",
-      value: isoValue,
-    },
+    hiddenInputProps: { type: "hidden", value: isoValue },
   };
 }
