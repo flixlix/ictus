@@ -18,6 +18,8 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 | `ictus/time` | 6.8 kB | **2.7 kB** |
 | `ictus/react` (react + core + time external) | 3.0 kB | **0.9 kB** |
 
+No runtime dependencies. The package is marked side-effect free (`sideEffects: false`), so unused entries can tree-shake out of your bundle. React is an optional peer for `ictus/react` only.
+
 `apply` is **0.1–0.3 µs** per keystroke (~3–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.2 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
 
 ## Install

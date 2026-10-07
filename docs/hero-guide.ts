@@ -1,3 +1,5 @@
+import { track } from "./analytics.js";
+
 export type HeroGuideKeyMods = {
   ctrlKey?: boolean;
   metaKey?: boolean;
@@ -10,7 +12,6 @@ export type HeroGuideDriver = {
   clear(): void;
 };
 
-const IDLE_MS = 2500;
 const DESKTOP_GUIDE = "(min-width: 72rem) and (hover: hover) and (pointer: fine)";
 const WORD_FADE_MS = 680;
 const WORD_STAGGER_MS = 40;
@@ -18,6 +19,7 @@ const KEY_DOWN_MS = 110;
 const KEY_HELD_MS = 200;
 const KEY_READ_MS = 380;
 const STEP_SETTLE_MS = 520;
+const GUIDE_MEMORY_KEY = "ictus-hero-guide";
 
 type KeyFace = {
   glyph: string;
@@ -28,65 +30,110 @@ type KeyFace = {
 };
 
 type Beat =
-  | { kind: "say"; text: string; hold?: number }
+  | { kind: "say"; id: string; text: string; hold?: number; finale?: boolean }
   | { kind: "keys"; keys: readonly string[]; hold?: number }
   | { kind: "paste"; text: string; hold?: number }
   | { kind: "clear" };
 
-const script: readonly Beat[] = [
+const coreScript: readonly Beat[] = [
   {
     kind: "say",
-    text: "Don't know what to type? I'll show you. Type anything and I'll stop.",
+    id: "intro",
+    text: "I'll tap through a few keys. Type anytime to take over.",
     hold: 380,
   },
-  { kind: "say", text: "Try a dot. There's nothing to finish yet, so it ignores you." },
+  {
+    kind: "say",
+    id: "ignore-dot",
+    text: "Try a dot. There's nothing to finish yet, so it ignores you.",
+  },
   { kind: "keys", keys: ["."] },
   {
     kind: "say",
+    id: "pad-day",
     text: "Now a 4. That can't start a day, so it turns into 04 and jumps to the month.",
   },
   { kind: "keys", keys: ["4"] },
-  { kind: "say", text: "1 could still be 10 or 11, so it waits." },
-  { kind: "keys", keys: ["1"] },
   {
     kind: "say",
-    text: "A slash finishes the group and pads that 1. A dash would too, and the field still writes dots.",
+    id: "finish-group",
+    text: "1 could still be 10 or 11, so it waits. A slash finishes the group and pads that 1.",
   },
-  { kind: "keys", keys: ["/"] },
-  { kind: "say", text: "Backspace removes what's behind the cursor. Right now, that's the dot." },
+  { kind: "keys", keys: ["1", "/"] },
+  {
+    kind: "say",
+    id: "backspace",
+    text: "Backspace removes what's behind the cursor. Right now, that's the dot.",
+  },
   { kind: "keys", keys: ["Backspace"] },
-  { kind: "say", text: "Dot again, then the year. Green means that day is real." },
+  {
+    kind: "say",
+    id: "valid-date",
+    text: "Dot again, then the year. Green means that day is real.",
+  },
   { kind: "keys", keys: [".", "2", "0", "2", "6"], hold: 1200 },
+  {
+    kind: "say",
+    id: "core-done",
+    text: "That's the basics. Your turn, or keep going for a few more tricks.",
+    hold: 0,
+    finale: true,
+  },
+];
+
+const moreScript: readonly Beat[] = [
   { kind: "clear" },
-  { kind: "say", text: "Letters don't get in. I'll type an a." },
+  {
+    kind: "say",
+    id: "letters",
+    text: "Letters don't get in. I'll type an a.",
+  },
   { kind: "keys", keys: ["a"], hold: 700 },
   {
     kind: "say",
+    id: "spill",
     text: "39 isn't a day. The 3 becomes 03, and the 9 moves into the month.",
   },
   { kind: "keys", keys: ["3", "9"], hold: 700 },
   { kind: "clear" },
   {
     kind: "say",
+    id: "month-overflow",
     text: "I'll type 31, then a 2. Months stop at 12, so February fills itself in.",
   },
   { kind: "keys", keys: ["3", "1", "2"] },
-  { kind: "say", text: "You can type 31 February. It just isn't a real day, so it stays red." },
+  {
+    kind: "say",
+    id: "invalid-day",
+    text: "You can type 31 February. It just isn't a real day, so it stays red.",
+  },
   { kind: "keys", keys: ["2", "0", "2", "6"], hold: 1200 },
   { kind: "clear" },
   {
     kind: "say",
+    id: "paste",
     text: "Pasting is fine too. 2026-12-11 gets flipped into day, month, year.",
   },
   { kind: "paste", text: "2026-12-11", hold: 1300 },
   {
     kind: "say",
+    id: "ctrl-backspace",
     text: "Hold Ctrl or Cmd and press Backspace to clear a whole part, like the year.",
   },
   { kind: "keys", keys: ["Ctrl+Backspace"], hold: 700 },
-  { kind: "say", text: "Shift and Backspace clears the whole field." },
+  {
+    kind: "say",
+    id: "shift-backspace",
+    text: "Shift and Backspace clears the whole field.",
+  },
   { kind: "keys", keys: ["Shift+Backspace"], hold: 700 },
-  { kind: "say", text: "Your turn.", hold: 0 },
+  {
+    kind: "say",
+    id: "more-done",
+    text: "Your turn.",
+    hold: 0,
+    finale: true,
+  },
 ];
 
 function wait(ms: number, signal: AbortSignal): Promise<void> {
@@ -154,6 +201,26 @@ function revealMs(words: number, reduced: boolean): number {
   return WORD_FADE_MS + (words - 1) * WORD_STAGGER_MS;
 }
 
+function countSaySteps(script: readonly Beat[]): number {
+  return script.filter((beat) => beat.kind === "say" && !beat.finale).length;
+}
+
+function readGuideMemory(): string | null {
+  try {
+    return sessionStorage.getItem(GUIDE_MEMORY_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeGuideMemory(value: string): void {
+  try {
+    sessionStorage.setItem(GUIDE_MEMORY_KEY, value);
+  } catch {
+    return;
+  }
+}
+
 export function bindHeroGuide(input: HTMLInputElement, driver: HeroGuideDriver): void {
   if (!matchMedia(DESKTOP_GUIDE).matches) return;
 
@@ -165,7 +232,14 @@ export function bindHeroGuide(input: HTMLInputElement, driver: HeroGuideDriver):
   const keycap = key?.querySelector(".coach-keycap");
   const glyph = key?.querySelector(".coach-key-glyph");
   const hint = key?.querySelector(".coach-key-hint");
+  const progress = coach?.querySelector(".coach-progress");
   const next = coach?.querySelector(".coach-next");
+  const skip = coach?.querySelector(".coach-skip");
+  const trySelf = coach?.querySelector(".coach-try");
+  const more = coach?.querySelector(".coach-more");
+  const replay = coach?.querySelector(".coach-replay");
+  const start = hero?.querySelector("#hero-guide-start");
+  const launch = hero?.querySelector(".hero-guide-launch");
   if (
     !(hero instanceof HTMLElement) ||
     !(coach instanceof HTMLElement) ||
@@ -175,11 +249,37 @@ export function bindHeroGuide(input: HTMLInputElement, driver: HeroGuideDriver):
     !(keycap instanceof HTMLElement) ||
     !(glyph instanceof HTMLElement) ||
     !(hint instanceof HTMLElement) ||
-    !(next instanceof HTMLButtonElement)
+    !(progress instanceof HTMLElement) ||
+    !(next instanceof HTMLButtonElement) ||
+    !(skip instanceof HTMLButtonElement) ||
+    !(trySelf instanceof HTMLButtonElement) ||
+    !(more instanceof HTMLButtonElement) ||
+    !(replay instanceof HTMLButtonElement) ||
+    !(start instanceof HTMLButtonElement) ||
+    !(launch instanceof HTMLElement)
   ) {
     return;
   }
-  mountGuide(input, driver, hero, coach, visual, live, key, keycap, glyph, hint, next);
+  mountGuide(
+    input,
+    driver,
+    hero,
+    coach,
+    visual,
+    live,
+    key,
+    keycap,
+    glyph,
+    hint,
+    progress,
+    next,
+    skip,
+    trySelf,
+    more,
+    replay,
+    start,
+    launch,
+  );
 }
 
 function mountGuide(
@@ -193,27 +293,45 @@ function mountGuide(
   keycap: HTMLElement,
   glyph: HTMLElement,
   hint: HTMLElement,
+  progress: HTMLElement,
   next: HTMLButtonElement,
+  skip: HTMLButtonElement,
+  trySelf: HTMLButtonElement,
+  more: HTMLButtonElement,
+  replay: HTMLButtonElement,
+  start: HTMLButtonElement,
+  launch: HTMLElement,
 ): void {
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const settleMs = reduced ? 180 : STEP_SETTLE_MS;
   const desktop = matchMedia(DESKTOP_GUIDE);
 
-  let waitTimer = 0;
   let showFrame = 0;
   let running = false;
-  let settled = false;
   let visible = false;
   let owned = false;
+  let path: "core" | "more" = "core";
+  let stepIndex = 0;
+  let stepTotal = countSaySteps(coreScript);
   let abort: AbortController | undefined;
+  let finaleResolver: ((choice: "done" | "more" | "replay" | "try") => void) | undefined;
+
+  function syncLaunch(): void {
+    const memory = readGuideMemory();
+    const seen = memory === "done" || memory === "skipped";
+    start.textContent = seen ? "Replay guide" : "Quick guide";
+    launch.hidden = !desktop.matches || running || visible;
+    launch.dataset.seen = seen ? "true" : "false";
+  }
 
   function showCoach(): void {
     visible = true;
+    launch.hidden = true;
     coach.hidden = false;
     visual.replaceChildren();
     live.textContent = "";
     hideKey();
-    hideNext();
+    hideTourActions();
     hero.classList.add("is-coaching");
     if (reduced) {
       coach.classList.add("is-in");
@@ -228,14 +346,15 @@ function mountGuide(
     coach.classList.remove("is-in");
     hero.classList.remove("is-coaching");
     hideKey();
-    hideNext();
+    hideTourActions();
     const finish = () => {
       if (coach.classList.contains("is-in")) return;
       coach.hidden = true;
       visual.replaceChildren();
       live.textContent = "";
       hideKey();
-      hideNext();
+      hideTourActions();
+      syncLaunch();
     };
     if (reduced || coach.hidden) {
       finish();
@@ -265,26 +384,65 @@ function mountGuide(
     keyEl.classList.remove("is-shown", "is-down");
   }
 
-  function hideNext(): void {
-    next.classList.remove("is-shown");
-    next.hidden = true;
+  function hideTourActions(): void {
+    for (const button of [next, skip, trySelf, more, replay]) {
+      button.classList.remove("is-shown");
+      button.hidden = true;
+    }
+    progress.hidden = true;
+    progress.textContent = "";
+  }
+
+  function showButton(button: HTMLButtonElement): void {
+    button.hidden = false;
+    if (reduced) button.classList.add("is-shown");
+    else requestAnimationFrame(() => button.classList.add("is-shown"));
+  }
+
+  function setProgress(current: number, total: number): void {
+    if (total <= 0) {
+      progress.hidden = true;
+      progress.textContent = "";
+      return;
+    }
+    progress.hidden = false;
+    progress.textContent = `${current} of ${total}`;
   }
 
   function waitForNext(signal: AbortSignal): Promise<boolean> {
     if (signal.aborted) return Promise.resolve(false);
-    next.hidden = false;
-    if (reduced) next.classList.add("is-shown");
-    else requestAnimationFrame(() => next.classList.add("is-shown"));
+    showButton(next);
+    showButton(skip);
+    showButton(trySelf);
     return new Promise((resolve) => {
       const finish = (continued: boolean) => {
         signal.removeEventListener("abort", onAbort);
         next.removeEventListener("click", onClick);
-        hideNext();
+        hideTourActions();
         resolve(continued);
       };
       const onAbort = () => finish(false);
       const onClick = () => finish(true);
       next.addEventListener("click", onClick);
+      signal.addEventListener("abort", onAbort, { once: true });
+    });
+  }
+
+  function waitForFinale(signal: AbortSignal): Promise<"done" | "more" | "replay" | "try"> {
+    if (signal.aborted) return Promise.resolve("done");
+    progress.hidden = true;
+    showButton(trySelf);
+    showButton(replay);
+    if (path === "core") showButton(more);
+    return new Promise<"done" | "more" | "replay" | "try">((resolve) => {
+      const finish = (choice: "done" | "more" | "replay" | "try") => {
+        signal.removeEventListener("abort", onAbort);
+        finaleResolver = undefined;
+        hideTourActions();
+        resolve(choice);
+      };
+      const onAbort = () => finish("done");
+      finaleResolver = finish;
       signal.addEventListener("abort", onAbort, { once: true });
     });
   }
@@ -317,23 +475,22 @@ function mountGuide(
     return true;
   }
 
-  function dismiss(leaveOwned: boolean): void {
+  function dismiss(reason: string, leaveOwned: boolean): void {
     const clearOwned = leaveOwned && owned;
-    settled = true;
+    const wasActive = running || visible;
+    const step = String(Math.max(stepIndex, 1));
     owned = false;
-    window.clearTimeout(waitTimer);
     abort?.abort();
     running = false;
+    finaleResolver?.("done");
+    finaleResolver = undefined;
     hideCoach();
     if (clearOwned) driver.clear();
-  }
-
-  function armWait(): void {
-    if (settled || running || input.value !== "" || document.activeElement !== input) return;
-    window.clearTimeout(waitTimer);
-    waitTimer = window.setTimeout(() => {
-      void run();
-    }, IDLE_MS);
+    if (wasActive && readGuideMemory() !== "done") {
+      writeGuideMemory("skipped");
+      track("guide_skip", { reason, step, path });
+    }
+    syncLaunch();
   }
 
   async function playBeat(beat: Beat, signal: AbortSignal): Promise<void> {
@@ -343,6 +500,16 @@ function mountGuide(
         hideKey();
         if (keyWasShown && !reduced) await wait(140, signal);
         if (signal.aborted) return;
+        if (!beat.finale) {
+          stepIndex += 1;
+          setProgress(stepIndex, stepTotal);
+          track("guide_step", {
+            step: String(stepIndex),
+            total: String(stepTotal),
+            id: beat.id,
+            path,
+          });
+        }
         const words = renderWords(beat.text);
         if (signal.aborted) return;
         await wait(revealMs(words, reduced) + (beat.hold ?? 280), signal);
@@ -400,14 +567,19 @@ function mountGuide(
     }
   }
 
-  async function run(): Promise<void> {
-    if (settled || running || input.value !== "" || document.activeElement !== input) return;
-    if (!desktop.matches) return;
+  async function run(script: readonly Beat[], nextPath: "core" | "more", source: string): Promise<void> {
+    if (running || !desktop.matches) return;
     running = true;
     owned = true;
+    path = nextPath;
+    stepIndex = 0;
+    stepTotal = countSaySteps(script);
     const controller = new AbortController();
     abort = controller;
+    let handoff = false;
     showCoach();
+    track("guide_start", { path, source });
+    input.focus();
     try {
       let index = 0;
       while (index < script.length) {
@@ -425,50 +597,95 @@ function mountGuide(
           if (controller.signal.aborted) return;
           index += 1;
         }
+        if (beat.finale) {
+          writeGuideMemory("done");
+          track("guide_complete", { path });
+          const choice = await waitForFinale(controller.signal);
+          if (controller.signal.aborted) return;
+          if (choice === "more" || choice === "replay") {
+            handoff = true;
+            track(choice === "more" ? "guide_more" : "guide_replay", { from: path });
+            driver.clear();
+            running = false;
+            await run(
+              choice === "more" ? moreScript : coreScript,
+              choice === "more" ? "more" : "core",
+              choice,
+            );
+            return;
+          }
+          owned = false;
+          hideCoach();
+          return;
+        }
         if (index >= script.length) break;
         const continued = await waitForNext(controller.signal);
         if (!continued) return;
       }
+      writeGuideMemory("done");
+      track("guide_complete", { path });
+      owned = false;
+      hideCoach();
     } finally {
-      running = false;
-      if (!controller.signal.aborted) {
-        settled = true;
-        owned = false;
+      if (!handoff && abort === controller) {
+        running = false;
+        syncLaunch();
       }
     }
   }
 
+  start.addEventListener("click", () => {
+    const source = readGuideMemory() ? "replay" : "cta";
+    void run(coreScript, "core", source);
+  });
+
+  skip.addEventListener("click", () => {
+    dismiss("skip", true);
+  });
+
+  trySelf.addEventListener("click", () => {
+    if (finaleResolver) {
+      finaleResolver("try");
+      return;
+    }
+    dismiss("try_yourself", false);
+  });
+
+  more.addEventListener("click", () => {
+    finaleResolver?.("more");
+  });
+
+  replay.addEventListener("click", () => {
+    finaleResolver?.("replay");
+  });
+
   input.addEventListener("focus", () => {
-    armWait();
+    hero.classList.add("is-engaged");
   });
 
   input.addEventListener("blur", (event) => {
     const nextFocus = event.relatedTarget;
-    if (nextFocus instanceof Node && (nextFocus === next || next.contains(nextFocus))) return;
+    if (
+      nextFocus instanceof Node &&
+      (coach.contains(nextFocus) || launch.contains(nextFocus) || nextFocus === start)
+    ) {
+      return;
+    }
     hero.classList.remove("is-engaged");
-    window.clearTimeout(waitTimer);
-    if (owned) dismiss(true);
+    if (owned) dismiss("blur", true);
   });
 
-  next.addEventListener("mousedown", (event) => {
-    event.preventDefault();
-  });
-
-  next.addEventListener("blur", () => {
-    window.setTimeout(() => {
-      const active = document.activeElement;
-      if (active === input || active === next || (active instanceof Node && next.contains(active))) return;
-      if (owned) dismiss(true);
-    }, 0);
-  });
+  for (const button of [next, skip, trySelf, more, replay, start]) {
+    button.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+    });
+  }
 
   input.addEventListener("keydown", (event) => {
     if (event.key === "Tab") return;
     if (!running && !visible) {
       if (event.metaKey || event.ctrlKey || event.altKey || !isTypingKey(event.key)) return;
       hero.classList.add("is-engaged");
-      window.clearTimeout(waitTimer);
-      if (input.value === "") armWait();
       return;
     }
     if (event.key === "Shift" || event.key === "Control" || event.key === "Alt" || event.key === "Meta") {
@@ -476,21 +693,21 @@ function mountGuide(
     }
     hero.classList.add("is-engaged");
     owned = false;
-    dismiss(false);
+    dismiss("type", false);
   });
 
   input.addEventListener("paste", () => {
     if (running || visible) {
       hero.classList.add("is-engaged");
       owned = false;
-      dismiss(false);
-      return;
+      dismiss("type", false);
     }
-    window.clearTimeout(waitTimer);
-    if (input.value === "") armWait();
   });
 
   desktop.addEventListener("change", () => {
-    if (!desktop.matches) dismiss(true);
+    if (!desktop.matches) dismiss("viewport", true);
+    syncLaunch();
   });
+
+  syncLaunch();
 }

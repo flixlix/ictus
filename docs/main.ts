@@ -15,6 +15,7 @@ import {
   timeStatus,
 } from "../src/time.js";
 import type { TimeFieldPrecision, TimeStatus } from "../src/time.js";
+import { track } from "./analytics.js";
 import { mountAdvancedDemos } from "./demos/advanced.js";
 import { appendBlurLayers, mountOverflowScrollGradients } from "./overflow-scroll-gradient.js";
 import { mountToc } from "./toc.js";
@@ -274,6 +275,10 @@ function labelCopyButton(button: HTMLButtonElement): (copied: boolean) => void {
   };
 }
 
+function copyTarget(button: HTMLButtonElement): string {
+  return button.dataset.track || button.dataset.copyTarget || button.id || "unknown";
+}
+
 function bindCopies(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-copy], [data-copy-target]")) {
     const setCopied = labelCopyButton(button);
@@ -285,6 +290,7 @@ function bindCopies(): void {
       const target = targetId ? document.getElementById(targetId) : null;
       const text = direct ?? target?.textContent ?? "";
       await navigator.clipboard.writeText(text);
+      track("copy", { target: copyTarget(button) });
       setCopied(true);
       window.clearTimeout(reset);
       reset = window.setTimeout(() => setCopied(false), 1200);
@@ -344,6 +350,7 @@ function bindFolds(): void {
 
       button.setAttribute("aria-expanded", open ? "true" : "false");
       button.textContent = open ? "Show less" : "Show more";
+      track(open ? "fold_open" : "fold_close", { id: id ?? "unknown" });
     });
   }
 }
@@ -365,6 +372,8 @@ function bindPackageManagers(): void {
       }
       words = morphCommand(command, words, next.split(" "));
       copy.dataset.copy = next;
+      const manager = tab.id?.replace(/^pm-/, "") || next.split(" ")[0] || "unknown";
+      track("pm_switch", { manager });
     });
   }
 }
@@ -498,6 +507,7 @@ function bindFormat(): void {
     if (root instanceof HTMLElement) {
       syncField(root, formatted, formatted.length);
       input?.focus();
+      track("format_load", { separator: sep.value });
     }
   });
 }
@@ -573,6 +583,13 @@ if (heroDate instanceof HTMLInputElement && heroRoot instanceof HTMLElement) {
   };
   mountHeroGuide();
   heroGuideDesktop.addEventListener("change", mountHeroGuide);
+}
+
+for (const link of document.querySelectorAll<HTMLAnchorElement>(".nav a[href^='#']")) {
+  link.addEventListener("click", () => {
+    const id = link.hash.replace(/^#/, "");
+    if (id) track("nav_jump", { id });
+  });
 }
 
 bindCopies();

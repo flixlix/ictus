@@ -1,3 +1,5 @@
+import { track as trackEvent } from "./analytics.js";
+
 function slug(text: string): string {
   return text
     .toLowerCase()
@@ -221,13 +223,17 @@ export function mountToc(shell: HTMLElement): void {
     }, 150);
   };
 
-  const jumpTo = (index: number) => {
+  const jumpTo = (index: number, source: "toc" | "tabbar") => {
     locked = true;
     setActive(index);
     holdUntilIdle();
+    const id = headings[index]?.id;
+    if (id) trackEvent("toc_jump", { id, source });
   };
-  links.forEach((link, index) => link.addEventListener("click", () => jumpTo(index)));
-  tabs.links.forEach((link, i) => link.addEventListener("click", () => jumpTo(tabs.headingIndex[i] ?? 0)));
+  links.forEach((link, index) => link.addEventListener("click", () => jumpTo(index, "toc")));
+  tabs.links.forEach((link, i) =>
+    link.addEventListener("click", () => jumpTo(tabs.headingIndex[i] ?? 0, "tabbar")),
+  );
 
   let frame = 0;
   const schedule = () => {

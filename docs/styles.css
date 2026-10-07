@@ -139,6 +139,10 @@ header + p {
   opacity: 0;
 }
 
+.hero-guide-launch {
+  display: none;
+}
+
 .hero [data-mask] {
   display: block;
 }
@@ -167,6 +171,71 @@ header + p {
 }
 
 @media (min-width: 72rem) and (hover: hover) and (pointer: fine) {
+  .try-cue {
+    display: none;
+  }
+
+  .hero-guide-launch:not([hidden]) {
+    position: absolute;
+    top: -0.35rem;
+    right: calc(100% + 1rem);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    width: 12.5rem;
+  }
+
+  .hero-guide-launch[hidden] {
+    display: none;
+  }
+
+  #hero-guide-start {
+    margin: 0;
+    border: 1px solid hsl(220 14% 78%);
+    border-radius: var(--radius);
+    background: hsl(var(--surface));
+    box-shadow: 0 1px 0 hsl(220 12% 74%);
+    padding: 0.4rem 0.7rem;
+    color: hsl(var(--foreground));
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+    transition:
+      color 150ms ease,
+      border-color 150ms ease,
+      background-color 150ms ease,
+      transform 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  #hero-guide-start:hover {
+    border-color: hsl(215 30% 62%);
+    background: hsl(var(--row-active));
+  }
+
+  #hero-guide-start:active {
+    transform: scale(0.98);
+  }
+
+  #hero-guide-start:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(215 72% 38% / 0.15);
+  }
+
+  .hero-guide-hint {
+    color: hsl(var(--foreground) / 0.62);
+    font-family: "Caveat", cursive;
+    font-size: 1.2rem;
+    font-weight: 500;
+    line-height: 1.15;
+  }
+
+  .hero-guide-launch[data-seen="true"] .hero-guide-hint {
+    opacity: 0.85;
+  }
+
   .coach {
     top: -0.8rem;
     right: calc(100% + 1rem);
@@ -292,10 +361,38 @@ header + p {
   display: none;
 }
 
-.coach-next {
+.coach-actions {
   position: absolute;
   top: calc(100% + 0.85rem);
   left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.7rem;
+  width: max-content;
+  max-width: 16rem;
+  pointer-events: none;
+}
+
+.coach-progress {
+  color: hsl(var(--muted));
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.coach-progress[hidden] {
+  display: none;
+}
+
+.coach-next,
+.coach-skip,
+.coach-try,
+.coach-more,
+.coach-replay {
+  position: relative;
   margin: 0;
   border: 0;
   border-radius: var(--radius);
@@ -316,33 +413,70 @@ header + p {
     transform 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.coach-next::before {
+.coach-skip,
+.coach-try {
+  color: hsl(var(--muted));
+}
+
+.coach-next::before,
+.coach-skip::before,
+.coach-try::before,
+.coach-more::before,
+.coach-replay::before {
   content: "";
   position: absolute;
   inset: -0.45rem -0.55rem;
 }
 
-.coach-next.is-shown {
+.coach-next.is-shown,
+.coach-skip.is-shown,
+.coach-try.is-shown,
+.coach-more.is-shown,
+.coach-replay.is-shown {
   opacity: 1;
   pointer-events: auto;
 }
 
-.coach-next[hidden] {
+.coach-actions:has(.is-shown) {
+  pointer-events: auto;
+}
+
+.coach-next[hidden],
+.coach-skip[hidden],
+.coach-try[hidden],
+.coach-more[hidden],
+.coach-replay[hidden] {
   display: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .coach-next:hover {
+  .coach-next:hover,
+  .coach-more:hover,
+  .coach-replay:hover {
     background: transparent;
     color: hsl(var(--link-hover));
   }
+
+  .coach-skip:hover,
+  .coach-try:hover {
+    background: transparent;
+    color: hsl(var(--foreground) / 0.72);
+  }
 }
 
-.coach-next:active {
+.coach-next:active,
+.coach-skip:active,
+.coach-try:active,
+.coach-more:active,
+.coach-replay:active {
   transform: scale(0.97);
 }
 
-.coach-next:focus-visible {
+.coach-next:focus-visible,
+.coach-skip:focus-visible,
+.coach-try:focus-visible,
+.coach-more:focus-visible,
+.coach-replay:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px hsl(215 72% 38% / 0.15);
 }
@@ -351,12 +485,22 @@ header + p {
   .coach,
   .coach-key,
   .coach-keycap,
-  .coach-next {
+  .coach-next,
+  .coach-skip,
+  .coach-try,
+  .coach-more,
+  .coach-replay,
+  #hero-guide-start {
     transition: none;
   }
 
   .coach,
-  .coach-next:active {
+  .coach-next:active,
+  .coach-skip:active,
+  .coach-try:active,
+  .coach-more:active,
+  .coach-replay:active,
+  #hero-guide-start:active {
     transform: none;
   }
 
