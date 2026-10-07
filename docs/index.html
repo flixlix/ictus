@@ -251,7 +251,7 @@
     </table>
 
     <h2 id="api">API</h2>
-    <p>Four exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
+    <p>Five exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
 
     <h3 id="apply"><code>apply</code></h3>
     <p>
@@ -291,10 +291,13 @@ apply({
       (<code>new Date(year, monthIndex, day)</code>) only for a complete, calendar-valid triple.
       Partial strings and impossible dates return <code>undefined</code>. Separators
       <code>.</code>, <code>/</code>, and <code>-</code> are all accepted.
+      Opt-in <code>yyExpand</code> also accepts a two-digit year (typing still uses four digits;
+      default pivot <code>50</code>).
     </p>
     <p><button type="button" data-copy-target="code-parse">Copy</button></p>
     <pre id="code-parse"><code>parseDate("11.12.2026"); // local Date
 parseDate("11/12/2026"); // same
+parseDate("11.12.26", { yyExpand: {} }); // → 2026
 parseDate("32.01.2020"); // undefined
 parseDate("31.02.2020"); // undefined
 parseDate("11.12");      // undefined</code></pre>
@@ -311,7 +314,18 @@ parseDate("11.12");      // undefined</code></pre>
 // "11.12.2026"
 
 formatDate(new Date(2026, 11, 11), "/");
-// "11/12/2026"</code></pre>
+// "11/12/2026"
+
+formatDate(new Date(2026, 11, 11), ".", { yyExpand: {} });
+// "11.12.26"</code></pre>
+
+    <h3 id="expandTwoDigitYear"><code>expandTwoDigitYear</code></h3>
+    <p>Same pivot rule as <code>parseDate</code> / <code>formatDate</code>.</p>
+    <p><button type="button" data-copy-target="code-yy">Copy</button></p>
+    <pre id="code-yy"><code>expandTwoDigitYear(26); // 2026
+expandTwoDigitYear(99); // 1999
+expandTwoDigitYear(49, 50); // 2049
+expandTwoDigitYear(50, 50); // 1950</code></pre>
 
     <h3 id="isDateMaskKey"><code>isDateMaskKey</code></h3>
     <p>
