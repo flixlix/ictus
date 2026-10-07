@@ -11,7 +11,7 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 | Entry | minify | gzip |
 | --- | ---: | ---: |
 | `ictus` | 5.2 kB | **2.2 kB** |
-| `ictus/react` (react external) | 1.2 kB | **0.6 kB** |
+| `ictus/react` (react external) | 1.4 kB | **0.8 kB** |
 
 `apply` is **0.1–0.2 µs** per keystroke (~5–8 million ops/s). Typing a full `11.12.2026` is about **2 µs**. `parseDate` is about **0.4 µs**. A 16 ms frame is tens of thousands of keystrokes; the work is a walk over at most ten characters, no DOM, no allocations beyond the returned `{ value, caret }`.
 
@@ -161,19 +161,28 @@ Live demos and the full API live in [`docs/`](docs/) (`pnpm docs`).
 import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
-  const { inputProps, parsed, status } = useDateFieldMask({
+  const { inputProps, hiddenInputProps, isoValue, parsed, status } =
+    useDateFieldMask({
     separator: ".",
     min: new Date(1900, 0, 1),
     max: new Date(2100, 11, 31),
     // step: 1, // optional; off by default
     onValueChange: (value) => console.log(value, parsed, status),
+    onParsedChange: (date) => console.log(date),
   });
 
-  return <input {...inputProps} />;
+  return (
+    <>
+      <input {...inputProps} />
+      <input name="date" {...hiddenInputProps} />
+    </>
+  );
 }
 ```
 
 `inputProps` is `ref`, `value`, `onKeyDown`, `onPaste` (`preventDefault` + `applyPaste`), a no-op `onChange` (value is owned by `apply` / `applyPaste`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`. `status` is the same classification as `dateStatus`. Pass `step` to enable ArrowUp/ArrowDown segment increment; it stays off when omitted.
+
+`onParsedChange` runs when the parsed calendar day changes (`undefined` ↔ `Date`, or a different day)—not on every keystroke while the value stays incomplete. `isoValue` is `YYYY-MM-DD` when `parsed` is set, otherwise `""`. `hiddenInputProps` is `{ type: "hidden", value: isoValue }` for a native form field you can spread and name yourself.
 
 ## Releasing
 

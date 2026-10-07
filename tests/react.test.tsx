@@ -9,6 +9,7 @@ function DateInput({
   separator,
   defaultValue,
   onValueChange,
+  onParsedChange,
   min,
   max,
   step,
@@ -16,23 +17,28 @@ function DateInput({
   separator?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  onParsedChange?: (date: Date | undefined) => void;
   min?: Date;
   max?: Date;
   step?: number;
 }) {
-  const { inputProps, parsed, status } = useDateFieldMask({
-    separator,
-    defaultValue,
-    onValueChange,
-    min,
-    max,
-    step,
-  });
+  const { inputProps, hiddenInputProps, isoValue, parsed, status } =
+    useDateFieldMask({
+      separator,
+      defaultValue,
+      onValueChange,
+      onParsedChange,
+      min,
+      max,
+      step,
+    });
   return (
     <>
       <input aria-label="date" {...inputProps} />
+      <input aria-label="iso" {...hiddenInputProps} />
       <output>{parsed ? parsed.toDateString() : "incomplete"}</output>
       <span data-testid="status">{status}</span>
+      <span data-testid="iso-value">{isoValue}</span>
     </>
   );
 }
@@ -209,4 +215,42 @@ describe("useDateFieldMask", () => {
     fireEvent.click(screen.getByRole("button", { name: "save" }));
     expect(screen.getByText("1")).toBeTruthy();
   });
+
+  it("exposes isoValue and hiddenInputProps when complete", () => {
+    render(<DateInput defaultValue="11.12.2026" />);
+    expect(screen.getByTestId("iso-value").textContent).toBe("2026-12-11");
+    const hidden = screen.getByLabelText("iso") as HTMLInputElement;
+    expect(hidden.type).toBe("hidden");
+    expect(hidden.value).toBe("2026-12-11");
+    typeKey("Backspace");
+    expect(screen.getByTestId("iso-value").textContent).toBe("");
+    expect(hidden.value).toBe("");
+  });
+
+  it("calls onParsedChange when the calendar day changes", () => {
+    const onParsedChange = vi.fn();
+    render(
+      <DateInput defaultValue="11.12.202" onParsedChange={onParsedChange} />,
+    );
+    expect(onParsedChange).not.toHaveBeenCalled();
+    typeKey("6");
+    expect(onParsedChange).toHaveBeenCalledTimes(1);
+    const date = onParsedChange.mock.calls[0]?.[0] as Date;
+    expect(date.getFullYear()).toBe(2026);
+    expect(date.getMonth()).toBe(11);
+    expect(date.getDate()).toBe(11);
+    typeKey("Backspace");
+    expect(onParsedChange).toHaveBeenCalledTimes(2);
+    expect(onParsedChange).toHaveBeenLastCalledWith(undefined);
+  });
+
+  it("does not call onParsedChange for incomplete keystrokes", () => {
+    const onParsedChange = vi.fn();
+    render(<DateInput onParsedChange={onParsedChange} />);
+    typeKey("1");
+    typeKey("1");
+    typeKey(".");
+    expect(onParsedChange).not.toHaveBeenCalled();
+  });
+
 });
