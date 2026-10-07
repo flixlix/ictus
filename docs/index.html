@@ -146,7 +146,13 @@
     </div>
     <div class="install-row">
       <code id="install-command">npm install ictus</code>
-      <button type="button" id="copy-install" data-copy="npm install ictus">Copy</button>
+      <button
+        type="button"
+        id="copy-install"
+        class="copy-icon"
+        data-copy="npm install ictus"
+        aria-label="Copy install command"
+      ></button>
     </div>
 
     <h3 id="agent" data-short="Agent prompt">Or prompt your agent</h3>
@@ -528,12 +534,16 @@ When done, summarize what you installed, what you changed, and how to try it.</c
       <code>useDateFieldMask</code> spread onto a shadcn-style <code>Input</code>.
     </p>
     <div id="advanced-demo-shadcn" class="advanced-demo-slot"></div>
-    <p>
-      <button type="button" data-copy="npx shadcn@latest add flixlix/ictus/date-field-shadcn">
-        Copy install
-      </button>
-      <button type="button" data-copy-target="code-agent-shadcn">Copy agent prompt</button>
-    </p>
+    <div class="install-row">
+      <code>npx shadcn@latest add flixlix/ictus/date-field-shadcn</code>
+      <button
+        type="button"
+        class="copy-icon"
+        data-copy="npx shadcn@latest add flixlix/ictus/date-field-shadcn"
+        aria-label="Copy install command"
+      ></button>
+    </div>
+    <p class="registry-or">Or prompt your agent</p>
     <div class="fold-wrap">
       <pre id="code-agent-shadcn" class="fold"><code>Add an ictus-masked date field using the shadcn Input pattern from https://github.com/flixlix/ictus.
 
@@ -542,6 +552,7 @@ Prefer: `npx shadcn@latest add flixlix/ictus/date-field-shadcn`
 
 Source of truth: registry/react/date-field-shadcn.tsx in that repo.
 Wire useDateFieldMask from ictus/react; keep the host Input styles. Ask before inventing a new date field.</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-agent-shadcn" aria-label="Copy prompt"></button>
       <button type="button" class="fold-toggle" data-expand="code-agent-shadcn" aria-controls="code-agent-shadcn" aria-expanded="false">Show more</button>
     </div>
 
@@ -550,12 +561,16 @@ Wire useDateFieldMask from ictus/react; keep the host Input styles. Ask before i
       Same hook on Base UI <code>Field</code> + <code>Input</code>.
     </p>
     <div id="advanced-demo-base-ui" class="advanced-demo-slot"></div>
-    <p>
-      <button type="button" data-copy="npx shadcn@latest add flixlix/ictus/date-field-base-ui">
-        Copy install
-      </button>
-      <button type="button" data-copy-target="code-agent-base-ui">Copy agent prompt</button>
-    </p>
+    <div class="install-row">
+      <code>npx shadcn@latest add flixlix/ictus/date-field-base-ui</code>
+      <button
+        type="button"
+        class="copy-icon"
+        data-copy="npx shadcn@latest add flixlix/ictus/date-field-base-ui"
+        aria-label="Copy install command"
+      ></button>
+    </div>
+    <p class="registry-or">Or prompt your agent</p>
     <div class="fold-wrap">
       <pre id="code-agent-base-ui" class="fold"><code>Add an ictus-masked date field using Base UI from https://github.com/flixlix/ictus.
 
@@ -564,6 +579,7 @@ Prefer: `npx shadcn@latest add flixlix/ictus/date-field-base-ui`
 
 Source: registry/react/date-field-base-ui.tsx.
 Use useDateFieldMask; keep Field/Input composition. Ask before inventing a new date field.</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-agent-base-ui" aria-label="Copy prompt"></button>
       <button type="button" class="fold-toggle" data-expand="code-agent-base-ui" aria-controls="code-agent-base-ui" aria-expanded="false">Show more</button>
     </div>
 
@@ -572,12 +588,16 @@ Use useDateFieldMask; keep Field/Input composition. Ask before inventing a new d
       Type a date, or open the calendar and pick one. Both update the same masked value.
     </p>
     <div id="advanced-demo-day-picker" class="advanced-demo-slot"></div>
-    <p>
-      <button type="button" data-copy="npx shadcn@latest add flixlix/ictus/date-field-day-picker">
-        Copy install
-      </button>
-      <button type="button" data-copy-target="code-agent-day-picker">Copy agent prompt</button>
-    </p>
+    <div class="install-row">
+      <code>npx shadcn@latest add flixlix/ictus/date-field-day-picker</code>
+      <button
+        type="button"
+        class="copy-icon"
+        data-copy="npx shadcn@latest add flixlix/ictus/date-field-day-picker"
+        aria-label="Copy install command"
+      ></button>
+    </div>
+    <p class="registry-or">Or prompt your agent</p>
     <div class="fold-wrap">
       <pre id="code-agent-day-picker" class="fold"><code>Add an ictus-masked date field with a react-day-picker popover calendar from https://github.com/flixlix/ictus.
 
@@ -586,6 +606,7 @@ Prefer: `npx shadcn@latest add flixlix/ictus/date-field-day-picker`
 
 Source: registry/react/date-field-day-picker.tsx.
 Keep typing and calendar selection in sync via useDateFieldMask + formatDate. Import react-day-picker/style.css if the calendar looks unstyled. Ask before inventing a new date field.</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-agent-day-picker" aria-label="Copy prompt"></button>
       <button type="button" class="fold-toggle" data-expand="code-agent-day-picker" aria-controls="code-agent-day-picker" aria-expanded="false">Show more</button>
     </div>
 

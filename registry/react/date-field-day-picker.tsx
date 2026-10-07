@@ -87,7 +87,11 @@ export function DateFieldDayPicker({
             <CalendarIcon />
           </Popover.Trigger>
           <Popover.Portal>
-            <Popover.Positioner sideOffset={8} align="end">
+            <Popover.Positioner
+              className="ictus-day-picker-positioner"
+              sideOffset={8}
+              align="end"
+            >
               <Popover.Popup className="ictus-day-picker-popup">
                 <DayPicker
                   mode="single"
