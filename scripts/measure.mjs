@@ -53,7 +53,7 @@ const react = await bundle("src/react.ts", [
 
 const N = 200_000;
 const applyDigit = bench("apply digit on empty", N, () => apply({ value: "", caret: 0, key: "4" }));
-const applyReject = bench("apply rejected second digit", N, () =>
+const applySpill = bench("apply overflowing second digit", N, () =>
   apply({ value: "3", caret: 1, key: "9" }),
 );
 const applyFull = bench("apply extra year digit", N, () =>
@@ -76,7 +76,7 @@ const report = {
     time: { min: time.min, gzip: time.gzip },
     react: { min: react.min, gzip: react.gzip },
   },
-  bench: [applyDigit, applyReject, applyFull, applyBackspace, typeFull, parseValid, parseInvalid],
+  bench: [applyDigit, applySpill, applyFull, applyBackspace, typeFull, parseValid, parseInvalid],
 };
 
 console.log(JSON.stringify(report, null, 2));
