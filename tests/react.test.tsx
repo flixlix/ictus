@@ -8,15 +8,18 @@ afterEach(cleanup);
 function DateInput({
   separator,
   defaultValue,
+  value,
   onValueChange,
 }: {
   separator?: string;
   defaultValue?: string;
+  value?: string;
   onValueChange?: (value: string) => void;
 }) {
   const { inputProps, parsed } = useDateFieldMask({
     separator,
     defaultValue,
+    value,
     onValueChange,
   });
   return (
@@ -118,5 +121,43 @@ describe("useDateFieldMask", () => {
     typeKey("1");
     fireEvent.click(screen.getByRole("button", { name: "save" }));
     expect(screen.getByText("1")).toBeTruthy();
+  });
+
+  it("uses controlled value as the source of truth", () => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(
+      <DateInput value="11" onValueChange={onValueChange} />,
+    );
+    const input = screen.getByLabelText("date") as HTMLInputElement;
+    expect(input.value).toBe("11");
+    typeKey("1");
+    expect(onValueChange).toHaveBeenCalledWith("11.1");
+    expect(input.value).toBe("11");
+    rerender(<DateInput value="11.1" onValueChange={onValueChange} />);
+    expect(input.value).toBe("11.1");
+  });
+
+  it("updates when the parent drives controlled value", () => {
+    function Controlled() {
+      const [value, setValue] = useState("");
+      const { inputProps } = useDateFieldMask({
+        value,
+        onValueChange: setValue,
+      });
+      return (
+        <>
+          <input aria-label="date" {...inputProps} />
+          <button type="button" onClick={() => setValue("04.09.2026")}>
+            set
+          </button>
+        </>
+      );
+    }
+    render(<Controlled />);
+    const input = screen.getByLabelText("date") as HTMLInputElement;
+    typeKey("4");
+    expect(input.value).toBe("04.");
+    fireEvent.click(screen.getByRole("button", { name: "set" }));
+    expect(input.value).toBe("04.09.2026");
   });
 });

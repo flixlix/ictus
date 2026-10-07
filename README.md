@@ -118,6 +118,20 @@ function DateInput() {
 }
 ```
 
+Pass `value` for controlled mode (with `onValueChange` to update parent state). Omit `value` and use `defaultValue` for uncontrolled mode.
+
+```tsx
+function ControlledDateInput() {
+  const [value, setValue] = useState("");
+  const { inputProps, parsed } = useDateFieldMask({
+    value,
+    onValueChange: setValue,
+  });
+
+  return <input {...inputProps} />;
+}
+```
+
 `inputProps` is `ref`, `value`, `onKeyDown`, a no-op `onChange` (value is owned by `apply`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`.
 
 ## Releasing

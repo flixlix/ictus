@@ -5,6 +5,7 @@ import { apply, isDateMaskKey, parseDate } from "./index.js";
 export type UseDateFieldMaskOptions = {
   separator?: string;
   defaultValue?: string;
+  value?: string;
   onValueChange?: (value: string) => void;
 };
 
@@ -31,9 +32,12 @@ function noopChange(_event: ChangeEvent<HTMLInputElement>) {}
 export function useDateFieldMask(
   options: UseDateFieldMaskOptions = {},
 ): UseDateFieldMaskReturn {
-  const { separator, defaultValue = "", onValueChange } = options;
+  const { separator, defaultValue = "", value: valueProp, onValueChange } =
+    options;
+  const isControlled = valueProp !== undefined;
   const ref = useRef<HTMLInputElement | null>(null);
-  const [value, setValue] = useState(defaultValue);
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
+  const value = isControlled ? valueProp : uncontrolledValue;
   const parsed = useMemo(() => parseDate(value), [value]);
 
   const onKeyDown = useCallback(
@@ -47,14 +51,16 @@ export function useDateFieldMask(
         key: event.key,
         separator,
       });
-      setValue(next.value);
+      if (!isControlled) {
+        setUncontrolledValue(next.value);
+      }
       onValueChange?.(next.value);
       const caret = next.caret;
       requestAnimationFrame(() => {
         ref.current?.setSelectionRange(caret, caret);
       });
     },
-    [separator, onValueChange],
+    [separator, onValueChange, isControlled],
   );
 
   return {
