@@ -42,8 +42,8 @@ Good fit when you want dates (`dd/mm/yyyy`, `mm/dd/yyyy`, `yyyy-mm-dd`) or 24-ho
 
 | Group | Width | First digit | Second digit |
 | --- | --- | --- | --- |
-| Day | 2 | `4–9` → `0N.` · `0–3` stay | max 31 (`32–39` ignored) |
-| Month | 2 | `2–9` → `0N.` · `0–1` stay | max 12 (`13–19` ignored) |
+| Day | 2 | `4–9` → `0N.` · `0–3` stay | max 31 (`32–39` pad day and spill into month) |
+| Month | 2 | `2–9` → `0N.` · `0–1` stay | max 12 (`13–19` pad month and spill into year) |
 | Year | 4 | never pad | any 4 digits until parse |
 
 The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the current group and writes the configured separator.
@@ -226,8 +226,8 @@ Same headless mask model for a 24-hour clock, from `ictus/time`. Default shape i
 
 | Group | Width | First digit | Second digit |
 | --- | --- | --- | --- |
-| Hour | 2 | `3–9` → `0N:` · `0–2` stay | max 23 (`24–29` ignored) |
-| Minute | 2 | `6–9` → `0N` (plus `:` when seconds follow) · `0–5` stay | max 59 |
+| Hour | 2 | `3–9` → `0N:` · `0–2` stay | max 23 (`24–29` pad hour and spill into minute) |
+| Minute | 2 | `6–9` → `0N` (plus `:` when seconds follow) · `0–5` stay | max 59 (spill into seconds when present; otherwise ignored) |
 | Second | 2 | `6–9` → `0N` · `0–5` stay | max 59 (only with `precision: "second"`) |
 
 Typing `:`, `.`, or `-` commits the current group and writes the configured separator.

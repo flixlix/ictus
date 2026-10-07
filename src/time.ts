@@ -214,6 +214,24 @@ function insertDigit(
 
   const next = current.slice(0, at) + digit + current.slice(at);
   if (Number(next) > spec.max) {
+    const ng = g + 1;
+    if (
+      current.length > 0 &&
+      current.length < spec.width &&
+      at === current.length &&
+      ng <= last &&
+      (digits[ng] ?? "").length === 0
+    ) {
+      digits[g] = current.padStart(spec.width, "0");
+      seps[g] = true;
+      return insertDigit(
+        assemble(digits, seps, sep),
+        caretAt(digits, seps, sep, g, true),
+        digit,
+        sep,
+        groups,
+      );
+    }
     return { value, caret };
   }
 

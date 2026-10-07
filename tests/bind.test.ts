@@ -30,12 +30,13 @@ describe("bindDateMask", () => {
     expect(input.selectionEnd).toBe(3);
   });
 
-  it("rejects an impossible second day digit", () => {
+  it("spills an overflowing second day digit into the month", () => {
     const input = createInput();
     bindDateMask(input);
     typeKey(input, "3");
     typeKey(input, "9");
-    expect(input.value).toBe("3");
+    expect(input.value).toBe("03.09.");
+    expect(input.selectionStart).toBe(6);
   });
 
   it("writes a custom separator", () => {
