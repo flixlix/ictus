@@ -95,27 +95,6 @@ function bindMask(root: HTMLElement): void {
   input.addEventListener("select", paintCaret);
 }
 
-function bindPasteSamples(): void {
-  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-paste]")) {
-    button.addEventListener("click", () => {
-      const pasted = button.dataset.paste ?? "";
-      const targetId = button.dataset.pasteInto ?? "hero-date";
-      const input = document.querySelector<HTMLInputElement>(`#${targetId}`);
-      const root = input?.closest("[data-mask]");
-      if (!(input instanceof HTMLInputElement) || !(root instanceof HTMLElement)) return;
-      const separator = root.dataset.separator || ".";
-      const next = applyPaste({
-        value: "",
-        caret: 0,
-        pasted,
-        separator,
-      });
-      syncField(root, next.value, next.caret);
-      input.focus();
-    });
-  }
-}
-
 function bindCopies(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-copy], [data-copy-target]")) {
     button.addEventListener("click", async () => {
@@ -223,7 +202,6 @@ for (const root of document.querySelectorAll<HTMLElement>("[data-mask]")) {
 }
 
 bindCopies();
-bindPasteSamples();
 bindFormat();
 bindTable();
 bindParseLive();
