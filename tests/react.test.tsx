@@ -70,12 +70,12 @@ describe("useDateFieldMask", () => {
     expect(input.selectionEnd).toBe(3);
   });
 
-  it("rejects an impossible second day digit", () => {
+  it("spills an overflowing second day digit into the month", () => {
     render(<DateInput />);
     const input = screen.getByLabelText("date") as HTMLInputElement;
     typeKey("3");
     typeKey("9");
-    expect(input.value).toBe("3");
+    expect(input.value).toBe("03.09.");
   });
 
   it("writes a custom separator", () => {

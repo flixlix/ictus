@@ -39,6 +39,13 @@ describe("dateStatus", () => {
     expect(dateStatus("29.02.2021")).toBe("invalid");
     expect(dateStatus("31/02/2020")).toBe("invalid");
     expect(dateStatus("31-02-2020")).toBe("invalid");
+    expect(dateStatus("00.01.2026")).toBe("invalid");
+    expect(dateStatus("01.00.2026")).toBe("invalid");
+  });
+
+  it("keeps zero day/month masks incomplete until a full invalid triple", () => {
+    expect(dateStatus("00.")).toBe("incomplete");
+    expect(dateStatus("04.00.")).toBe("incomplete");
   });
 
   it("returns valid when parseDate would succeed", () => {

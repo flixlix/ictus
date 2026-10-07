@@ -38,16 +38,31 @@ describe("acceptance table", () => {
     ["|", ".", "|"],
     ["04.|", ".", "04.|"],
     ["04.|", "9", "04.09.|"],
-    ["3|", "9", "3|"],
-    ["04.1|", "3", "04.1|"],
+    ["3|", "9", "03.09.|"],
+    ["3|", "2", "03.02.|"],
+    ["04.1|", "3", "04.01.3|"],
     ["04.|2.2026", "1", "04.12.|2026"],
     ["04.|1.2026", "2", "04.|1.2026"],
     ["11|", "1", "11.1|"],
     ["11.12.|", "Backspace", "11.12|"],
     ["14.10.|26", "1", "14.10.1|26"],
+    ["31.|", "1", "31.1|"],
+    ["0|", "0", "00.|"],
+    ["04.0|", "0", "04.00.|"],
   ] as const)("%s + %s → %s", (before, key, after) => {
     const result = type(before, key);
     expect(show(result.value, result.caret)).toBe(after);
+  });
+
+  it("keeps year typing stable after day/month overflow-advance", () => {
+    let state = type("|", "3");
+    expect(show(state.value, state.caret)).toBe("3|");
+    state = apply({ value: state.value, caret: state.caret, key: "9" });
+    expect(show(state.value, state.caret)).toBe("03.09.|");
+    for (const key of ["2", "0", "2", "6"] as const) {
+      state = apply({ value: state.value, caret: state.caret, key });
+    }
+    expect(show(state.value, state.caret)).toBe("03.09.2026|");
   });
 });
 
@@ -204,14 +219,14 @@ describe("mode mdy", () => {
     ["|", "9", "09/|"],
     ["04/|", "3", "04/3|"],
     ["04/|", "9", "04/09/|"],
-    ["04/3|", "2", "04/3|"],
+    ["04/3|", "2", "04/03/2|"],
     ["04/1|", "5", "04/15/|"],
     ["12/|", "4", "12/04/|"],
     ["12/25/|", "2", "12/25/2|"],
     ["12/25/202|", "6", "12/25/2026|"],
-    ["3|", "9", "3|"],
+    ["3|", "9", "03/09/|"],
     ["1|", "2", "12/|"],
-    ["1|", "3", "1|"],
+    ["1|", "3", "01/3|"],
   ] as const)("%s + %s → %s", (before, key, after) => {
     const result = type(before, key, "/", "mdy");
     expect(show(result.value, result.caret)).toBe(after);
@@ -229,7 +244,7 @@ describe("mode ymd", () => {
     ["2026/12/|", "3", "2026/12/3|"],
     ["2026/12/3|", "1", "2026/12/31|"],
     ["2026/12/3|", "9", "2026/12/3|"],
-    ["2026/1|", "3", "2026/1|"],
+    ["2026/1|", "3", "2026/01/3|"],
     ["|", "0", "0|"],
   ] as const)("%s + %s → %s", (before, key, after) => {
     const result = type(before, key, "/", "ymd");
