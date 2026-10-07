@@ -85,7 +85,7 @@ export function mountToc(shell: HTMLElement): void {
 
     const link = document.createElement("a");
     link.href = `#${heading.id}`;
-    link.textContent = heading.textContent;
+    link.textContent = heading.dataset.short ?? heading.textContent ?? "";
     link.className = heading.tagName === "H3" ? "toc-link toc-link--sub" : "toc-link";
 
     const item = document.createElement("li");
