@@ -654,6 +654,14 @@ footer a:hover {
   inset: 0;
 }
 
+/* Firefox re-renders each stacked backdrop blur on every scroll frame, which makes scrolling lag.
+   It gets the tinted gradient fade without the blur. !important beats the inline style. */
+@supports (-moz-appearance: none) {
+  .overflow-scroll-gradient__layer {
+    backdrop-filter: none !important;
+  }
+}
+
 .overflow-scroll-gradient__layer--bottom {
   bottom: 4rem;
   z-index: 10;
