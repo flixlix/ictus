@@ -51,7 +51,7 @@
       </span>
     </p>
 
-    <h2 id="getting-started">Getting started</h2>
+    <h2 id="getting-started" data-short="Start">Getting started</h2>
     <p>Install it yourself, or hand a prompt to your agent.</p>
 
     <h3>Install</h3>
@@ -119,7 +119,7 @@ When done, summarize what you installed, what you changed, and how to try it.</c
       <button type="button" class="fold-toggle" data-expand="code-agent-prompt" aria-controls="code-agent-prompt" aria-expanded="false">Show more</button>
     </div>
 
-    <h2 id="size">Size and speed</h2>
+    <h2 id="size" data-short="Size">Size and speed</h2>
     <p>Min+gzip, as a bundler ships it. Reproduce with <code>pnpm measure</code>.</p>
     <table>
       <thead>
@@ -357,8 +357,8 @@ When done, summarize what you installed, what you changed, and how to try it.</c
       value and caret. Unknown keys are a no-op. The box is never cleared on reject. A non-empty
       selection is replaced: Backspace and Delete remove it, a digit types into the hole.
     </p>
-    <p><button type="button" data-copy-target="code-apply">Copy</button></p>
-    <pre id="code-apply"><code>import { apply } from "ictus";
+    <div class="code-block">
+      <pre id="code-apply"><code>import { apply } from "ictus";
 
 apply({
   value: "1",
@@ -367,6 +367,8 @@ apply({
   separator: ".", // default
 });
 // { value: "01.", caret: 3 }</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-apply" aria-label="Copy code"></button>
+    </div>
     <dl>
       <dt><code>value</code></dt>
       <dd>Current masked string.</dd>
@@ -390,8 +392,8 @@ apply({
         when opting in.
       </dd>
     </dl>
-    <p><button type="button" data-copy-target="code-step">Copy</button></p>
-    <pre id="code-step"><code>const step = 1;
+    <div class="code-block">
+      <pre id="code-step"><code>const step = 1;
 if (
   isDateMaskKey(event.key) ||
   (step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown"))
@@ -399,6 +401,8 @@ if (
   event.preventDefault();
   apply({ value, caret, key: event.key, step });
 }</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-step" aria-label="Copy code"></button>
+    </div>
 
     <h3 id="applyPaste"><code>applyPaste</code></h3>
     <p>
@@ -406,8 +410,8 @@ if (
       <code>apply</code>. Accepts <code>11/12/2026</code>, dashed or dotted forms, digit-only
       <code>11122026</code>, and ISO <code>2026-12-11</code> (remapped to day-month-year).
     </p>
-    <p><button type="button" data-copy-target="code-paste">Copy</button></p>
-    <pre id="code-paste"><code>import { applyPaste } from "ictus";
+    <div class="code-block">
+      <pre id="code-paste"><code>import { applyPaste } from "ictus";
 
 applyPaste({
   value: "",
@@ -415,6 +419,8 @@ applyPaste({
   pasted: "2026-12-11",
 });
 // { value: "11.12.2026", caret: 10 }</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-paste" aria-label="Copy code"></button>
+    </div>
 
     <h3 id="parseDate"><code>parseDate</code></h3>
     <p>
@@ -425,13 +431,15 @@ applyPaste({
       Optional <code>min</code> / <code>max</code> Dates bound complete calendar days; partials
       ignore bounds.
     </p>
-    <p><button type="button" data-copy-target="code-parse">Copy</button></p>
-    <pre id="code-parse"><code>parseDate("11.12.2026"); // local Date
+    <div class="code-block">
+      <pre id="code-parse"><code>parseDate("11.12.2026"); // local Date
 parseDate("11/12/2026"); // same
 parseDate("11.12.2026", { min, max });
 parseDate("32.01.2020"); // undefined
 parseDate("31.02.2020"); // undefined
 parseDate("11.12");      // undefined</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-parse" aria-label="Copy code"></button>
+    </div>
     <p>
       <label for="parse-input">Masked string</label><br />
       <input id="parse-input" size="16" value="11.12.2026" spellcheck="false" />
@@ -444,44 +452,52 @@ parseDate("11.12");      // undefined</code></pre>
       <code>empty</code>, <code>incomplete</code>, <code>invalid</code>, or
       <code>valid</code>.
     </p>
-    <p><button type="button" data-copy-target="code-status">Copy</button></p>
-    <pre id="code-status"><code>dateStatus("");           // "empty"
+    <div class="code-block">
+      <pre id="code-status"><code>dateStatus("");           // "empty"
 dateStatus("11.12");      // "incomplete"
 dateStatus("31.02.2020"); // "invalid"
 dateStatus("11.12.2026"); // "valid"</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-status" aria-label="Copy code"></button>
+    </div>
 
     <h3 id="formatDate"><code>formatDate</code></h3>
     <p>Writes <code>dd{sep}mm{sep}yyyy</code> from the date’s local day, month, and year.</p>
-    <p><button type="button" data-copy-target="code-format">Copy</button></p>
-    <pre id="code-format"><code>formatDate(new Date(2026, 11, 11));
+    <div class="code-block">
+      <pre id="code-format"><code>formatDate(new Date(2026, 11, 11));
 // "11.12.2026"
 
 formatDate(new Date(2026, 11, 11), "/");
 // "11/12/2026"</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-format" aria-label="Copy code"></button>
+    </div>
 
     <h3 id="isDateMaskKey"><code>isDateMaskKey</code></h3>
     <p>
       True for keys <code>apply</code> handles. Use it to <code>preventDefault</code> in
       <code>keydown</code> without swallowing arrows, tab, or shortcuts.
     </p>
-    <p><button type="button" data-copy-target="code-key">Copy</button></p>
-    <pre id="code-key"><code>if (!isDateMaskKey(event.key)) return;
+    <div class="code-block">
+      <pre id="code-key"><code>if (!isDateMaskKey(event.key)) return;
 event.preventDefault();</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-key" aria-label="Copy code"></button>
+    </div>
 
     <h3 id="bindDateMask"><code>bindDateMask</code></h3>
     <p>
       Wires <code>keydown</code> and paste to <code>apply</code>, writes the result back, and
       restores the caret. Returns a cleanup function that removes the listeners.
     </p>
-    <p><button type="button" data-copy-target="code-bind">Copy</button></p>
-    <pre id="code-bind"><code>import { bindDateMask } from "ictus";
+    <div class="code-block">
+      <pre id="code-bind"><code>import { bindDateMask } from "ictus";
 
 const unbind = bindDateMask(input, { separator: "." });
 // later: unbind();</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-bind" aria-label="Copy code"></button>
+    </div>
 
     <h3 id="types">Types</h3>
-    <p><button type="button" data-copy-target="code-types">Copy</button></p>
-    <pre id="code-types"><code>type ApplyInput = {
+    <div class="code-block">
+      <pre id="code-types"><code>type ApplyInput = {
   value: string;
   caret: number;
   selectionEnd?: number;
@@ -504,14 +520,16 @@ type ApplyResult = {
 };
 
 type DateStatus = "empty" | "incomplete" | "invalid" | "valid";</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-types" aria-label="Copy code"></button>
+    </div>
 
     <h3 id="vanilla">Vanilla <code>&lt;input&gt;</code></h3>
     <p>
       Prefer <code>bindDateMask</code>. For a one-off keystroke without listeners, call
       <code>apply</code> and <code>isDateMaskKey</code> yourself.
     </p>
-    <p><button type="button" data-copy-target="code-vanilla">Copy</button></p>
-    <pre id="code-vanilla"><code>import { bindDateMask } from "ictus";
+    <div class="code-block">
+      <pre id="code-vanilla"><code>import { bindDateMask } from "ictus";
 
 const input = document.querySelector("input");
 const unbind = bindDateMask(input, {
@@ -520,6 +538,8 @@ const unbind = bindDateMask(input, {
 });
 
 // later: unbind();</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-vanilla" aria-label="Copy code"></button>
+    </div>
 
     <h3 id="react"><code>useDateFieldMask</code></h3>
     <p>
@@ -533,8 +553,8 @@ const unbind = bindDateMask(input, {
       Pass <code>value</code> + <code>onValueChange</code> to control it, or omit
       <code>value</code> and use <code>defaultValue</code> uncontrolled.
     </p>
-    <p><button type="button" data-copy-target="code-react">Copy</button></p>
-    <pre id="code-react"><code>import { useState } from "react";
+    <div class="code-block">
+      <pre id="code-react"><code>import { useState } from "react";
 import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
@@ -552,6 +572,8 @@ function DateInput() {
     &lt;/&gt;
   );
 }</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-react" aria-label="Copy code"></button>
+    </div>
 
     <hr />
     <footer>

@@ -1,6 +1,7 @@
 import { apply, applyPaste, dateStatus, formatDate, isDateMaskKey, parseDate } from "../src/index.js";
 import type { DateStatus } from "../src/index.js";
 import { appendBlurLayers, mountOverflowScrollGradients } from "./overflow-scroll-gradient.js";
+import { mountToc } from "./toc.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
   if (selectionEnd === caret) {
@@ -111,25 +112,40 @@ function bindMask(root: HTMLElement): void {
   input.addEventListener("select", paintCaret);
 }
 
+const copyIcon = `<svg class="copy-glyph" data-label="idle" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>`;
+const checkIcon = `<svg class="copy-glyph" data-label="done" viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="M4.5 12.5l5 5 10-11"/></svg>`;
+
+function labelCopyButton(button: HTMLButtonElement): (copied: boolean) => void {
+  if (button.classList.contains("copy-icon")) {
+    button.innerHTML = copyIcon + checkIcon;
+    const label = button.getAttribute("aria-label") ?? "Copy";
+    return (copied) => {
+      button.dataset.copied = String(copied);
+      button.setAttribute("aria-label", copied ? "Copied" : label);
+    };
+  }
+
+  const idle = document.createElement("span");
+  idle.className = "copy-label";
+  idle.dataset.label = "idle";
+  idle.textContent = button.textContent;
+  const done = document.createElement("span");
+  done.className = "copy-label";
+  done.dataset.label = "done";
+  done.textContent = "Copied";
+  done.setAttribute("aria-hidden", "true");
+  button.replaceChildren(idle, done);
+  return (copied) => {
+    button.dataset.copied = String(copied);
+    idle.setAttribute("aria-hidden", String(copied));
+    done.setAttribute("aria-hidden", String(!copied));
+  };
+}
+
 function bindCopies(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-copy], [data-copy-target]")) {
-    const idle = document.createElement("span");
-    idle.className = "copy-label";
-    idle.dataset.label = "idle";
-    idle.textContent = button.textContent;
-    const done = document.createElement("span");
-    done.className = "copy-label";
-    done.dataset.label = "done";
-    done.textContent = "Copied";
-    done.setAttribute("aria-hidden", "true");
-    button.replaceChildren(idle, done);
-
+    const setCopied = labelCopyButton(button);
     let reset: number | undefined;
-    const setCopied = (copied: boolean) => {
-      button.dataset.copied = String(copied);
-      idle.setAttribute("aria-hidden", String(copied));
-      done.setAttribute("aria-hidden", String(!copied));
-    };
 
     button.addEventListener("click", async () => {
       const direct = button.dataset.copy;
@@ -305,6 +321,7 @@ function bindParseLive(): void {
 const scrollShell = document.querySelector("#scroll-shell");
 if (scrollShell instanceof HTMLElement) {
   mountOverflowScrollGradients(scrollShell);
+  mountToc(scrollShell);
 }
 
 for (const root of document.querySelectorAll<HTMLElement>("[data-mask]")) {

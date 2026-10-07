@@ -211,6 +211,100 @@ pre code {
   font-size: inherit;
 }
 
+.code-block {
+  position: relative;
+  margin: 0.75rem 0 1rem;
+}
+
+.code-block > pre {
+  margin: 0;
+  padding-right: 3rem;
+}
+
+.copy-icon {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  color: hsl(var(--muted));
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Widens the tap target without growing the visible button. */
+.copy-icon::before {
+  content: "";
+  position: absolute;
+  inset: -0.45rem;
+}
+
+.copy-icon:hover {
+  color: hsl(var(--foreground));
+}
+
+.copy-icon:active {
+  transform: scale(0.94);
+}
+
+.copy-glyph {
+  grid-area: 1 / 1;
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition:
+    opacity 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    transform 0.2s cubic-bezier(0.19, 1, 0.22, 1),
+    filter 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.copy-glyph[data-label="done"],
+.copy-icon[data-copied="true"] .copy-glyph[data-label="idle"] {
+  opacity: 0;
+  transform: scale(0.75);
+  filter: blur(2px);
+}
+
+.copy-icon[data-copied="true"] .copy-glyph[data-label="done"] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* The check draws itself in on copy; on reset it fades first and only then rewinds, out of sight. */
+.copy-glyph[data-label="done"] path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0s linear 0.2s;
+}
+
+.copy-icon[data-copied="true"] .copy-glyph[data-label="done"] path {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.3s cubic-bezier(0.65, 0, 0.35, 1) 0.05s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-glyph {
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .copy-glyph[data-label="done"] path {
+    stroke-dashoffset: 0;
+    transition: none !important;
+  }
+}
+
 .fold-wrap {
   position: relative;
   margin: 0.75rem 0 1rem;
@@ -526,6 +620,169 @@ footer a:hover {
   z-index: 10;
   height: 4rem;
   background: hsl(var(--background));
+}
+
+h2[id],
+h3[id] {
+  scroll-margin-top: 4.5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-shell {
+    scroll-behavior: smooth;
+  }
+}
+
+.toc {
+  display: none;
+}
+
+@media (min-width: 68rem) {
+  .toc {
+    display: block;
+    position: fixed;
+    z-index: 20;
+    top: 5.5rem;
+    left: calc(50% + var(--page-width) / 2 + 2.5rem);
+    width: 12rem;
+    font-size: 0.82rem;
+  }
+}
+
+.toc-title {
+  margin: 0 0 0.6rem;
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+.toc-list {
+  position: relative;
+  max-height: calc(100vh - 12rem);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  list-style: none;
+  box-shadow: inset 1px 0 hsl(var(--border));
+}
+
+.toc-link {
+  display: block;
+  padding: 0.22rem 0 0.22rem 0.85rem;
+  color: hsl(var(--muted));
+  line-height: 1.35;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.toc-link--sub {
+  padding-left: 1.6rem;
+}
+
+.toc-link code {
+  padding: 0;
+  background: none;
+}
+
+.toc-link:hover {
+  color: hsl(var(--foreground));
+  text-decoration: none;
+}
+
+.toc-link[aria-current] {
+  color: hsl(var(--foreground));
+}
+
+/* 1px tall bar scaled to the active link's height, so moving it only touches transform. */
+.toc-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 1px;
+  background: hsl(var(--link));
+  transform-origin: top;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toc.is-ready .toc-indicator {
+  transition:
+    transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+    opacity 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toc.is-ready .toc-indicator {
+    transition: opacity 0.2s ease;
+  }
+}
+
+.tabbar {
+  position: fixed;
+  z-index: 20;
+  left: 50%;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  translate: -50% 0;
+  padding: 0.25rem;
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: 999px;
+  background: hsl(var(--surface) / 0.72);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  backdrop-filter: blur(16px) saturate(1.6);
+  box-shadow: 0 1px 2px hsl(220 18% 14% / 0.06), 0 8px 24px hsl(220 18% 14% / 0.1);
+}
+
+@media (min-width: 68rem) {
+  .tabbar {
+    display: none;
+  }
+}
+
+.tabbar-list {
+  display: flex;
+}
+
+.tabbar-tab {
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  color: hsl(var(--muted));
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tabbar-tab:hover {
+  color: hsl(var(--foreground));
+  text-decoration: none;
+}
+
+.tabbar-highlight {
+  position: absolute;
+  inset: 0.25rem;
+  background: hsl(var(--foreground));
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tabbar-highlight .tabbar-tab {
+  color: hsl(var(--surface));
+}
+
+.tabbar.is-ready .tabbar-highlight {
+  transition:
+    clip-path 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+    opacity 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabbar.is-ready .tabbar-highlight {
+    transition: opacity 0.2s ease;
+  }
 }
 
 @media (max-width: 480px) {
