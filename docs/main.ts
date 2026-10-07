@@ -15,9 +15,9 @@ import {
   timeStatus,
 } from "../src/time.js";
 import type { TimeFieldPrecision, TimeStatus } from "../src/time.js";
+import { mountAdvancedDemos } from "./demos/advanced.js";
 import { appendBlurLayers, mountOverflowScrollGradients } from "./overflow-scroll-gradient.js";
 import { mountToc } from "./toc.js";
-import { mountAdvancedDemos } from "./demos/advanced.js";
 
 function show(value: string, caret: number, selectionEnd = caret): string {
   if (selectionEnd === caret) {
@@ -115,13 +115,78 @@ function syncField(root: HTMLElement, value: string, caret: number, hint = ""): 
   if (hintEl) hintEl.textContent = hint;
 }
 
+function maskOptions(root: HTMLElement): {
+  time: boolean;
+  separator: string;
+  precision: TimeFieldPrecision;
+  step: number;
+} {
+  const time = isTimeRoot(root);
+  return {
+    time,
+    separator: root.dataset.separator || (time ? ":" : "."),
+    precision: timePrecision(root),
+    step: Number(root.dataset.step) || 0,
+  };
+}
+
+function applyMaskKey(root: HTMLElement, input: HTMLInputElement, key: string): void {
+  const { time, separator, precision, step } = maskOptions(root);
+  const arrow = step > 0 && (key === "ArrowUp" || key === "ArrowDown");
+  const isMaskKey = time ? isTimeMaskKey(key) : isDateMaskKey(key);
+  if (!isMaskKey && !arrow) return;
+  const caret = input.selectionStart ?? 0;
+  const next = time
+    ? applyTime({
+        value: input.value,
+        caret,
+        selectionEnd: input.selectionEnd ?? undefined,
+        key,
+        separator,
+        precision,
+        step,
+      })
+    : apply({
+        value: input.value,
+        caret,
+        selectionEnd: input.selectionEnd ?? undefined,
+        key,
+        separator,
+        step,
+      });
+  const ignored =
+    next.value === input.value &&
+    next.caret === caret &&
+    key !== "Backspace" &&
+    key !== "Delete";
+  syncField(root, next.value, next.caret, ignored ? "ignored" : "");
+}
+
+function applyMaskPaste(root: HTMLElement, input: HTMLInputElement, pasted: string): void {
+  const { time, separator, precision } = maskOptions(root);
+  const next = time
+    ? applyTimePaste({
+        value: input.value,
+        caret: input.selectionStart ?? 0,
+        selectionEnd: input.selectionEnd ?? undefined,
+        pasted,
+        separator,
+        precision,
+      })
+    : applyPaste({
+        value: input.value,
+        caret: input.selectionStart ?? 0,
+        selectionEnd: input.selectionEnd ?? undefined,
+        pasted,
+        separator,
+      });
+  syncField(root, next.value, next.caret);
+}
+
 function bindMask(root: HTMLElement): void {
   const input = root.querySelector("input");
   if (!(input instanceof HTMLInputElement)) return;
-  const time = isTimeRoot(root);
-  const separator = root.dataset.separator || (time ? ":" : ".");
-  const precision = timePrecision(root);
-  const step = Number(root.dataset.step) || 0;
+  const { time, step } = maskOptions(root);
   syncField(root, input.value, input.selectionStart ?? input.value.length);
 
   input.addEventListener("keydown", (event) => {
@@ -140,52 +205,12 @@ function bindMask(root: HTMLElement): void {
       return;
     }
     event.preventDefault();
-    const caret = input.selectionStart ?? 0;
-    const next = time
-      ? applyTime({
-          value: input.value,
-          caret,
-          selectionEnd: input.selectionEnd ?? undefined,
-          key: event.key,
-          separator,
-          precision,
-          step,
-        })
-      : apply({
-          value: input.value,
-          caret,
-          selectionEnd: input.selectionEnd ?? undefined,
-          key: event.key,
-          separator,
-          step,
-        });
-    const ignored =
-      next.value === input.value &&
-      next.caret === caret &&
-      event.key !== "Backspace" &&
-      event.key !== "Delete";
-    syncField(root, next.value, next.caret, ignored ? "ignored" : "");
+    applyMaskKey(root, input, event.key);
   });
 
   input.addEventListener("paste", (event) => {
     event.preventDefault();
-    const next = time
-      ? applyTimePaste({
-          value: input.value,
-          caret: input.selectionStart ?? 0,
-          selectionEnd: input.selectionEnd ?? undefined,
-          pasted: event.clipboardData?.getData("text") ?? "",
-          separator,
-          precision,
-        })
-      : applyPaste({
-          value: input.value,
-          caret: input.selectionStart ?? 0,
-          selectionEnd: input.selectionEnd ?? undefined,
-          pasted: event.clipboardData?.getData("text") ?? "",
-          separator,
-        });
-    syncField(root, next.value, next.caret);
+    applyMaskPaste(root, input, event.clipboardData?.getData("text") ?? "");
   });
 
   const paintCaret = () => {
@@ -507,6 +532,26 @@ if (scrollShell instanceof HTMLElement) {
 
 for (const root of document.querySelectorAll<HTMLElement>("[data-mask]")) {
   bindMask(root);
+}
+
+const heroDate = document.querySelector("#hero-date");
+const heroRoot = heroDate?.closest("[data-mask]");
+const heroGuideDesktop = matchMedia("(min-width: 72rem) and (hover: hover) and (pointer: fine)");
+if (heroDate instanceof HTMLInputElement && heroRoot instanceof HTMLElement) {
+  let heroGuideMounted = false;
+  const mountHeroGuide = () => {
+    if (heroGuideMounted || !heroGuideDesktop.matches) return;
+    heroGuideMounted = true;
+    void import("./hero-guide.js").then(({ bindHeroGuide }) => {
+      bindHeroGuide(heroDate, {
+        press: (key) => applyMaskKey(heroRoot, heroDate, key),
+        paste: (text) => applyMaskPaste(heroRoot, heroDate, text),
+        clear: () => syncField(heroRoot, "", 0),
+      });
+    });
+  };
+  mountHeroGuide();
+  heroGuideDesktop.addEventListener("change", mountHeroGuide);
 }
 
 bindCopies();
