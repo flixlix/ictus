@@ -358,14 +358,22 @@ input.addEventListener("keydown", (event) => {
     <h3 id="react"><code>useDateFieldMask</code></h3>
     <p>
       Optional React entry. Peer on <code>react</code>. Restores the caret after commit.
-      <code>parsed</code> is a local <code>Date</code> or <code>undefined</code>.
+      <code>onParsedChange</code> fires when the calendar day changes;
+      <code>isoValue</code> / <code>hiddenInputProps</code> expose <code>YYYY-MM-DD</code> for forms.
     </p>
     <p><button type="button" data-copy-target="code-react">Copy</button></p>
     <pre id="code-react"><code>import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
-  const { inputProps, parsed } = useDateFieldMask();
-  return &lt;input {...inputProps} /&gt;;
+  const { inputProps, hiddenInputProps, isoValue, parsed } = useDateFieldMask({
+    onParsedChange: (date) => console.log(date, isoValue),
+  });
+  return (
+    &lt;&gt;
+      &lt;input {...inputProps} /&gt;
+      &lt;input name="date" {...hiddenInputProps} /&gt;
+    &lt;/&gt;
+  );
 }</code></pre>
 
     <hr />
