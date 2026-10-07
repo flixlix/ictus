@@ -251,7 +251,7 @@
     </table>
 
     <h2 id="api">API</h2>
-    <p>Four exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
+    <p>Five exports. Callers own the DOM; <code>apply</code> owns the next value and caret.</p>
 
     <h3 id="apply"><code>apply</code></h3>
     <p>
@@ -322,6 +322,17 @@ formatDate(new Date(2026, 11, 11), "/");
     <pre id="code-key"><code>if (!isDateMaskKey(event.key)) return;
 event.preventDefault();</code></pre>
 
+    <h3 id="bindDateMask"><code>bindDateMask</code></h3>
+    <p>
+      Wires <code>keydown</code> and paste to <code>apply</code>, writes the result back, and
+      restores the caret. Returns a cleanup function that removes the listeners.
+    </p>
+    <p><button type="button" data-copy-target="code-bind">Copy</button></p>
+    <pre id="code-bind"><code>import { bindDateMask } from "ictus";
+
+const unbind = bindDateMask(input, { separator: "." });
+// later: unbind();</code></pre>
+
     <h3 id="types">Types</h3>
     <p><button type="button" data-copy-target="code-types">Copy</button></p>
     <pre id="code-types"><code>type ApplyInput = {
@@ -338,22 +349,20 @@ type ApplyResult = {
 };</code></pre>
 
     <h3 id="vanilla">Vanilla <code>&lt;input&gt;</code></h3>
+    <p>
+      Prefer <code>bindDateMask</code>. For a one-off keystroke without listeners, call
+      <code>apply</code> and <code>isDateMaskKey</code> yourself.
+    </p>
     <p><button type="button" data-copy-target="code-vanilla">Copy</button></p>
-    <pre id="code-vanilla"><code>import { apply, isDateMaskKey } from "ictus";
+    <pre id="code-vanilla"><code>import { bindDateMask } from "ictus";
 
 const input = document.querySelector("input");
-input.addEventListener("keydown", (event) => {
-  if (!isDateMaskKey(event.key)) return;
-  event.preventDefault();
-  const next = apply({
-    value: input.value,
-    caret: input.selectionStart ?? 0,
-    selectionEnd: input.selectionEnd ?? undefined,
-    key: event.key,
-  });
-  input.value = next.value;
-  input.setSelectionRange(next.caret, next.caret);
-});</code></pre>
+const unbind = bindDateMask(input, {
+  separator: ".",
+  onValueChange: (value) => console.log(value),
+});
+
+// later: unbind();</code></pre>
 
     <h3 id="react"><code>useDateFieldMask</code></h3>
     <p>
