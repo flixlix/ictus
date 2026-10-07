@@ -94,6 +94,28 @@ describe("apply", () => {
     const result = type(before, key, separator);
     expect(show(result.value, result.caret)).toBe(after);
   });
+
+  it("ignores a letter key without changing state", () => {
+    const result = type("11|", "a");
+    expect(show(result.value, result.caret)).toBe("11|");
+  });
+
+  it("does not let Backspace leave a rejected letter in state", () => {
+    const typed = type("11|", "a");
+    expect(typed.value).toBe("11");
+    const afterBackspace = apply({
+      value: `${typed.value}a`,
+      caret: 2,
+      key: "Backspace",
+    });
+    expect(afterBackspace.value).toBe("1");
+    expect(afterBackspace.value).not.toMatch(/[a-z]/i);
+  });
+
+  it("Backspace at the end removes a rejected letter without deleting a digit", () => {
+    const result = apply({ value: "11a", caret: 3, key: "Backspace" });
+    expect(show(result.value, result.caret)).toBe("11|");
+  });
 });
 
 describe("apply step", () => {

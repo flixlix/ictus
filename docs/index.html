@@ -530,8 +530,9 @@ When done, summarize what you installed, what you changed, and how to try it.</c
     <p>
       The core of ictus. Pass the current value, the selection, and the key that was pressed, and
       get back the next value and caret. Unknown keys and rejected digits leave the value as it
-      was. If text is selected, Backspace and Delete remove it and a digit
-      replaces it.
+      was. Backspace and Delete never leave non-mask characters in the result (so a letter that
+      somehow sat in the DOM cannot leak into mask state). If text is selected, Backspace and
+      Delete remove it and a digit replaces it.
     </p>
     <div class="code-block">
       <pre id="code-apply"><code>import { apply } from "ictus";
@@ -653,10 +654,22 @@ formatDate(new Date(2026, 11, 11), "/");
     <p>
       Returns <code>true</code> for keys <code>apply</code> handles. Check it in
       <code>keydown</code> before calling <code>preventDefault</code>, so arrows, Tab, and
-      shortcuts keep working.
+      shortcuts keep working. ictus does not own your <code>&lt;input&gt;</code>: letters and other
+      non-mask characters should be blocked at the input (as these docs demos do), so they never
+      reach the DOM value that later Backspace/Delete would read.
     </p>
     <div class="code-block">
-      <pre id="code-key"><code>if (!isDateMaskKey(event.key)) return;
+      <pre id="code-key"><code>if (!isDateMaskKey(event.key)) {
+  if (
+    event.key.length === 1 &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.altKey
+  ) {
+    event.preventDefault();
+  }
+  return;
+}
 event.preventDefault();</code></pre>
       <button type="button" class="copy-icon" data-copy-target="code-key" aria-label="Copy code"></button>
     </div>
