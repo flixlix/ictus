@@ -217,6 +217,17 @@ export function apply(input: ApplyInput): ApplyResult {
 
   if (key === "Backspace") {
     if (caret === 0) return { value, caret };
+    const sepLen = separator.length;
+    if (
+      caret >= sepLen + 1 &&
+      value.slice(caret - sepLen, caret) === separator
+    ) {
+      const from = caret - sepLen - 1;
+      return {
+        value: value.slice(0, from) + value.slice(caret),
+        caret: from,
+      };
+    }
     return {
       value: value.slice(0, caret - 1) + value.slice(caret),
       caret: caret - 1,

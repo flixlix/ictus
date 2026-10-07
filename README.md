@@ -38,7 +38,7 @@ The separator is configurable (default `.`). Typing `.`, `/`, or `-` commits the
 ## API
 
 ```ts
-import { apply, parseDate, formatDate, isDateMaskKey } from "ictus";
+import { apply, parseDate, dateStatus, formatDate, isDateMaskKey } from "ictus";
 
 apply({
   value: string,          // current masked value
@@ -49,11 +49,14 @@ apply({
 }): { value: string; caret: number }
 
 parseDate(masked: string): Date | undefined
+dateStatus(masked: string): "empty" | "incomplete" | "invalid" | "valid"
 formatDate(date: Date, separator?: string): string
 isDateMaskKey(key: string): boolean
 ```
 
 `parseDate` returns a **local** `Date` (`new Date(year, monthIndex, day)`) only for a complete, calendar-valid triple. Partial and impossible strings stay in the input and parse to `undefined`. Reject never clears the box; selecting the value and deleting does.
+
+`dateStatus` classifies a masked string for UI feedback: `""` → `empty`, a partial mask → `incomplete`, a complete `dd{sep}mm{sep}yyyy` that is not a calendar date → `invalid`, and a value `parseDate` accepts → `valid`.
 
 `formatDate` writes `dd{sep}mm{sep}yyyy` from the date's local calendar parts.
 
@@ -75,29 +78,31 @@ isDateMaskKey(key: string): boolean
 | `04.\|2.2026` | `1` | `04.12.\|2026` |
 | `04.\|1.2026` | `2` | `04.\|1.2026` |
 | `11\|` | `1` | `11.1\|` |
-| `11.12.\|` | `⌫` | `11.12\|` |
+| `11.12.\|` | `⌫` | `11.1\|` |
+| `11.\|12.2026` | `⌫` | `1\|12.2026` |
+| `04.\|` | `⌫` | `0\|` |
+| `11.1\|` | `⌫` | `11.\|` |
+| `11.12\|` | `⌫` | `11.1\|` |
 
-Empty current group + separator is a no-op (`Blank + . → ""`). Backspace/Delete remove one visible character, including a trailing separator. A selected range is deleted (select-all + delete clears the field).
+Empty current group + separator is a no-op (`Blank + . → ""`). Backspace immediately after a separator removes that separator and the previous group's last digit in one stroke. Mid-group Backspace and Delete still remove one visible character. A selected range is deleted (select-all + delete clears the field).
 
 ## Vanilla `<input>`
 
 ```js
-import { apply, isDateMaskKey } from "ictus";
+import { bindDateMask } from "ictus";
 
 const input = document.querySelector("input");
-input.addEventListener("keydown", (event) => {
-  if (!isDateMaskKey(event.key)) return;
-  event.preventDefault();
-  const next = apply({
-    value: input.value,
-    caret: input.selectionStart ?? 0,
-    selectionEnd: input.selectionEnd ?? undefined,
-    key: event.key,
-  });
-  input.value = next.value;
-  input.setSelectionRange(next.caret, next.caret);
+const unbind = bindDateMask(input, {
+  separator: ".",
+  onValueChange: (value) => console.log(value),
 });
+
+// later: unbind();
 ```
+
+`bindDateMask` wires `keydown` (and paste) to `apply`, writes the result back to the input, and restores the caret. It returns a cleanup function that removes the listeners. Pass `getValue` / `setValue` when the masked string is owned outside the DOM.
+
+For a one-off keystroke without attaching listeners, call `apply` and `isDateMaskKey` yourself.
 
 Live demos and the full API live in [`docs/`](docs/) (`pnpm docs`).
 
@@ -109,16 +114,16 @@ Live demos and the full API live in [`docs/`](docs/) (`pnpm docs`).
 import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
-  const { inputProps, parsed } = useDateFieldMask({
+  const { inputProps, parsed, status } = useDateFieldMask({
     separator: ".",
-    onValueChange: (value) => console.log(value, parsed),
+    onValueChange: (value) => console.log(value, parsed, status),
   });
 
   return <input {...inputProps} />;
 }
 ```
 
-`inputProps` is `ref`, `value`, `onKeyDown`, a no-op `onChange` (value is owned by `apply`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`.
+`inputProps` is `ref`, `value`, `onKeyDown`, a no-op `onChange` (value is owned by `apply`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`. `status` is the same classification as `dateStatus`.
 
 ## Releasing
 
