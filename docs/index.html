@@ -20,7 +20,10 @@
       Headless as-you-type behavior for a single <code>&lt;input&gt;</code> date field. Day-month-year,
       zero dependencies, no calendar, no React in the core.
     </p>
-    <p><a href="#demos">Demos</a> · <a href="#size">Size</a> · <a href="#api">API</a></p>
+    <p>
+      <a href="#demos">Demos</a> · <a href="#agent">Prompt your agent</a> ·
+      <a href="#size">Size</a> · <a href="#api">API</a>
+    </p>
 
     <p>
       <label for="hero-date">Try it</label><br />
@@ -50,6 +53,46 @@
       <code>npm install ictus</code>
       <button type="button" data-copy="npm install ictus">Copy</button>
     </p>
+
+    <h2 id="agent">Prompt your agent</h2>
+    <p>
+      Drop this into Cursor, Claude Code, or similar. It finds date fields in the current repo,
+      asks before changing code, then installs and wires ictus from the docs.
+    </p>
+    <p><button type="button" data-copy-target="code-agent-prompt">Copy</button></p>
+    <pre id="code-agent-prompt"><code>Integrate the `ictus` date-mask library into this project.
+
+Docs: https://ictus.luca-felix.com
+Package: https://www.npmjs.com/package/ictus
+Repo: https://github.com/flixlix/ictus
+
+ictus is a headless as-you-type mask for a single &lt;input&gt; day-month-year field. It does not render a calendar, popover, or segmented spinbuttons. Attach it to an existing text input (vanilla `apply` / `applyPaste`, or React `useDateFieldMask` from `ictus/react`).
+
+## 1. Find opportunities first
+Scan this repo for places a date is entered as text (or should be), for example:
+- date / birthdate / DOB / expiry / start–end date inputs
+- &lt;input&gt; fields with date placeholders or masks (dd.mm.yyyy, mm/dd/yyyy, etc.)
+- custom or design-system Input wrappers used for dates
+- forms that parse free-text dates today
+
+Do NOT invent a new date field if none belongs here.
+
+Then stop and ask me before changing code:
+- If you find none: say so, and ask where I want ictus added (path / component / form).
+- If you find exactly one good place: briefly say where and why, and ask for OK to proceed there.
+- If you find more than one: list them (file + short reason) and ask whether to do one, several, or all.
+
+## 2. Install (only after I confirm where)
+Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun` — match lockfiles). Install `ictus`. Follow current docs for the right entry (`ictus` vs `ictus/react`).
+
+## 3. Implement in the confirmed place(s)
+- Wire the mask per the docs (keydown + paste for vanilla; `inputProps` for React).
+- Keep the host app’s Input / styling / labels; only add ictus behavior.
+- Match separator and date order to the product locale or existing UX (see docs for supported options).
+- Use `parseDate` (and status helpers if useful) at the form boundary; do not add a calendar UI.
+- Leave unrelated date pickers alone unless I asked to replace them.
+
+When done, summarize what you installed, what you changed, and how to try it.</code></pre>
 
     <h2 id="size">Size and speed</h2>
     <p>Min+gzip, as a bundler ships it. Reproduce with <code>pnpm measure</code>.</p>
