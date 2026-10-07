@@ -65,8 +65,18 @@ describe("bindDateMask", () => {
     const input = createInput("11");
     bindDateMask(input);
     expect(typeKey(input, "ArrowLeft")).toBe(true);
+    expect(typeKey(input, "ArrowUp")).toBe(true);
     expect(typeKey(input, "a")).toBe(true);
     expect(input.value).toBe("11");
+  });
+
+  it("steps the current group when step is set", () => {
+    const input = createInput("15.12.2026");
+    bindDateMask(input, { step: 1 });
+    input.setSelectionRange(2, 2);
+    typeKey(input, "ArrowUp");
+    expect(input.value).toBe("16.12.2026");
+    expect(input.selectionStart).toBe(2);
   });
 
   it("prevents default for mask keys", () => {

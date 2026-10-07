@@ -2,6 +2,7 @@ import { apply, isDateMaskKey } from "./index.js";
 
 export type BindDateMaskOptions = {
   separator?: string;
+  step?: number;
   onValueChange?: (value: string) => void;
   getValue?: () => string;
   setValue?: (value: string) => void;
@@ -11,7 +12,7 @@ export function bindDateMask(
   input: HTMLInputElement,
   options: BindDateMaskOptions = {},
 ): () => void {
-  const { separator, onValueChange } = options;
+  const { separator, onValueChange, step = 0 } = options;
   const getValue = options.getValue ?? (() => input.value);
   const setValue =
     options.setValue ??
@@ -26,6 +27,7 @@ export function bindDateMask(
       selectionEnd: input.selectionEnd ?? undefined,
       key,
       separator,
+      step,
     });
     setValue(next.value);
     input.setSelectionRange(next.caret, next.caret);
@@ -33,7 +35,12 @@ export function bindDateMask(
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
-    if (!isDateMaskKey(event.key)) return;
+    if (
+      !isDateMaskKey(event.key) &&
+      !(step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown"))
+    ) {
+      return;
+    }
     event.preventDefault();
     commit(event.key);
   };

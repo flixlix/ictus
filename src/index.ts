@@ -4,6 +4,7 @@ export type ApplyInput = {
   selectionEnd?: number;
   key: string;
   separator?: string;
+  step?: number;
 };
 
 export type ApplyResult = {
@@ -197,13 +198,58 @@ function clampIndex(value: string, index: number): number {
   return Math.min(Math.max(index, 0), value.length);
 }
 
+function stepGroup(
+  value: string,
+  caret: number,
+  delta: number,
+  sep: string,
+): ApplyResult {
+  const { digits, seps, groupIndex: g, offset } = parseState(value, caret, sep);
+  const beforeLen = digits[g].length;
+  const now = new Date();
+  let n =
+    beforeLen === 0
+      ? g === 0
+        ? now.getDate()
+        : g === 1
+          ? now.getMonth() + 1
+          : now.getFullYear()
+      : Number(digits[g]);
+  n += delta;
+  if (g === 2) {
+    n = Math.min(9999, Math.max(1, n));
+  } else {
+    const max = g === 0 ? 31 : 12;
+    n = ((((n - 1) % max) + max) % max) + 1;
+  }
+  digits[g] = String(n).padStart(GROUPS[g].width, "0");
+  if (digits[1] || seps[1] || digits[2]) seps[0] = true;
+  if (digits[2]) seps[1] = true;
+  const afterLen = digits[g].length;
+  const groupEnd = caretAt(digits, seps, sep, g, false);
+  const nextCaret =
+    beforeLen === 0
+      ? groupEnd
+      : groupEnd - afterLen + Math.min(offset, afterLen);
+  return {
+    value: assemble(digits, seps, sep),
+    caret: nextCaret,
+  };
+}
+
 export function apply(input: ApplyInput): ApplyResult {
   let { value, caret, key } = input;
   const separator = input.separator || ".";
+  const step = input.step ?? 0;
   const from = clampIndex(value, caret);
   const to = clampIndex(value, input.selectionEnd ?? caret);
   const start = Math.min(from, to);
   const end = Math.max(from, to);
+
+  if (step > 0 && (key === "ArrowUp" || key === "ArrowDown")) {
+    const delta = key === "ArrowUp" ? step : -step;
+    return stepGroup(value, start, delta, separator);
+  }
 
   if (end > start) {
     value = value.slice(0, start) + value.slice(end);
