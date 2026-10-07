@@ -2,4 +2,4 @@
 "ictus": patch
 ---
 
-Prevent Backspace/Delete from leaving non-mask characters in date and time mask state when the DOM value was polluted.
+Prevent Backspace/Delete from leaving non-mask characters in date and time mask state when the DOM value was polluted. Ignore separator keys inside an already-complete group that already has its separator (same no-op as a rejected digit).

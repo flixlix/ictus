@@ -239,6 +239,14 @@ function commitSeparator(
   if (digits[groupIndex].length === 0 || groupIndex === 2) {
     return { value, caret };
   }
+  const sepAlready =
+    (groupIndex === 0 && seps[0]) || (groupIndex === 1 && seps[1]);
+  if (
+    digits[groupIndex].length >= groups[groupIndex].width &&
+    sepAlready
+  ) {
+    return { value, caret };
+  }
   digits[groupIndex] = digits[groupIndex].padStart(groups[groupIndex].width, "0");
   setSep(seps, groupIndex);
   return {

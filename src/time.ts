@@ -238,6 +238,12 @@ function commitSeparator(
   if ((digits[groupIndex] ?? "").length === 0 || groupIndex === last) {
     return { value, caret };
   }
+  if (
+    (digits[groupIndex] ?? "").length >= groups[groupIndex]!.width &&
+    seps[groupIndex]
+  ) {
+    return { value, caret };
+  }
   digits[groupIndex] = digits[groupIndex]!.padStart(groups[groupIndex]!.width, "0");
   seps[groupIndex] = true;
   return {

@@ -116,6 +116,13 @@ describe("apply", () => {
     const result = apply({ value: "11a", caret: 3, key: "Backspace" });
     expect(show(result.value, result.caret)).toBe("11|");
   });
+
+  it("ignores a separator inside a complete group that already has its separator", () => {
+    const digit = type("02.1|2.2026", "4");
+    expect(show(digit.value, digit.caret)).toBe("02.1|2.2026");
+    const sep = type("02.1|2.2026", ".");
+    expect(show(sep.value, sep.caret)).toBe("02.1|2.2026");
+  });
 });
 
 describe("apply step", () => {

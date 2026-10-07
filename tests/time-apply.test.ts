@@ -104,6 +104,13 @@ describe("applyTime", () => {
     expect(show(result.value, result.caret)).toBe("11|");
   });
 
+  it("ignores a separator inside a complete group that already has its separator", () => {
+    const digit = type("14:3|0", "9");
+    expect(show(digit.value, digit.caret)).toBe("14:3|0");
+    const sep = type("14:3|0", ":");
+    expect(show(sep.value, sep.caret)).toBe("14:3|0");
+  });
+
   it.each([
     ["|", "9", "09:|"],
     ["14:30|", ":", "14:30:|"],
