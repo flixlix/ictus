@@ -127,7 +127,17 @@ function bindMask(root: HTMLElement): void {
     const arrow =
       step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown");
     const isMaskKey = time ? isTimeMaskKey(event.key) : isDateMaskKey(event.key);
-    if (!isMaskKey && !arrow) return;
+    if (!isMaskKey && !arrow) {
+      if (
+        event.key.length === 1 &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
+        event.preventDefault();
+      }
+      return;
+    }
     event.preventDefault();
     const caret = input.selectionStart ?? 0;
     const next = time

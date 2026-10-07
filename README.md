@@ -175,6 +175,8 @@ const unbind = bindDateMask(input, {
 
 `bindDateMask` wires `keydown` (and paste) to `apply`, writes the result back to the input, and restores the caret. It returns a cleanup function that removes the listeners. Pass `getValue` / `setValue` when the masked string is owned outside the DOM.
 
+ictus is headless: it does not own the DOM input. Restrict the field to mask keys (digits, separator keys, Backspace, Delete) in your own `keydown` handler so letters and other characters never enter the input value. The live docs demos do this; `bindDateMask` / `useDateFieldMask` leave non-mask keys to the browser so Tab, shortcuts, and arrows keep working. If a rejected character is already in the string, Backspace/Delete still drop it from the result so it cannot leak into mask state.
+
 For a one-off keystroke without attaching listeners, call `apply` and `isDateMaskKey` yourself.
 
 Live demos and the full API live in [`docs/`](docs/) (`pnpm docs`).

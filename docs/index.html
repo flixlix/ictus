@@ -90,11 +90,9 @@
       <p class="version"><a href="https://github.com/flixlix/ictus/releases">v%ICTUS_VERSION%</a></p>
     </header>
     <p>
-      <strong>Date and time input mask</strong> for a plain <code>&lt;input&gt;</code>: formats
-      <code>dd/mm/yyyy</code>, <code>mm/dd/yyyy</code>, or <code>yyyy-mm-dd</code> dates and
-      <code>HH:mm</code> times <strong>as you type</strong>. Keep the input and styles you already
-      have. Core is 2.6&nbsp;kB gzipped; optional React hook. No calendar UI, no contentEditable
-      spinbuttons.
+      Turn a plain <code>&lt;input&gt;</code> into a date or time field that formats as you type.
+      It works with the input and styles you already have, weighs 2.6&nbsp;kB gzipped, and comes
+      with an optional React hook.
     </p>
     <p class="nav">
       <a href="#getting-started">Getting started</a> · <a href="#demos">Demos</a> ·
@@ -153,29 +151,30 @@
     <h3 id="agent" data-short="Agent prompt">Or prompt your agent</h3>
     <p>
       Let your coding agent handle the install and setup. Paste this into Cursor, Claude Code, or
-      any other agent. It finds the date fields in your project, asks which ones you want, then
-      installs ictus and wires it up.
+      any other agent. It finds date and time text fields in your project, asks which ones you
+      want, then installs ictus and wires it up.
     </p>
     <p>
       <button type="button" data-copy-target="code-agent-prompt">Copy</button>
     </p>
     <div class="fold-wrap">
-      <pre id="code-agent-prompt" class="fold"><code>Integrate the `ictus` date-mask library into this project.
+      <pre id="code-agent-prompt" class="fold"><code>Integrate the `ictus` library into this project for masked date and/or time text inputs.
 
 Docs: https://ictus.luca-felix.com
 Package: https://www.npmjs.com/package/ictus
 Repo: https://github.com/flixlix/ictus
 
-ictus is a headless as-you-type mask for a single &lt;input&gt; day-month-year field. It does not render a calendar, popover, or segmented spinbuttons. Attach it to an existing text input (vanilla `apply` / `applyPaste`, or React `useDateFieldMask` from `ictus/react`).
+ictus is a headless as-you-type mask for a plain &lt;input&gt;. Use it for day-month-year dates (`apply` / `applyPaste`, or React `useDateFieldMask`) and for 24-hour times (`ictus/time`: `applyTime` / `bindTimeMask`, or React `useTimeFieldMask`). Attach it to an existing text input; keep the host app’s UI.
 
 ## 1. Find opportunities first
-Scan this repo for places a date is entered as text (or should be), for example:
-- date / birthdate / DOB / expiry / start–end date inputs
-- &lt;input&gt; fields with date placeholders or masks (dd.mm.yyyy, mm/dd/yyyy, etc.)
-- custom or design-system Input wrappers used for dates
-- forms that parse free-text dates today
+Scan this repo for places a date or time is entered as text (or should be), for example:
+- date / birthdate / DOB / expiry / start/end date inputs
+- time / clock / HH:mm or HH:mm:ss inputs
+- &lt;input&gt; fields with date or time placeholders or masks (dd.mm.yyyy, mm/dd/yyyy, HH:mm, etc.)
+- custom or design-system Input wrappers used for dates or times
+- forms that parse free-text dates or times today
 
-Do NOT invent a new date field if none belongs here.
+Do NOT invent a new date or time field if none belongs here.
 
 Then stop and ask me before changing code:
 - If you find none: say so, and ask where I want ictus added (path / component / form).
@@ -188,9 +187,9 @@ Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun`, matching 
 ## 3. Implement in the confirmed place(s)
 - Wire the mask per the docs (keydown + paste for vanilla; `inputProps` for React).
 - Keep the host app’s Input / styling / labels; only add ictus behavior.
-- Match separator and date order to the product locale or existing UX (see docs for supported options).
-- Use `parseDate` (and status helpers if useful) at the form boundary; do not add a calendar UI.
-- Leave unrelated date pickers alone unless I asked to replace them.
+- Match separator and date order (or time precision) to the product locale or existing UX.
+- Use `parseDate` / `parseTime` (and status helpers if useful) at the form boundary.
+- Leave unrelated pickers alone unless I asked to replace them.
 
 When done, summarize what you installed, what you changed, and how to try it.</code></pre>
       <button type="button" class="fold-toggle" data-expand="code-agent-prompt" aria-controls="code-agent-prompt" aria-expanded="false">Show more</button>
@@ -198,24 +197,23 @@ When done, summarize what you installed, what you changed, and how to try it.</c
 
     <h2 id="when" data-short="When to use?">When to use a date input mask</h2>
     <p>
-      Reach for ictus when the product needs a <strong>masked date text field</strong>—birthdates,
-      expiry, start/end dates—and a native <code>type=&quot;date&quot;</code> picker or a segmented
-      spinbutton field is the wrong UX. It is a dedicated <strong>date mask</strong>, not a
-      general phone/credit-card input-mask library.
+      Good fit for birthdates, expiry dates, start/end dates, or clock times in a single text
+      input that should format while someone types. Works with your existing input styles, in
+      vanilla JS/TS or React.
     </p>
     <ul>
       <li>
-        <strong>Formats:</strong> <code>dd.mm.yyyy</code>, <code>dd/mm/yyyy</code>,
+        <strong>Dates:</strong> <code>dd.mm.yyyy</code>, <code>dd/mm/yyyy</code>,
         <code>dd-mm-yyyy</code>, plus <code>mm/dd/yyyy</code> and <code>yyyy-mm-dd</code> via
         <code>mode</code>
       </li>
       <li>
-        <strong>Stack:</strong> vanilla JavaScript/TypeScript, or React with
-        <code>useDateFieldMask</code>
+        <strong>Times:</strong> <code>HH:mm</code> or <code>HH:mm:ss</code> via
+        <code>ictus/time</code>
       </li>
       <li>
-        <strong>Compared to:</strong> lighter than wiring IMask, Cleave, Maskito, or
-        <code>react-input-mask</code> just for dates; keeps your design-system Input
+        <strong>React:</strong> <code>useDateFieldMask</code> and
+        <code>useTimeFieldMask</code>
       </li>
     </ul>
 
@@ -530,8 +528,8 @@ When done, summarize what you installed, what you changed, and how to try it.</c
     <p>
       The core of ictus. Pass the current value, the selection, and the key that was pressed, and
       get back the next value and caret. Unknown keys and rejected digits leave the value as it
-      was. If text is selected, Backspace and Delete remove it and a digit
-      replaces it.
+      was. Backspace and Delete also strip any non-mask characters from the result. If text is
+      selected, Backspace and Delete remove it and a digit replaces it.
     </p>
     <div class="code-block">
       <pre id="code-apply"><code>import { apply } from "ictus";
@@ -653,10 +651,21 @@ formatDate(new Date(2026, 11, 11), "/");
     <p>
       Returns <code>true</code> for keys <code>apply</code> handles. Check it in
       <code>keydown</code> before calling <code>preventDefault</code>, so arrows, Tab, and
-      shortcuts keep working.
+      shortcuts keep working. Block other printable keys on the input yourself (the demos here
+      do) so letters never land in the field value.
     </p>
     <div class="code-block">
-      <pre id="code-key"><code>if (!isDateMaskKey(event.key)) return;
+      <pre id="code-key"><code>if (!isDateMaskKey(event.key)) {
+  if (
+    event.key.length === 1 &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.altKey
+  ) {
+    event.preventDefault();
+  }
+  return;
+}
 event.preventDefault();</code></pre>
       <button type="button" class="copy-icon" data-copy-target="code-key" aria-label="Copy code"></button>
     </div>

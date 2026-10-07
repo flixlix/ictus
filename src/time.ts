@@ -238,6 +238,12 @@ function commitSeparator(
   if ((digits[groupIndex] ?? "").length === 0 || groupIndex === last) {
     return { value, caret };
   }
+  if (
+    (digits[groupIndex] ?? "").length >= groups[groupIndex]!.width &&
+    seps[groupIndex]
+  ) {
+    return { value, caret };
+  }
   digits[groupIndex] = digits[groupIndex]!.padStart(groups[groupIndex]!.width, "0");
   seps[groupIndex] = true;
   return {
@@ -248,6 +254,19 @@ function commitSeparator(
 
 function clampIndex(value: string, index: number): number {
   return Math.min(Math.max(index, 0), value.length);
+}
+
+function dropRejected(value: string, caret: number, sep: string): ApplyTimeResult {
+  let out = "";
+  let nextCaret = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    const ch = value[i];
+    if (ch === undefined) break;
+    if (!isDigit(ch) && ch !== sep) continue;
+    out += ch;
+    if (i < caret) nextCaret += 1;
+  }
+  return { value: out, caret: nextCaret };
 }
 
 function nowSeed(kind: GroupKind): number {
@@ -320,26 +339,28 @@ export function applyTime(input: ApplyTimeInput): ApplyTimeResult {
     value = value.slice(0, start) + value.slice(end);
     caret = start;
     if (key === "Backspace" || key === "Delete") {
-      return { value, caret };
+      return dropRejected(value, caret, separator);
     }
   } else {
     caret = start;
   }
 
   if (key === "Backspace") {
-    if (caret === 0) return { value, caret };
-    return {
-      value: value.slice(0, caret - 1) + value.slice(caret),
-      caret: caret - 1,
-    };
+    if (caret === 0) return dropRejected(value, caret, separator);
+    return dropRejected(
+      value.slice(0, caret - 1) + value.slice(caret),
+      caret - 1,
+      separator,
+    );
   }
 
   if (key === "Delete") {
-    if (caret >= value.length) return { value, caret };
-    return {
-      value: value.slice(0, caret) + value.slice(caret + 1),
+    if (caret >= value.length) return dropRejected(value, caret, separator);
+    return dropRejected(
+      value.slice(0, caret) + value.slice(caret + 1),
       caret,
-    };
+      separator,
+    );
   }
 
   if (SEPARATOR_KEYS.has(key)) {

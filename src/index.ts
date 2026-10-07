@@ -239,6 +239,14 @@ function commitSeparator(
   if (digits[groupIndex].length === 0 || groupIndex === 2) {
     return { value, caret };
   }
+  const sepAlready =
+    (groupIndex === 0 && seps[0]) || (groupIndex === 1 && seps[1]);
+  if (
+    digits[groupIndex].length >= groups[groupIndex].width &&
+    sepAlready
+  ) {
+    return { value, caret };
+  }
   digits[groupIndex] = digits[groupIndex].padStart(groups[groupIndex].width, "0");
   setSep(seps, groupIndex);
   return {
@@ -249,6 +257,19 @@ function commitSeparator(
 
 function clampIndex(value: string, index: number): number {
   return Math.min(Math.max(index, 0), value.length);
+}
+
+function dropRejected(value: string, caret: number, sep: string): ApplyResult {
+  let out = "";
+  let nextCaret = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    const ch = value[i];
+    if (ch === undefined) break;
+    if (!isDigit(ch) && ch !== sep) continue;
+    out += ch;
+    if (i < caret) nextCaret += 1;
+  }
+  return { value: out, caret: nextCaret };
 }
 
 function todaySeed(kind: GroupSpec["kind"]): number {
@@ -320,26 +341,28 @@ export function apply(input: ApplyInput): ApplyResult {
     value = value.slice(0, start) + value.slice(end);
     caret = start;
     if (key === "Backspace" || key === "Delete") {
-      return { value, caret };
+      return dropRejected(value, caret, separator);
     }
   } else {
     caret = start;
   }
 
   if (key === "Backspace") {
-    if (caret === 0) return { value, caret };
-    return {
-      value: value.slice(0, caret - 1) + value.slice(caret),
-      caret: caret - 1,
-    };
+    if (caret === 0) return dropRejected(value, caret, separator);
+    return dropRejected(
+      value.slice(0, caret - 1) + value.slice(caret),
+      caret - 1,
+      separator,
+    );
   }
 
   if (key === "Delete") {
-    if (caret >= value.length) return { value, caret };
-    return {
-      value: value.slice(0, caret) + value.slice(caret + 1),
+    if (caret >= value.length) return dropRejected(value, caret, separator);
+    return dropRejected(
+      value.slice(0, caret) + value.slice(caret + 1),
       caret,
-    };
+      separator,
+    );
   }
 
   if (SEPARATOR_KEYS.has(key)) {
