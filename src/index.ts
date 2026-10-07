@@ -7,6 +7,14 @@ export type ApplyInput = {
   step?: number;
 };
 
+export type ApplyPasteInput = {
+  value: string;
+  caret: number;
+  selectionEnd?: number;
+  pasted: string;
+  separator?: string;
+};
+
 export type ApplyResult = {
   value: string;
   caret: number;
@@ -288,29 +296,92 @@ export function apply(input: ApplyInput): ApplyResult {
   return { value, caret };
 }
 
+const ISO_PASTE_RE = /^(\d{4})[./-](\d{1,2})[./-](\d{1,2})$/;
+
+function normalizePastedKeys(pasted: string): string[] {
+  const text = pasted.trim();
+  if (!text) return [];
+
+  const iso = ISO_PASTE_RE.exec(text);
+  if (iso?.[1] && iso[2] && iso[3]) {
+    return [...iso[3], ".", ...iso[2], ".", ...iso[1]];
+  }
+
+  const keys: string[] = [];
+  for (const ch of text) {
+    if (isDigit(ch) || SEPARATOR_KEYS.has(ch)) keys.push(ch);
+  }
+  return keys;
+}
+
+export function applyPaste(input: ApplyPasteInput): ApplyResult {
+  const separator = input.separator || ".";
+  const keys = normalizePastedKeys(input.pasted);
+  if (keys.length === 0) {
+    return {
+      value: input.value,
+      caret: clampIndex(input.value, input.caret),
+    };
+  }
+
+  let value = input.value;
+  let caret = input.caret;
+  let selectionEnd = input.selectionEnd;
+
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i];
+    if (key === undefined) continue;
+    const next = apply({
+      value,
+      caret,
+      selectionEnd: i === 0 ? selectionEnd : caret,
+      key,
+      separator,
+    });
+    value = next.value;
+    caret = next.caret;
+    selectionEnd = caret;
+  }
+
+  return { value, caret };
+}
+
 const PARSE_RE = /^(\d{2})[./-](\d{2})[./-](\d{4})$/;
+const PARSE_RE_YY = /^(\d{2})[./-](\d{2})[./-](\d{2})$/;
+
+const DEFAULT_YY_PIVOT = 50;
+
+export type YyExpand = {
+  pivot?: number;
+};
 
 export type ParseDateOptions = {
+  yyExpand?: YyExpand;
   min?: Date;
   max?: Date;
 };
+
+export type FormatDateOptions = {
+  yyExpand?: YyExpand;
+};
+
+export function expandTwoDigitYear(
+  yy: number,
+  pivot: number = DEFAULT_YY_PIVOT,
+): number {
+  return yy < pivot ? 2000 + yy : 1900 + yy;
+}
 
 function localDayTime(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
 
-export function parseDate(
-  masked: string,
-  options: ParseDateOptions = {},
+function calendarDate(
+  day: number,
+  month: number,
+  year: number,
 ): Date | undefined {
-  const match = PARSE_RE.exec(masked);
-  if (!match?.[1] || !match[2] || !match[3]) return undefined;
-
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  const year = Number(match[3]);
   const date = new Date(year, month - 1, day);
-
   if (
     date.getFullYear() !== year ||
     date.getMonth() !== month - 1 ||
@@ -318,6 +389,32 @@ export function parseDate(
   ) {
     return undefined;
   }
+  return date;
+}
+
+export function parseDate(
+  masked: string,
+  options: ParseDateOptions = {},
+): Date | undefined {
+  let date: Date | undefined;
+
+  const match4 = PARSE_RE.exec(masked);
+  if (match4?.[1] && match4[2] && match4[3]) {
+    date = calendarDate(
+      Number(match4[1]),
+      Number(match4[2]),
+      Number(match4[3]),
+    );
+  } else if (options.yyExpand !== undefined) {
+    const match2 = PARSE_RE_YY.exec(masked);
+    if (match2?.[1] && match2[2] && match2[3]) {
+      const pivot = options.yyExpand.pivot ?? DEFAULT_YY_PIVOT;
+      const year = expandTwoDigitYear(Number(match2[3]), pivot);
+      date = calendarDate(Number(match2[1]), Number(match2[2]), year);
+    }
+  }
+
+  if (!date) return undefined;
 
   const { min, max } = options;
   const time = date.getTime();
@@ -327,9 +424,36 @@ export function parseDate(
   return date;
 }
 
-export function formatDate(date: Date, separator = "."): string {
+export type DateStatus = "empty" | "incomplete" | "invalid" | "valid";
+
+export function dateStatus(masked: string): DateStatus {
+  if (masked === "") return "empty";
+  const date = parseDate(masked);
+  if (date) return "valid";
+  if (PARSE_RE.test(masked)) return "invalid";
+  return "incomplete";
+}
+
+export function formatDate(
+  date: Date,
+  separator = ".",
+  options: FormatDateOptions = {},
+): string {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = String(date.getFullYear()).padStart(4, "0");
+  const fullYear = date.getFullYear();
+
+  if (options.yyExpand !== undefined) {
+    const pivot = options.yyExpand.pivot ?? DEFAULT_YY_PIVOT;
+    const yy = ((fullYear % 100) + 100) % 100;
+    if (expandTwoDigitYear(yy, pivot) === fullYear) {
+      return `${day}${separator}${month}${separator}${String(yy).padStart(2, "0")}`;
+    }
+  }
+
+  const year = String(fullYear).padStart(4, "0");
   return `${day}${separator}${month}${separator}${year}`;
 }
+
+export { bindDateMask } from "./bind.js";
+export type { BindDateMaskOptions } from "./bind.js";

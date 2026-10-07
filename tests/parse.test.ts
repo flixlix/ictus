@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseDate } from "../src/index.js";
+import { expandTwoDigitYear, parseDate } from "../src/index.js";
 
 function ymd(date: Date) {
   return {
@@ -8,6 +8,22 @@ function ymd(date: Date) {
     day: date.getDate(),
   };
 }
+
+describe("expandTwoDigitYear", () => {
+  it("uses pivot 50 by default", () => {
+    expect(expandTwoDigitYear(0)).toBe(2000);
+    expect(expandTwoDigitYear(49)).toBe(2049);
+    expect(expandTwoDigitYear(50)).toBe(1950);
+    expect(expandTwoDigitYear(99)).toBe(1999);
+  });
+
+  it("respects a custom pivot", () => {
+    expect(expandTwoDigitYear(29, 30)).toBe(2029);
+    expect(expandTwoDigitYear(30, 30)).toBe(1930);
+    expect(expandTwoDigitYear(0, 0)).toBe(1900);
+    expect(expandTwoDigitYear(99, 100)).toBe(2099);
+  });
+});
 
 describe("parseDate", () => {
   it("returns a local Date for a complete calendar-valid triple", () => {
@@ -44,6 +60,82 @@ describe("parseDate", () => {
     expect(parseDate("11.12")).toBeUndefined();
     expect(parseDate("11.12.20")).toBeUndefined();
     expect(parseDate("04.")).toBeUndefined();
+  });
+
+  it("leaves two-digit years undefined without yyExpand", () => {
+    expect(parseDate("11.12.26")).toBeUndefined();
+    expect(parseDate("11.12.50")).toBeUndefined();
+  });
+
+  it("expands two-digit years with the default pivot", () => {
+    expect(ymd(parseDate("11.12.26", { yyExpand: {} })!)).toEqual({
+      year: 2026,
+      month: 12,
+      day: 11,
+    });
+    expect(ymd(parseDate("01.01.00", { yyExpand: {} })!)).toEqual({
+      year: 2000,
+      month: 1,
+      day: 1,
+    });
+    expect(ymd(parseDate("01.01.49", { yyExpand: {} })!)).toEqual({
+      year: 2049,
+      month: 1,
+      day: 1,
+    });
+    expect(ymd(parseDate("01.01.50", { yyExpand: {} })!)).toEqual({
+      year: 1950,
+      month: 1,
+      day: 1,
+    });
+    expect(ymd(parseDate("31.12.99", { yyExpand: {} })!)).toEqual({
+      year: 1999,
+      month: 12,
+      day: 31,
+    });
+  });
+
+  it("expands with a custom pivot", () => {
+    expect(ymd(parseDate("15.06.29", { yyExpand: { pivot: 30 } })!)).toEqual({
+      year: 2029,
+      month: 6,
+      day: 15,
+    });
+    expect(ymd(parseDate("15.06.30", { yyExpand: { pivot: 30 } })!)).toEqual({
+      year: 1930,
+      month: 6,
+      day: 15,
+    });
+  });
+
+  it("still accepts four-digit years when yyExpand is set", () => {
+    expect(ymd(parseDate("11.12.2026", { yyExpand: {} })!)).toEqual({
+      year: 2026,
+      month: 12,
+      day: 11,
+    });
+  });
+
+  it("rejects invalid calendar dates after expansion", () => {
+    expect(parseDate("29.02.01", { yyExpand: {} })).toBeUndefined();
+    expect(ymd(parseDate("29.02.00", { yyExpand: {} })!)).toEqual({
+      year: 2000,
+      month: 2,
+      day: 29,
+    });
+  });
+
+  it("accepts yy with alternate separators", () => {
+    expect(ymd(parseDate("11/12/26", { yyExpand: {} })!)).toEqual({
+      year: 2026,
+      month: 12,
+      day: 11,
+    });
+    expect(ymd(parseDate("11-12-50", { yyExpand: {} })!)).toEqual({
+      year: 1950,
+      month: 12,
+      day: 11,
+    });
   });
 
   it("ignores min and max for partial values", () => {
@@ -97,4 +189,5 @@ describe("parseDate", () => {
       day: 15,
     });
   });
+
 });

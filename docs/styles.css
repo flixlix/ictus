@@ -37,6 +37,16 @@ pre {
   overflow: auto;
 }
 
+pre.fold {
+  max-height: 6em;
+  overflow: hidden;
+}
+
+pre.fold.is-open {
+  max-height: none;
+  overflow: auto;
+}
+
 #spec-body tr {
   cursor: pointer;
 }

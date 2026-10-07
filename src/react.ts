@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
-import { apply, isDateMaskKey, parseDate } from "./index.js";
+import type { ChangeEvent, ClipboardEvent, KeyboardEvent, RefObject } from "react";
+import { apply, applyPaste, dateStatus, isDateMaskKey, parseDate } from "./index.js";
+import type { DateStatus } from "./index.js";
 
 export type UseDateFieldMaskOptions = {
   separator?: string;
@@ -15,6 +16,7 @@ export type DateFieldInputProps = {
   ref: RefObject<HTMLInputElement | null>;
   value: string;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+  onPaste: (event: ClipboardEvent<HTMLInputElement>) => void;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   inputMode: "numeric";
   autoComplete: "off";
@@ -25,7 +27,9 @@ export type UseDateFieldMaskReturn = {
   ref: RefObject<HTMLInputElement | null>;
   value: string;
   parsed: Date | undefined;
+  status: DateStatus;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+  onPaste: (event: ClipboardEvent<HTMLInputElement>) => void;
   inputProps: DateFieldInputProps;
 };
 
@@ -38,7 +42,23 @@ export function useDateFieldMask(
     options;
   const ref = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState(defaultValue);
-  const parsed = useMemo(() => parseDate(value, { min, max }), [value, min, max]);
+  const parsed = useMemo(
+    () => parseDate(value, { min, max }),
+    [value, min, max],
+  );
+  const status = useMemo(() => dateStatus(value), [value]);
+
+  const commit = useCallback(
+    (next: { value: string; caret: number }) => {
+      setValue(next.value);
+      onValueChange?.(next.value);
+      const caret = next.caret;
+      requestAnimationFrame(() => {
+        ref.current?.setSelectionRange(caret, caret);
+      });
+    },
+    [onValueChange],
+  );
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
@@ -47,33 +67,48 @@ export function useDateFieldMask(
         step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown");
       if (!isDateMaskKey(event.key) && !isStepArrow) return;
       event.preventDefault();
-      const next = apply({
-        value: event.currentTarget.value,
-        caret: event.currentTarget.selectionStart ?? 0,
-        selectionEnd: event.currentTarget.selectionEnd ?? undefined,
-        key: event.key,
-        separator,
-        step,
-      });
-      setValue(next.value);
-      onValueChange?.(next.value);
-      const caret = next.caret;
-      requestAnimationFrame(() => {
-        ref.current?.setSelectionRange(caret, caret);
-      });
+      commit(
+        apply({
+          value: event.currentTarget.value,
+          caret: event.currentTarget.selectionStart ?? 0,
+          selectionEnd: event.currentTarget.selectionEnd ?? undefined,
+          key: event.key,
+          separator,
+          step,
+        }),
+      );
     },
-    [separator, onValueChange, step],
+    [separator, commit, step],
+  );
+
+  const onPaste = useCallback(
+    (event: ClipboardEvent<HTMLInputElement>) => {
+      event.preventDefault();
+      commit(
+        applyPaste({
+          value: event.currentTarget.value,
+          caret: event.currentTarget.selectionStart ?? 0,
+          selectionEnd: event.currentTarget.selectionEnd ?? undefined,
+          pasted: event.clipboardData.getData("text"),
+          separator,
+        }),
+      );
+    },
+    [separator, commit],
   );
 
   return {
     ref,
     value,
     parsed,
+    status,
     onKeyDown,
+    onPaste,
     inputProps: {
       ref,
       value,
       onKeyDown,
+      onPaste,
       onChange: noopChange,
       inputMode: "numeric",
       autoComplete: "off",
