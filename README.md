@@ -109,16 +109,24 @@ Live demos and the full API live in [`docs/`](docs/) (`pnpm docs`).
 import { useDateFieldMask } from "ictus/react";
 
 function DateInput() {
-  const { inputProps, parsed } = useDateFieldMask({
+  const { inputProps, hiddenInputProps, isoValue, parsed } = useDateFieldMask({
     separator: ".",
-    onValueChange: (value) => console.log(value, parsed),
+    onValueChange: (value) => console.log(value),
+    onParsedChange: (date) => console.log(date),
   });
 
-  return <input {...inputProps} />;
+  return (
+    <>
+      <input {...inputProps} />
+      <input name="date" {...hiddenInputProps} />
+    </>
+  );
 }
 ```
 
 `inputProps` is `ref`, `value`, `onKeyDown`, a no-op `onChange` (value is owned by `apply`), `inputMode="numeric"`, `autoComplete="off"`, and `spellCheck={false}`. The hook restores the caret after React commits. `parsed` is a local `Date` or `undefined`.
+
+`onParsedChange` runs when the parsed calendar day changes (`undefined` ↔ `Date`, or a different day)—not on every keystroke while the value stays incomplete. `isoValue` is `YYYY-MM-DD` when `parsed` is set, otherwise `""`. `hiddenInputProps` is `{ type: "hidden", value: isoValue }` for a native form field you can spread and name yourself.
 
 ## Releasing
 
