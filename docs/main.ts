@@ -114,6 +114,19 @@ function bindCopies(): void {
   }
 }
 
+function bindFolds(): void {
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-expand]")) {
+    button.addEventListener("click", () => {
+      const id = button.dataset.expand;
+      const target = id ? document.getElementById(id) : null;
+      if (!(target instanceof HTMLElement)) return;
+      const open = target.classList.toggle("is-open");
+      button.setAttribute("aria-expanded", open ? "true" : "false");
+      button.textContent = open ? "Show less" : "Show more";
+    });
+  }
+}
+
 function bindFormat(): void {
   const native = document.querySelector<HTMLInputElement>("#native-date");
   const sep = document.querySelector<HTMLSelectElement>("#format-sep");
@@ -202,6 +215,7 @@ for (const root of document.querySelectorAll<HTMLElement>("[data-mask]")) {
 }
 
 bindCopies();
+bindFolds();
 bindFormat();
 bindTable();
 bindParseLive();
