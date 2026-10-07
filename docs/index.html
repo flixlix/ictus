@@ -81,9 +81,9 @@
     </p>
     <p>
       <button type="button" data-copy-target="code-agent-prompt">Copy</button>
-      <button type="button" data-expand="code-agent-prompt" aria-expanded="false">Show more</button>
     </p>
-    <pre id="code-agent-prompt" class="fold"><code>Integrate the `ictus` date-mask library into this project.
+    <div class="fold-wrap">
+      <pre id="code-agent-prompt" class="fold"><code>Integrate the `ictus` date-mask library into this project.
 
 Docs: https://ictus.luca-felix.com
 Package: https://www.npmjs.com/package/ictus
@@ -116,6 +116,8 @@ Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun` — match 
 - Leave unrelated date pickers alone unless I asked to replace them.
 
 When done, summarize what you installed, what you changed, and how to try it.</code></pre>
+      <button type="button" class="fold-toggle" data-expand="code-agent-prompt" aria-controls="code-agent-prompt" aria-expanded="false">Show more</button>
+    </div>
 
     <h2 id="size">Size and speed</h2>
     <p>Min+gzip, as a bundler ships it. Reproduce with <code>pnpm measure</code>.</p>
