@@ -30,12 +30,12 @@ describe("bindTimeMask", () => {
     expect(input.selectionEnd).toBe(3);
   });
 
-  it("rejects an impossible second hour digit", () => {
+  it("spills an overflowing second hour digit into the minute", () => {
     const input = createInput();
     bindTimeMask(input);
     typeKey(input, "2");
     typeKey(input, "4");
-    expect(input.value).toBe("2");
+    expect(input.value).toBe("02:4");
   });
 
   it("writes a custom separator", () => {

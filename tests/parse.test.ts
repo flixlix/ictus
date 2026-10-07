@@ -42,6 +42,12 @@ describe("parseDate", () => {
     expect(parseDate("32.01.2020")).toBeUndefined();
   });
 
+  it("does not invent a date from zero day or month", () => {
+    expect(parseDate("00.01.2026")).toBeUndefined();
+    expect(parseDate("01.00.2026")).toBeUndefined();
+    expect(parseDate("00.00.2026")).toBeUndefined();
+  });
+
   it("rejects 31 February", () => {
     expect(parseDate("31.02.2020")).toBeUndefined();
   });
