@@ -671,8 +671,18 @@ function mountGuide(
     ) {
       return;
     }
+    if (owned) {
+      if (!(nextFocus instanceof Node) || nextFocus === document.body) {
+        requestAnimationFrame(() => {
+          if (owned) input.focus({ preventScroll: true });
+        });
+        return;
+      }
+      hero.classList.remove("is-engaged");
+      dismiss("blur", true);
+      return;
+    }
     hero.classList.remove("is-engaged");
-    if (owned) dismiss("blur", true);
   });
 
   for (const button of [next, skip, trySelf, more, replay, start]) {

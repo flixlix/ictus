@@ -289,7 +289,11 @@ function bindCopies(): void {
       const targetId = button.dataset.copyTarget;
       const target = targetId ? document.getElementById(targetId) : null;
       const text = direct ?? target?.textContent ?? "";
-      await navigator.clipboard.writeText(text);
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        return;
+      }
       track("copy", { target: copyTarget(button) });
       setCopied(true);
       window.clearTimeout(reset);
