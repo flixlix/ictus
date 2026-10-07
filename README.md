@@ -4,7 +4,7 @@
 
 ![Typing 4122026 into a date field becomes 04.12.2026, and 945 into a time field becomes 09:45](assets/demo.gif)
 
-Use it when you need a **text date field** with caret-aware masking (overflow-advance, paste normalization, parse/format) without a calendar picker, contentEditable spinbuttons, or a general-purpose input-mask library.
+Use it when you need a **text date or time field** with caret-aware masking (overflow-advance, paste normalization, parse/format) without a calendar picker, contentEditable spinbuttons, or a general-purpose input-mask library.
 
 Segmented date fields already own overflow-advance, but they replace the input with contentEditable spinbuttons. ictus is a tiny state machine other design systems can attach to their own Input primitive.
 
@@ -35,13 +35,14 @@ Live demos and API reference: [ictus.luca-felix.com](https://ictus.luca-felix.co
 | Need | Fit |
 | --- | --- |
 | `dd/mm/yyyy` / `mm/dd/yyyy` / `yyyy-mm-dd` in one text input | Yes |
+| 24-hour `HH:mm` / `HH:mm:ss` in one text input | Yes (`ictus/time`) |
 | As-you-type formatting with correct caret | Yes |
 | Keep your own styles / design-system Input | Yes (headless) |
-| React hook or vanilla `bindDateMask` | Yes |
+| React hooks or vanilla `bindDateMask` / `bindTimeMask` | Yes |
 | Calendar / date picker UI | No — out of scope |
-| Phone, credit card, or pattern masks | No — date-only |
+| Phone, credit card, or pattern masks | No, dates and times only |
 
-Lighter alternative when IMask, Cleave, Maskito, or `react-input-mask` are heavier than a dedicated date mask.
+Lighter alternative when IMask, Cleave, Maskito, or `react-input-mask` are heavier than a dedicated date or time mask.
 
 ## Groups
 
@@ -223,21 +224,17 @@ function ControlledDateInput() {
 
 `onParsedChange` runs when the parsed calendar day changes (`undefined` ↔ `Date`, or a different day)—not on every keystroke while the value stays incomplete. `isoValue` is `YYYY-MM-DD` when `parsed` is set, otherwise `""`. `hiddenInputProps` is `{ type: "hidden", value: isoValue }` for a native form field you can spread and name yourself.
 
-## Releasing
-
-This repo uses [Changesets](https://changesets.dev). On a branch with a user-facing change:
-
-```bash
-pnpm changeset
-```
-
-Merging to `main` opens a Version Packages PR. Merging that PR publishes to npm and creates a GitHub release.
-
-Publishing needs an `NPM_TOKEN` repository secret. In the repo’s Actions settings, enable **Allow GitHub Actions to create and approve pull requests**.
-
 ## Time
 
-Same headless mask model for a 24-hour clock. Default shape is `HH:mm`; pass `precision: "second"` for `HH:mm:ss`. Separator defaults to `:`.
+Same headless mask model for a 24-hour clock, from `ictus/time`. Default shape is `HH:mm`; pass `precision: "second"` for `HH:mm:ss`. Separator defaults to `:`.
+
+| Group | Width | First digit | Second digit |
+| --- | --- | --- | --- |
+| Hour | 2 | `3–9` → `0N:` · `0–2` stay | max 23 (`24–29` ignored) |
+| Minute | 2 | `6–9` → `0N` (plus `:` when seconds follow) · `0–5` stay | max 59 |
+| Second | 2 | `6–9` → `0N` · `0–5` stay | max 59 (only with `precision: "second"`) |
+
+Typing `:`, `.`, or `-` commits the current group and writes the configured separator.
 
 ```ts
 import {
@@ -246,25 +243,37 @@ import {
   parseTime,
   timeStatus,
   formatTime,
+  isoTime,
   isTimeMaskKey,
   bindTimeMask,
 } from "ictus/time";
+
+type TimeValue = { hours: number; minutes: number; seconds: number };
 
 applyTime({
   value: string,
   caret: number,
   selectionEnd?: number,
-  key: string,
-  separator?: string,           // default ':'
+  key: string,                     // digit, `:` `.` `-`, Backspace, Delete
+  separator?: string,              // default ':'
   precision?: "minute" | "second", // default 'minute'
-  step?: number,                // default 0
+  step?: number,                   // default 0: ignore ArrowUp/ArrowDown
+}): { value: string; caret: number }
+
+applyTimePaste({
+  value: string,
+  caret: number,
+  selectionEnd?: number,
+  pasted: string,
+  separator?: string,
+  precision?: "minute" | "second",
 }): { value: string; caret: number }
 
 parseTime(masked: string, options?: {
   precision?: "minute" | "second";
-  min?: { hours: number; minutes: number; seconds: number };
-  max?: { hours: number; minutes: number; seconds: number };
-}): { hours: number; minutes: number; seconds: number } | undefined
+  min?: TimeValue;
+  max?: TimeValue;
+}): TimeValue | undefined
 
 timeStatus(masked: string, options?: { precision?: "minute" | "second" }):
   "empty" | "incomplete" | "invalid" | "valid"
@@ -272,6 +281,8 @@ timeStatus(masked: string, options?: { precision?: "minute" | "second" }):
 formatTime(time: Date | TimeValue, separator?: string, options?: {
   precision?: "minute" | "second";
 }): string
+isoTime(time: TimeValue | undefined, precision?: "minute" | "second"): string
+isTimeMaskKey(key: string): boolean
 
 bindTimeMask(input: HTMLInputElement, options?: {
   separator?: string;
@@ -280,10 +291,23 @@ bindTimeMask(input: HTMLInputElement, options?: {
   onValueChange?: (value: string) => void;
   getValue?: () => string;
   setValue?: (value: string) => void;
-}): () => void
+}): () => void                     // unsubscribe
 ```
 
-Hour overflow-pads `3–9` to `0N:`. Minute and second overflow-pad `6–9`. Hours wrap 0–23 under `step`; minutes and seconds wrap 0–59. `parseTime` returns a `TimeValue` only for a complete, clock-valid mask (`seconds` is `0` when `precision` is `"minute"`).
+`applyTimePaste` normalizes `9:45`, `09.45`, `0945`, and `14:30:15` into the mask with the same group and overflow rules as `applyTime`. Seconds are dropped unless `precision` is `"second"`, and AM/PM suffixes are ignored (`2:05 PM` becomes `02:05`).
+
+`parseTime` returns a `TimeValue` only for a complete, clock-valid mask (`seconds` is `0` when `precision` is `"minute"`). Optional `min` / `max` reject complete times outside that range. `formatTime` writes `HH{sep}mm` (or `HH{sep}mm{sep}ss`) from a `TimeValue` or a `Date`'s local time. `isoTime` is the colon-separated form, or `""` for `undefined`.
+
+With `step > 0`, `ArrowUp` / `ArrowDown` step the caret's group like the date mask: hours wrap 0–23, minutes and seconds wrap 0–59, and an empty group seeds from the current local time. `isTimeMaskKey` does not include arrow keys.
+
+```js
+import { bindTimeMask } from "ictus/time";
+
+const unbind = bindTimeMask(document.querySelector("input"), {
+  // precision: "second",
+  onValueChange: (value) => console.log(value),
+});
+```
 
 ```tsx
 import { useTimeFieldMask } from "ictus/react";
@@ -293,6 +317,8 @@ function TimeInput() {
     useTimeFieldMask({
       separator: ":",
       // precision: "second",
+      min: { hours: 8, minutes: 0, seconds: 0 },
+      max: { hours: 18, minutes: 0, seconds: 0 },
       onParsedChange: (time) => console.log(time),
     });
 
@@ -305,7 +331,7 @@ function TimeInput() {
 }
 ```
 
-`isoValue` is always colon-separated (`HH:mm` or `HH:mm:ss`) for form posts, regardless of the display separator.
+`useTimeFieldMask` takes the same `value` / `defaultValue` / `onValueChange` / `step` options as `useDateFieldMask` and returns the same shape, with `parsed` as a `TimeValue`. `isoValue` is always colon-separated (`HH:mm` or `HH:mm:ss`) for form posts, regardless of the display separator.
 
 ### Time acceptance table
 
@@ -321,6 +347,18 @@ function TimeInput() {
 | `14:\|` | `6` | `14:06\|` |
 | `14:5\|` | `9` | `14:59\|` |
 | `14:6\|` | `0` | `14:6\|` |
+
+## Releasing
+
+This repo uses [Changesets](https://changesets.dev). On a branch with a user-facing change:
+
+```bash
+pnpm changeset
+```
+
+Merging to `main` opens a Version Packages PR. Merging that PR publishes to npm and creates a GitHub release.
+
+Publishing needs an `NPM_TOKEN` repository secret. In the repo’s Actions settings, enable **Allow GitHub Actions to create and approve pull requests**.
 
 ## Out of scope
 
