@@ -9,15 +9,18 @@ function DateInput({
   separator,
   defaultValue,
   onValueChange,
+  step,
 }: {
   separator?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  step?: number;
 }) {
   const { inputProps, parsed } = useDateFieldMask({
     separator,
     defaultValue,
     onValueChange,
+    step,
   });
   return (
     <>
@@ -98,6 +101,25 @@ describe("useDateFieldMask", () => {
     expect(arrow).toBe(true);
     expect(letter).toBe(true);
     expect((input as HTMLInputElement).value).toBe("11");
+  });
+
+  it("leaves ArrowUp/ArrowDown to the browser when step is off", () => {
+    render(<DateInput defaultValue="11" />);
+    const input = screen.getByLabelText("date");
+    const up = fireEvent.keyDown(input, { key: "ArrowUp" });
+    expect(up).toBe(true);
+    expect((input as HTMLInputElement).value).toBe("11");
+  });
+
+  it("steps the current group when step is set", async () => {
+    render(<DateInput defaultValue="15.12.2026" step={1} />);
+    const input = screen.getByLabelText("date") as HTMLInputElement;
+    input.setSelectionRange(2, 2);
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    expect(input.value).toBe("16.12.2026");
+    await nextFrame();
+    expect(input.selectionStart).toBe(2);
+    expect(input.selectionEnd).toBe(2);
   });
 
   it("spreads inputProps onto a controlled field", () => {
