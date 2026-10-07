@@ -4,9 +4,7 @@
 
 ![Typing 4122026 into a date field becomes 04.12.2026, and 945 into a time field becomes 09:45](assets/demo.gif)
 
-Use it when you need a **text date or time field** with caret-aware masking (overflow-advance, paste normalization, parse/format) without a calendar picker, contentEditable spinbuttons, or a general-purpose input-mask library.
-
-Segmented date fields already own overflow-advance, but they replace the input with contentEditable spinbuttons. ictus is a tiny state machine other design systems can attach to their own Input primitive.
+Attach it to the text input you already have. As you type, it formats the value, keeps the caret in the right place, normalizes pasted dates and times, and helps you parse or format them. Your design-system Input stays an input.
 
 Docs: [ictus.luca-felix.com](https://ictus.luca-felix.com) · npm: [`ictus`](https://www.npmjs.com/package/ictus)
 
@@ -30,19 +28,15 @@ npm install ictus
 
 Live demos and API reference: [ictus.luca-felix.com](https://ictus.luca-felix.com) (`pnpm docs` locally).
 
+React starting blocks (shadcn Input, Base UI, Day Picker + popover) live under `registry/react/` and install via:
+
+```bash
+npx shadcn@latest add flixlix/ictus/date-field-shadcn
+```
+
 ## When to use
 
-| Need | Fit |
-| --- | --- |
-| `dd/mm/yyyy` / `mm/dd/yyyy` / `yyyy-mm-dd` in one text input | Yes |
-| 24-hour `HH:mm` / `HH:mm:ss` in one text input | Yes (`ictus/time`) |
-| As-you-type formatting with correct caret | Yes |
-| Keep your own styles / design-system Input | Yes (headless) |
-| React hooks or vanilla `bindDateMask` / `bindTimeMask` | Yes |
-| Calendar / date picker UI | No — out of scope |
-| Phone, credit card, or pattern masks | No, dates and times only |
-
-Lighter alternative when IMask, Cleave, Maskito, or `react-input-mask` are heavier than a dedicated date or time mask.
+Good fit when you want dates (`dd/mm/yyyy`, `mm/dd/yyyy`, `yyyy-mm-dd`) or 24-hour times (`HH:mm`, `HH:mm:ss`) typed into one text field, with formatting and caret behavior as someone types. Works with the Input you already have (vanilla `bindDateMask` / `bindTimeMask`, or React hooks). Dates and times only.
 
 ## Groups
 
@@ -362,8 +356,6 @@ Merging to `main` opens a Version Packages PR. Merging that PR publishes to npm 
 
 Publishing needs an `NPM_TOKEN` repository secret. In the repo’s Actions settings, enable **Allow GitHub Actions to create and approve pull requests**.
 
-## Out of scope
+## Limits for now
 
-Segmented/spinbutton fields. Calendar/popover. Locale-driven field order (explicit `mode` is supported). Date-time combined fields, ranges, 12-hour / AM-PM. IME / non-Latin numerals. Wrapping Maskito, IMask, Cleave, React Aria, or `@internationalized/date`.
-
-Default date order is `dd.mm.yyyy` (`dmy`). Pass `mode: "mdy"` or `mode: "ymd"` for the other orders.
+This release covers single date fields and single time fields. Combined date-time, ranges, and 12-hour clocks are future work. Pick field order with `mode` (`dmy` by default, or `mdy` / `ymd`). Pair with a calendar UI when the product needs both typing and picking.
