@@ -228,9 +228,9 @@ function stepGroup(
   const afterLen = digits[g].length;
   const groupEnd = caretAt(digits, seps, sep, g, false);
   const nextCaret =
-    beforeLen > 0 && beforeLen === afterLen
-      ? groupEnd - afterLen + Math.min(offset, afterLen)
-      : groupEnd;
+    beforeLen === 0
+      ? groupEnd
+      : groupEnd - afterLen + Math.min(offset, afterLen);
   return {
     value: assemble(digits, seps, sep),
     caret: nextCaret,

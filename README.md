@@ -60,7 +60,7 @@ isDateMaskKey(key: string): boolean
 
 ### Optional arrow step
 
-`step` defaults to `0` (off). When `step > 0`, `ArrowUp` / `ArrowDown` increment or decrement the caret’s current group by `step`. Day wraps in 1–31, month wraps in 1–12, year clamps to 0001–9999. An empty group seeds from today’s local day/month/year, then steps. Partial groups are treated as their typed integer and padded to width. When the group width does not change, the caret keeps its offset inside that group; if width changes (empty → padded), it moves to the end of the group. Left/Right, Home/End, and Page keys are not handled. Do not set `role="spinbutton"` on the input.
+`step` defaults to `0` (off). When `step > 0`, `ArrowUp` / `ArrowDown` increment or decrement the caret’s current group by `step`. Day wraps in 1–31, month wraps in 1–12, year clamps to 0001–9999. An empty group seeds from today’s local day/month/year, then steps. Partial groups are treated as their typed integer and padded to width. The caret keeps its offset inside the group (clamped if the width changes). An empty group that seeds from today still places the caret at the end of that group. Left/Right, Home/End, and Page keys are not handled. Do not set `role="spinbutton"` on the input.
 
 `isDateMaskKey` does **not** include arrow keys. Callers that opt in must treat them as handled themselves:
 

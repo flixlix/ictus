@@ -118,7 +118,10 @@ describe("apply step", () => {
     ["15.12.2026|", "ArrowDown", "15.12.2025|"],
     ["15.12.9999|", "ArrowUp", "15.12.9999|"],
     ["15.12.0001|", "ArrowDown", "15.12.0001|"],
-    ["1|.12.2026", "ArrowUp", "02|.12.2026"],
+    ["1|.12.2026", "ArrowUp", "0|2.12.2026"],
+    ["|9.12.2026", "ArrowUp", "|10.12.2026"],
+    ["9|.12.2026", "ArrowUp", "1|0.12.2026"],
+    ["1|0.12.2026", "ArrowDown", "0|9.12.2026"],
     ["11.|12.2026", "ArrowUp", "11.|01.2026"],
     ["12.02.20|27", "ArrowUp", "12.02.20|28"],
     ["12.02.20|27", "ArrowDown", "12.02.20|26"],
@@ -143,7 +146,7 @@ describe("apply step", () => {
     expect(show(year.value, year.caret)).toBe("07.10.2025|");
   });
 
-  it("keeps caret offset when width is unchanged", () => {
+  it("keeps caret offset inside the group (empty seed still ends the group)", () => {
     const result = type("11.12.|2026", "ArrowUp", undefined, 1);
     expect(show(result.value, result.caret)).toBe("11.12.|2027");
     for (const key of ["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"]) {
