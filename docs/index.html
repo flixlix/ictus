@@ -91,8 +91,8 @@
     </header>
     <p>
       Turn a plain <code>&lt;input&gt;</code> into a date or time field that formats as you type.
-      It works with the input and styles you already have, weighs 3.0&nbsp;kB gzipped, and comes
-      with an optional React hook.
+      It works with the input and styles you already have, weighs 3.0&nbsp;kB gzipped, has no
+      runtime dependencies, and comes with an optional React hook.
     </p>
     <p class="nav">
       <a href="#getting-started">Getting started</a> · <a href="#demos">Demos</a> ·
@@ -109,6 +109,10 @@
           <path d="M 104.0 27.0 Q 104.0 27.0 103.4 28.3 102.9 29.5 102.2 30.3 101.5 31.1 100.3 32.4 99.0 33.7 97.0 35.5 95.0 37.3 95.0 37.3 95.0 37.2 95.0 37.2 95.0 37.2 95.7 35.5 96.3 33.8 97.4 32.3 98.5 30.8 99.1 30.1 99.8 29.3 100.6 28.7 101.4 28.0 102.7 27.5 104.0 27.0 104.0 27.0 Z" />
         </svg>
       </span>
+      <span class="hero-guide-launch">
+        <button type="button" id="hero-guide-start">Quick guide</button>
+        <span class="hero-guide-hint">A short walkthrough. Skip whenever.</span>
+      </span>
       <span class="coach" id="hero-coach" hidden>
         <span class="coach-text" aria-hidden="true"></span>
         <span class="coach-live" aria-live="polite" aria-atomic="true"></span>
@@ -118,7 +122,14 @@
             <span class="coach-key-hint"></span>
           </kbd>
         </span>
-        <button type="button" class="coach-next" hidden>Next</button>
+        <span class="coach-actions">
+          <span class="coach-progress" hidden></span>
+          <button type="button" class="coach-next" hidden>Next</button>
+          <button type="button" class="coach-skip" hidden>Skip</button>
+          <button type="button" class="coach-try" hidden>I'll type</button>
+          <button type="button" class="coach-more" hidden>A few more tricks</button>
+          <button type="button" class="coach-replay" hidden>Replay</button>
+        </span>
       </span>
       <label for="hero-date">Try it: type a date, or paste one</label><br />
       <span data-mask data-separator=".">
@@ -160,6 +171,7 @@
         type="button"
         id="copy-install"
         class="copy-icon"
+        data-track="install"
         data-copy="npm install ictus"
         aria-label="Copy install command"
       ></button>
@@ -172,7 +184,7 @@
       want, then installs ictus and wires it up.
     </p>
     <p>
-      <button type="button" data-copy-target="code-agent-prompt">Copy</button>
+      <button type="button" data-track="agent-prompt" data-copy-target="code-agent-prompt">Copy</button>
     </p>
     <div class="fold-wrap">
       <pre id="code-agent-prompt" class="fold"><code>Integrate the `ictus` library into this project for masked date and/or time text inputs.
@@ -237,7 +249,9 @@ When done, summarize what you installed, what you changed, and how to try it.</c
     <h2 id="size" data-short="Size">Size and speed</h2>
     <p>
       ictus is tiny and does a lot. The date core is 3.0 kB gzipped, time is a separate 2.7 kB
-      entry, and the React hooks add 0.9 kB on top.
+      entry, and the React hooks add 0.9 kB on top. No runtime dependencies, marked side-effect
+      free, and tree-shakeable if you only import what you use. React is an optional peer for
+      <code>ictus/react</code> only.
     </p>
     <table>
       <thead>
@@ -554,7 +568,7 @@ When done, summarize what you installed, what you changed, and how to try it.</c
       <button
         type="button"
         class="copy-icon"
-        data-copy="npx shadcn@latest add flixlix/ictus/date-field-shadcn"
+        data-track="registry-shadcn" data-copy="npx shadcn@latest add flixlix/ictus/date-field-shadcn"
         aria-label="Copy install command"
       ></button>
     </div>
@@ -581,7 +595,7 @@ Wire useDateFieldMask from ictus/react; keep the host Input styles. Ask before i
       <button
         type="button"
         class="copy-icon"
-        data-copy="npx shadcn@latest add flixlix/ictus/date-field-base-ui"
+        data-track="registry-base-ui" data-copy="npx shadcn@latest add flixlix/ictus/date-field-base-ui"
         aria-label="Copy install command"
       ></button>
     </div>
@@ -608,7 +622,7 @@ Use useDateFieldMask; keep Field/Input composition. Ask before inventing a new d
       <button
         type="button"
         class="copy-icon"
-        data-copy="npx shadcn@latest add flixlix/ictus/date-field-day-picker"
+        data-track="registry-day-picker" data-copy="npx shadcn@latest add flixlix/ictus/date-field-day-picker"
         aria-label="Copy install command"
       ></button>
     </div>
