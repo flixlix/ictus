@@ -1,5 +1,23 @@
 # ictus
 
+## 1.1.0
+
+### Minor Changes
+
+- [#19](https://github.com/flixlix/ictus/pull/19) [`c7d837b`](https://github.com/flixlix/ictus/commit/c7d837b73cd4ed37483df5b7ebb80d4193d7aac0) Thanks [@flixlix](https://github.com/flixlix)! - Add a headless 24-hour time mask via `ictus/time` (`applyTime`, `bindTimeMask`, and `useTimeFieldMask`).
+
+### Patch Changes
+
+- [#22](https://github.com/flixlix/ictus/pull/22) [`bd49a7c`](https://github.com/flixlix/ictus/commit/bd49a7c53cda0135f96ad43bf211ecfab6989b27) Thanks [@flixlix](https://github.com/flixlix)! - Prevent Backspace/Delete from leaving non-mask characters in date and time mask state when the DOM value was polluted.
+
+- [#26](https://github.com/flixlix/ictus/pull/26) [`5804ce9`](https://github.com/flixlix/ictus/commit/5804ce94d72739d7844ef174d0fcbc3955078d13) Thanks [@flixlix](https://github.com/flixlix)! - Ctrl/Cmd+Backspace and Ctrl/Cmd+Delete clear a date or time group; Shift+Backspace and Shift+Delete clear the whole value. Plain Backspace and Delete still remove one character.
+
+- [#25](https://github.com/flixlix/ictus/pull/25) [`5de584e`](https://github.com/flixlix/ictus/commit/5de584e74643b4465145889f879dfa1c9d797a94) Thanks [@flixlix](https://github.com/flixlix)! - When a second digit would push a day, month, or hour past its max, pad the group and spill the digit into the next one (`3` then `9` → `03.09.|`), including the same idea for time and `mdy` / `ymd`.
+
+- [#22](https://github.com/flixlix/ictus/pull/22) [`a01ad69`](https://github.com/flixlix/ictus/commit/a01ad69ed92fddfcd6d99b62fa1aa831f50161d3) Thanks [@flixlix](https://github.com/flixlix)! - Ignore separator keys inside an already-complete date or time group that already has its separator (same no-op as a rejected digit).
+
+- [#24](https://github.com/flixlix/ictus/pull/24) [`5233585`](https://github.com/flixlix/ictus/commit/5233585057fd1a2cdc8956a419087f219b2b8db4) Thanks [@flixlix](https://github.com/flixlix)! - Keep the caret after a digit inserted in the middle of a group (notably the year), so typing `19` at `14.10.|26` becomes `14.10.19|26` instead of appending at the end.
+
 ## 1.0.0
 
 ### Major Changes
