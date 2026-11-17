@@ -461,7 +461,7 @@ pnpm changeset
 
 Merging to `main` opens a Version Packages PR. Merging that PR publishes to npm and creates a GitHub release.
 
-Publishing needs an `NPM_TOKEN` repository secret. In the repo’s Actions settings, enable **Allow GitHub Actions to create and approve pull requests**.
+Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers), so there is no npm token to store or rotate. On npmjs.com, the `ictus` package lists `flixlix/ictus` with the `release.yml` workflow as its trusted publisher. In the repo’s Actions settings, enable **Allow GitHub Actions to create and approve pull requests**.
 
 ## Limits for now
 
