@@ -1,5 +1,11 @@
 # ictus
 
+## 1.2.0
+
+### Minor Changes
+
+- [#30](https://github.com/flixlix/ictus/pull/30) [`ad50397`](https://github.com/flixlix/ictus/commit/ad50397f88b0b0f5dd690786f2796246a3f8adec) Thanks [@flixlix](https://github.com/flixlix)! - Add a combined date and time mask via `ictus/datetime` (`applyDateTime`, `bindDateTimeMask`, and `useDateTimeFieldMask`), so `dd.mm.yyyy HH:mm` can be typed into one field.
+
 ## 1.1.0
 
 ### Minor Changes
