@@ -6,7 +6,7 @@
   },
   "homepage": "https://ictus.luca-felix.com",
   "version": "1.1.0",
-  "description": "Date and time input mask for a plain text field. Formats dd/mm/yyyy, mm/dd/yyyy, yyyy-mm-dd, or HH:mm as you type. Headless, 2.6 kB, optional React hook.",
+  "description": "Date and time input mask for a plain text field. Formats dd/mm/yyyy, mm/dd/yyyy, yyyy-mm-dd, HH:mm, or both in one field as you type. Headless, 2.6 kB, optional React hook.",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",
@@ -19,6 +19,10 @@
     "./time": {
       "types": "./dist/time.d.ts",
       "import": "./dist/time.js"
+    },
+    "./datetime": {
+      "types": "./dist/datetime.d.ts",
+      "import": "./dist/datetime.js"
     },
     "./react": {
       "types": "./dist/react.d.ts",
@@ -66,6 +70,9 @@
     "caret",
     "headless",
     "hh-mm",
+    "datetime",
+    "datetime-input",
+    "date-time-mask",
     "hh:mm",
     "react",
     "react-hook",

@@ -1,6 +1,6 @@
 # ictus
 
-**Date and time input mask** for a plain `<input>`. Formats `dd/mm/yyyy`, `mm/dd/yyyy`, or `yyyy-mm-dd` dates and `HH:mm` or `HH:mm:ss` times **as you type**. Headless, zero-dependency, **3.0 kB** gzipped. Optional React hook (`ictus/react`).
+**Date and time input mask** for a plain `<input>`. Formats `dd/mm/yyyy`, `mm/dd/yyyy`, or `yyyy-mm-dd` dates, `HH:mm` or `HH:mm:ss` times, or both in one field **as you type**. Headless, zero-dependency, **3.0 kB** gzipped. Optional React hook (`ictus/react`).
 
 ![Typing 4122026 into a date field becomes 04.12.2026, and 945 into a time field becomes 09:45](assets/demo.gif)
 
@@ -16,7 +16,8 @@ Measured on this repo (`pnpm measure`). Min+gzip is what a bundler ships.
 | --- | ---: | ---: |
 | `ictus` | 8.2 kB | **3.0 kB** |
 | `ictus/time` | 6.8 kB | **2.7 kB** |
-| `ictus/react` (react + core + time external) | 3.0 kB | **0.9 kB** |
+| `ictus/datetime` (includes core + time) | 18.0 kB | **5.5 kB** |
+| `ictus/react` (react + core + time + datetime external) | 2.7 kB | **1.1 kB** |
 
 No runtime dependencies. The package is marked side-effect free (`sideEffects: false`), so unused entries can tree-shake out of your bundle. React is an optional peer for `ictus/react` only.
 
@@ -38,7 +39,7 @@ npx shadcn@latest add flixlix/ictus/date-field-shadcn
 
 ## When to use
 
-Good fit when you want dates (`dd/mm/yyyy`, `mm/dd/yyyy`, `yyyy-mm-dd`) or 24-hour times (`HH:mm`, `HH:mm:ss`) typed into one text field, with formatting and caret behavior as someone types. Works with the Input you already have (vanilla `bindDateMask` / `bindTimeMask`, or React hooks). Dates and times only.
+Good fit when you want dates (`dd/mm/yyyy`, `mm/dd/yyyy`, `yyyy-mm-dd`), 24-hour times (`HH:mm`, `HH:mm:ss`), or both (`dd.mm.yyyy HH:mm`) typed into one text field, with formatting and caret behavior as someone types. Works with the Input you already have (vanilla `bindDateMask` / `bindTimeMask` / `bindDateTimeMask`, or React hooks). Dates and times only.
 
 ## Groups
 
@@ -346,6 +347,110 @@ function TimeInput() {
 | `14:5\|` | `9` | `14:59\|` |
 | `14:6\|` | `0` | `14:6\|` |
 
+## Date and time
+
+One field for both, from `ictus/datetime`. It chains the date mask and the time mask with a joiner (default a space): `dd.mm.yyyy HH:mm`. Every date option (`separator`, `mode`) and time option (`timeSeparator`, `precision`) works as in the single-field masks, so the group and overflow rules are the same on both sides.
+
+Once the year is complete the joiner is written for you, so typing `111220260945` gives `11.12.2026 09:45`. Space jumps from a complete date to the time. Backspace right after the joiner removes it when the time is empty, or the last date digit when it is not. Ctrl/Cmd+Backspace there clears the year. Arrow steps act on the group under the caret.
+
+```ts
+import {
+  applyDateTime,
+  applyDateTimePaste,
+  parseDateTime,
+  dateTimeStatus,
+  formatDateTime,
+  isoDateTime,
+  isDateTimeMaskKey,
+  bindDateTimeMask,
+} from "ictus/datetime";
+
+type DateTimeFieldOptions = {
+  separator?: string;              // date separator, default '.'
+  timeSeparator?: string;          // default ':'
+  joiner?: string;                 // between date and time, default ' '
+  mode?: "dmy" | "mdy" | "ymd";    // default 'dmy'
+  precision?: "minute" | "second"; // default 'minute'
+};
+
+applyDateTime({
+  value: string,
+  caret: number,
+  selectionEnd?: number,
+  key: string,                     // digit, `.` `/` `-` `:`, space, Backspace, Delete
+  step?: number,                   // default 0: ignore ArrowUp/ArrowDown
+  ...DateTimeFieldOptions,
+}): { value: string; caret: number }
+
+applyDateTimePaste({
+  value: string,
+  caret: number,
+  selectionEnd?: number,
+  pasted: string,
+  ...DateTimeFieldOptions,
+}): { value: string; caret: number }
+
+parseDateTime(masked: string, options?: {
+  joiner?: string;
+  mode?: "dmy" | "mdy" | "ymd";
+  precision?: "minute" | "second";
+  yyExpand?: { pivot?: number };
+  min?: Date;
+  max?: Date;
+}): Date | undefined
+dateTimeStatus(masked: string, options?: same as parseDateTime):
+  "empty" | "incomplete" | "invalid" | "valid"
+formatDateTime(date: Date, options?: DateTimeFieldOptions): string
+isoDateTime(date: Date | undefined, precision?: "minute" | "second"): string
+isDateTimeMaskKey(key: string): boolean
+
+bindDateTimeMask(input: HTMLInputElement, options?: DateTimeFieldOptions & {
+  step?: number;
+  onValueChange?: (value: string) => void;
+  getValue?: () => string;
+  setValue?: (value: string) => void;
+}): () => void                     // unsubscribe
+```
+
+`applyDateTimePaste` accepts `11.12.2026 09:45`, `11/12/2026 9:45`, and ISO `2026-12-11T09:45:30Z` (the date and time are split on whitespace or `T`; the zone suffix is ignored). A bare time like `9:45` lands in the time part, as long as the date is already complete.
+
+`parseDateTime` returns a local `Date` only when both halves are complete and valid. `min` / `max` compare the full timestamp, not just the day. `isoDateTime` writes the `datetime-local` form (`2026-12-11T09:45`, or with seconds), or `""` for `undefined`.
+
+```tsx
+import { useDateTimeFieldMask } from "ictus/react";
+
+function DateTimeInput() {
+  const { inputProps, hiddenInputProps } = useDateTimeFieldMask({
+    // mode: "ymd", precision: "second", joiner: ", ",
+    min: new Date(2026, 0, 1, 8, 0),
+    onParsedChange: (date) => console.log(date),
+  });
+
+  return (
+    <>
+      <input {...inputProps} />
+      <input name="startsAt" {...hiddenInputProps} />
+    </>
+  );
+}
+```
+
+`useDateTimeFieldMask` takes the same `value` / `defaultValue` / `onValueChange` / `step` options as the other hooks. `parsed` is a `Date`, and `isoValue` is the `isoDateTime` string.
+
+### Date and time acceptance table
+
+Defaults (`dd.mm.yyyy HH:mm`). `|` is the caret after the keystroke.
+
+| Before | Key | After |
+| --- | --- | --- |
+| `11.12.202\|` | `6` | `11.12.2026 \|` |
+| `11.12.2026\|` | `9` | `11.12.2026 09:\|` |
+| `11.12.2026\|` | `Space` | `11.12.2026 \|` |
+| `11.12.202\|` | `Space` | `11.12.202\|` |
+| `11.12.2026 \|` | `⌫` | `11.12.2026\|` |
+| `11.12.2026 \|09:45` | `⌫` | `11.12.202\| 09:45` |
+| `11.12.2026 09:45\|` | `1` | `11.12.2026 09:45\|` |
+
 ## Releasing
 
 This repo uses [Changesets](https://changesets.dev). On a branch with a user-facing change:
@@ -360,4 +465,4 @@ Publishing needs an `NPM_TOKEN` repository secret. In the repo’s Actions setti
 
 ## Limits for now
 
-This release covers single date fields and single time fields. Combined date-time, ranges, and 12-hour clocks are future work. Pick field order with `mode` (`dmy` by default, or `mdy` / `ymd`). Pair with a calendar UI when the product needs both typing and picking.
+This release covers date fields, time fields, and combined date-time fields. Ranges and 12-hour clocks are future work. Pick field order with `mode` (`dmy` by default, or `mdy` / `ymd`). Pair with a calendar UI when the product needs both typing and picking.

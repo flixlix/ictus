@@ -17,6 +17,15 @@ import {
   timeStatus,
 } from "./time.js";
 import type { TimeFieldPrecision, TimeStatus, TimeValue } from "./time.js";
+import {
+  applyDateTime,
+  applyDateTimePaste,
+  dateTimeStatus,
+  isDateTimeMaskKey,
+  isoDateTime,
+  parseDateTime,
+} from "./datetime.js";
+import type { DateTimeStatus } from "./datetime.js";
 
 export type UseDateFieldMaskOptions = {
   separator?: string;
@@ -53,125 +62,6 @@ export type UseDateFieldMaskReturn = {
   hiddenInputProps: { type: "hidden"; value: string };
 };
 
-function noopChange(_event: ChangeEvent<HTMLInputElement>) {}
-
-function iso(date: Date | undefined) {
-  return date
-    ? `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, "0")}-${`${date.getDate()}`.padStart(2, "0")}`
-    : "";
-}
-
-export function useDateFieldMask(
-  options: UseDateFieldMaskOptions = {},
-): UseDateFieldMaskReturn {
-  const {
-    separator,
-    mode,
-    defaultValue = "",
-    value: valueProp,
-    onValueChange,
-    onParsedChange,
-    min,
-    max,
-    step = 0,
-  } = options;
-  const isControlled = valueProp !== undefined;
-  const ref = useRef<HTMLInputElement | null>(null);
-  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
-  const value = isControlled ? valueProp : uncontrolledValue;
-  const parseOpts = { mode, min, max };
-  const parsed = useMemo(
-    () => parseDate(value, parseOpts),
-    [value, mode, min, max],
-  );
-  const status = useMemo(() => dateStatus(value, { mode }), [value, mode]);
-  const isoValue = iso(parsed);
-  const prevIso = useRef(isoValue);
-
-  const commit = useCallback(
-    (next: { value: string; caret: number }) => {
-      if (!isControlled) {
-        setUncontrolledValue(next.value);
-      }
-      onValueChange?.(next.value);
-      const d = parseDate(next.value, { mode, min, max });
-      const k = iso(d);
-      if (k !== prevIso.current) {
-        prevIso.current = k;
-        onParsedChange?.(d);
-      }
-      const caret = next.caret;
-      requestAnimationFrame(() => {
-        ref.current?.setSelectionRange(caret, caret);
-      });
-    },
-    [isControlled, onValueChange, onParsedChange, mode, min, max],
-  );
-
-  const onKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLInputElement>) => {
-      if (event.nativeEvent.isComposing) return;
-      const isStepArrow =
-        step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown");
-      if (!isDateMaskKey(event.key) && !isStepArrow) return;
-      event.preventDefault();
-      commit(
-        apply({
-          value: event.currentTarget.value,
-          caret: event.currentTarget.selectionStart ?? 0,
-          selectionEnd: event.currentTarget.selectionEnd ?? undefined,
-          key: event.key,
-          separator,
-          mode,
-          step,
-          ctrlKey: event.ctrlKey,
-          metaKey: event.metaKey,
-          shiftKey: event.shiftKey,
-        }),
-      );
-    },
-    [separator, mode, commit, step],
-  );
-
-  const onPaste = useCallback(
-    (event: ClipboardEvent<HTMLInputElement>) => {
-      event.preventDefault();
-      commit(
-        applyPaste({
-          value: event.currentTarget.value,
-          caret: event.currentTarget.selectionStart ?? 0,
-          selectionEnd: event.currentTarget.selectionEnd ?? undefined,
-          pasted: event.clipboardData.getData("text"),
-          separator,
-          mode,
-        }),
-      );
-    },
-    [separator, mode, commit],
-  );
-
-  return {
-    ref,
-    value,
-    parsed,
-    status,
-    isoValue,
-    onKeyDown,
-    onPaste,
-    inputProps: {
-      ref,
-      value,
-      onKeyDown,
-      onPaste,
-      onChange: noopChange,
-      inputMode: "numeric",
-      autoComplete: "off",
-      spellCheck: false,
-    },
-    hiddenInputProps: { type: "hidden", value: isoValue },
-  };
-}
-
 export type UseTimeFieldMaskOptions = {
   separator?: string;
   precision?: TimeFieldPrecision;
@@ -196,34 +86,71 @@ export type UseTimeFieldMaskReturn = {
   hiddenInputProps: { type: "hidden"; value: string };
 };
 
-export function useTimeFieldMask(
-  options: UseTimeFieldMaskOptions = {},
-): UseTimeFieldMaskReturn {
-  const {
-    separator,
-    precision = "minute",
-    defaultValue = "",
-    value: valueProp,
-    onValueChange,
-    onParsedChange,
-    min,
-    max,
-    step = 0,
-  } = options;
+export type UseDateTimeFieldMaskOptions = {
+  separator?: string;
+  timeSeparator?: string;
+  joiner?: string;
+  mode?: DateFieldMode;
+  precision?: TimeFieldPrecision;
+  defaultValue?: string;
+  value?: string;
+  onValueChange?: (value: string) => void;
+  onParsedChange?: (date: Date | undefined) => void;
+  min?: Date;
+  max?: Date;
+  step?: number;
+};
+
+export type UseDateTimeFieldMaskReturn = {
+  ref: RefObject<HTMLInputElement | null>;
+  value: string;
+  parsed: Date | undefined;
+  status: DateTimeStatus;
+  isoValue: string;
+  onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+  onPaste: (event: ClipboardEvent<HTMLInputElement>) => void;
+  inputProps: DateFieldInputProps;
+  hiddenInputProps: { type: "hidden"; value: string };
+};
+
+type Edit = { value: string; caret: number; selectionEnd?: number };
+
+type MaskConfig<P, S> = {
+  defaultValue?: string;
+  value?: string;
+  onValueChange?: (value: string) => void;
+  onParsedChange?: (parsed: P | undefined) => void;
+  step: number;
+  deps: unknown[];
+  isKey: (key: string) => boolean;
+  key: (edit: Edit & { key: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean }) => {
+    value: string;
+    caret: number;
+  };
+  paste: (edit: Edit & { pasted: string }) => { value: string; caret: number };
+  parse: (value: string) => P | undefined;
+  status: (value: string) => S;
+  iso: (parsed: P | undefined) => string;
+};
+
+function noopChange(_event: ChangeEvent<HTMLInputElement>) {}
+
+function iso(date: Date | undefined) {
+  return date
+    ? `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, "0")}-${`${date.getDate()}`.padStart(2, "0")}`
+    : "";
+}
+
+function useMask<P, S>(config: MaskConfig<P, S>) {
+  const { value: valueProp, defaultValue = "", onValueChange, onParsedChange, step, deps } =
+    config;
   const isControlled = valueProp !== undefined;
   const ref = useRef<HTMLInputElement | null>(null);
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const value = isControlled ? valueProp : uncontrolledValue;
-  const parseOpts = { precision, min, max };
-  const parsed = useMemo(
-    () => parseTime(value, parseOpts),
-    [value, precision, min, max],
-  );
-  const status = useMemo(
-    () => timeStatus(value, { precision }),
-    [value, precision],
-  );
-  const isoValue = isoTime(parsed, precision);
+  const parsed = useMemo(() => config.parse(value), [value, ...deps]);
+  const status = useMemo(() => config.status(value), [value, ...deps]);
+  const isoValue = config.iso(parsed);
   const prevIso = useRef(isoValue);
 
   const commit = useCallback(
@@ -232,18 +159,18 @@ export function useTimeFieldMask(
         setUncontrolledValue(next.value);
       }
       onValueChange?.(next.value);
-      const t = parseTime(next.value, { precision, min, max });
-      const k = isoTime(t, precision);
+      const d = config.parse(next.value);
+      const k = config.iso(d);
       if (k !== prevIso.current) {
         prevIso.current = k;
-        onParsedChange?.(t);
+        onParsedChange?.(d);
       }
       const caret = next.caret;
       requestAnimationFrame(() => {
         ref.current?.setSelectionRange(caret, caret);
       });
     },
-    [isControlled, onValueChange, onParsedChange, precision, min, max],
+    [isControlled, onValueChange, onParsedChange, ...deps],
   );
 
   const onKeyDown = useCallback(
@@ -251,41 +178,36 @@ export function useTimeFieldMask(
       if (event.nativeEvent.isComposing) return;
       const isStepArrow =
         step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown");
-      if (!isTimeMaskKey(event.key) && !isStepArrow) return;
+      if (!config.isKey(event.key) && !isStepArrow) return;
       event.preventDefault();
       commit(
-        applyTime({
+        config.key({
           value: event.currentTarget.value,
           caret: event.currentTarget.selectionStart ?? 0,
           selectionEnd: event.currentTarget.selectionEnd ?? undefined,
           key: event.key,
-          separator,
-          precision,
-          step,
           ctrlKey: event.ctrlKey,
           metaKey: event.metaKey,
           shiftKey: event.shiftKey,
         }),
       );
     },
-    [separator, precision, commit, step],
+    [commit, step, ...deps],
   );
 
   const onPaste = useCallback(
     (event: ClipboardEvent<HTMLInputElement>) => {
       event.preventDefault();
       commit(
-        applyTimePaste({
+        config.paste({
           value: event.currentTarget.value,
           caret: event.currentTarget.selectionStart ?? 0,
           selectionEnd: event.currentTarget.selectionEnd ?? undefined,
           pasted: event.clipboardData.getData("text"),
-          separator,
-          precision,
         }),
       );
     },
-    [separator, precision, commit],
+    [commit, ...deps],
   );
 
   return {
@@ -302,10 +224,72 @@ export function useTimeFieldMask(
       onKeyDown,
       onPaste,
       onChange: noopChange,
-      inputMode: "numeric",
-      autoComplete: "off",
-      spellCheck: false,
+      inputMode: "numeric" as const,
+      autoComplete: "off" as const,
+      spellCheck: false as const,
     },
-    hiddenInputProps: { type: "hidden", value: isoValue },
+    hiddenInputProps: { type: "hidden" as const, value: isoValue },
   };
+}
+
+export function useDateFieldMask(
+  options: UseDateFieldMaskOptions = {},
+): UseDateFieldMaskReturn {
+  const { separator, mode, min, max, step = 0 } = options;
+  return useMask<Date, DateStatus>({
+    ...options,
+    step,
+    deps: [separator, mode, min, max],
+    isKey: isDateMaskKey,
+    key: (edit) => apply({ ...edit, separator, mode, step }),
+    paste: (edit) => applyPaste({ ...edit, separator, mode }),
+    parse: (value) => parseDate(value, { mode, min, max }),
+    status: (value) => dateStatus(value, { mode }),
+    iso,
+  });
+}
+
+export function useTimeFieldMask(
+  options: UseTimeFieldMaskOptions = {},
+): UseTimeFieldMaskReturn {
+  const { separator, precision = "minute", min, max, step = 0 } = options;
+  return useMask<TimeValue, TimeStatus>({
+    ...options,
+    step,
+    deps: [separator, precision, min, max],
+    isKey: isTimeMaskKey,
+    key: (edit) => applyTime({ ...edit, separator, precision, step }),
+    paste: (edit) => applyTimePaste({ ...edit, separator, precision }),
+    parse: (value) => parseTime(value, { precision, min, max }),
+    status: (value) => timeStatus(value, { precision }),
+    iso: (time) => isoTime(time, precision),
+  });
+}
+
+export function useDateTimeFieldMask(
+  options: UseDateTimeFieldMaskOptions = {},
+): UseDateTimeFieldMaskReturn {
+  const {
+    separator,
+    timeSeparator,
+    joiner,
+    mode,
+    precision = "minute",
+    min,
+    max,
+    step = 0,
+  } = options;
+  const field = { separator, timeSeparator, joiner, mode, precision };
+  const parseOpts = { joiner, mode, precision, min, max };
+  return useMask<Date, DateTimeStatus>({
+    ...options,
+    step,
+    deps: [separator, timeSeparator, joiner, mode, precision, min, max],
+    isKey: isDateTimeMaskKey,
+    key: (edit) => applyDateTime({ ...edit, ...field, step }),
+    paste: (edit) => applyDateTimePaste({ ...edit, ...field }),
+    parse: (value) => parseDateTime(value, parseOpts),
+    status: (value) => dateTimeStatus(value, { joiner, mode, precision }),
+    iso: (date) => isoDateTime(date, precision),
+  });
 }
