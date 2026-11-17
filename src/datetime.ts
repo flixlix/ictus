@@ -282,7 +282,10 @@ export function applyDateTimePaste(input: ApplyDateTimePasteInput): ApplyDateTim
   const timeKeys = timeText
     ? applyTimePaste({ value: "", caret: 0, pasted: timeText, precision: r.precision }).value
     : "";
-  const keys = [...dateKeys, ...(dateKeys && timeKeys ? " " : ""), ...timeKeys];
+  const overflow = at < 0 && !timeOnly && digitCount(text) > digitCount(dateKeys);
+  const keys = overflow
+    ? [...text].filter((ch) => isDateTimeMaskKey(ch) && ch !== " ")
+    : [...dateKeys, ...(dateKeys && timeKeys ? " " : ""), ...timeKeys];
   if (keys.length === 0) return { value, caret };
 
   let selectionEnd = input.selectionEnd;
