@@ -193,7 +193,7 @@ Docs: https://ictus.luca-felix.com
 Package: https://www.npmjs.com/package/ictus
 Repo: https://github.com/flixlix/ictus
 
-ictus is a headless as-you-type mask for a plain &lt;input&gt;. Use it for day-month-year dates (`apply` / `applyPaste`, or React `useDateFieldMask`) and for 24-hour times (`ictus/time`: `applyTime` / `bindTimeMask`, or React `useTimeFieldMask`). Attach it to an existing text input; keep the host app’s UI.
+ictus is a headless as-you-type mask for a plain &lt;input&gt;. Use it for day-month-year dates (`apply` / `applyPaste`, or React `useDateFieldMask`) for 24-hour times (`ictus/time`: `applyTime` / `bindTimeMask`, or React `useTimeFieldMask`), and for both in one field (`ictus/datetime`: `applyDateTime` / `bindDateTimeMask`, or React `useDateTimeFieldMask`). Attach it to an existing text input; keep the host app’s UI.
 
 ## 1. Find opportunities first
 Scan this repo for places a date or time is entered as text (or should be), for example:
@@ -211,13 +211,13 @@ Then stop and ask me before changing code:
 - If you find more than one: list them (file + short reason) and ask whether to do one, several, or all.
 
 ## 2. Install (only after I confirm where)
-Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun`, matching the lockfile). Install `ictus`. Follow current docs for the right entry (`ictus`, `ictus/time`, or `ictus/react`).
+Use this project’s package manager (`pnpm` / `npm` / `yarn` / `bun`, matching the lockfile). Install `ictus`. Follow current docs for the right entry (`ictus`, `ictus/time`, `ictus/datetime`, or `ictus/react`).
 
 ## 3. Implement in the confirmed place(s)
 - Wire the mask per the docs (keydown + paste for vanilla; `inputProps` for React).
 - Keep the host app’s Input / styling / labels; only add ictus behavior.
 - Match separator and date order (or time precision) to the product locale or existing UX.
-- Use `parseDate` / `parseTime` (and status helpers if useful) at the form boundary.
+- Use `parseDate` / `parseTime` / `parseDateTime` (and status helpers if useful) at the form boundary.
 - Leave unrelated pickers alone unless I asked to replace them.
 
 When done, summarize what you installed, what you changed, and how to try it.</code></pre>
@@ -241,15 +241,19 @@ When done, summarize what you installed, what you changed, and how to try it.</c
         <code>ictus/time</code>
       </li>
       <li>
-        <strong>React:</strong> <code>useDateFieldMask</code> and
-        <code>useTimeFieldMask</code>
+        <strong>Date and time:</strong> <code>dd.mm.yyyy HH:mm</code> in one field via
+        <code>ictus/datetime</code>
+      </li>
+      <li>
+        <strong>React:</strong> <code>useDateFieldMask</code>,
+        <code>useTimeFieldMask</code>, and <code>useDateTimeFieldMask</code>
       </li>
     </ul>
 
     <h2 id="size" data-short="Size">Size and speed</h2>
     <p>
       ictus is tiny and does a lot. The date core is 3.0 kB gzipped, time is a separate 2.7 kB
-      entry, and the React hooks add 0.9 kB on top. No runtime dependencies, marked side-effect
+      entry, date and time together are 5.5 kB, and the React hooks add 1.1 kB on top. No runtime dependencies, marked side-effect
       free, and tree-shakeable if you only import what you use. React is an optional peer for
       <code>ictus/react</code> only.
     </p>
@@ -273,9 +277,14 @@ When done, summarize what you installed, what you changed, and how to try it.</c
           <td>2.7 kB</td>
         </tr>
         <tr>
-          <td><code>ictus/react</code> (excluding React, core, time)</td>
-          <td>3.0 kB</td>
-          <td>0.9 kB</td>
+          <td><code>ictus/datetime</code> (including core and time)</td>
+          <td>18.0 kB</td>
+          <td>5.5 kB</td>
+        </tr>
+        <tr>
+          <td><code>ictus/react</code> (excluding React, core, time, datetime)</td>
+          <td>2.7 kB</td>
+          <td>1.1 kB</td>
         </tr>
       </tbody>
     </table>
@@ -423,6 +432,30 @@ When done, summarize what you installed, what you changed, and how to try it.</c
         <br />
         <code data-caret>14:30:00|</code>
         <span data-parse data-kind="valid">14:30:00</span>
+        <span data-hint></span>
+      </span>
+    </p>
+
+    <h3>Date and time</h3>
+    <p>
+      One field for both, from <code>ictus/datetime</code>. The space lands once the year is
+      complete, then the time mask takes over: type <code>111220260945</code> for
+      <code>11.12.2026 09:45</code>.
+    </p>
+    <p>
+      <label for="demo-datetime">dd.mm.yyyy HH:mm</label><br />
+      <span data-mask data-kind="datetime" data-separator="." data-step="1">
+        <input
+          id="demo-datetime"
+          size="16"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="dd.mm.yyyy HH:mm"
+        />
+        <br />
+        <code data-caret>|</code>
+        <span data-parse data-kind="incomplete">incomplete</span>
         <span data-hint></span>
       </span>
     </p>
@@ -642,9 +675,11 @@ Keep typing and calendar selection in sync via useDateFieldMask + formatDate. Im
     <h2 id="api">API</h2>
     <p>
       Most apps need one call: <a href="#bindDateMask"><code>bindDateMask</code></a> /
-      <a href="#bindTimeMask"><code>bindTimeMask</code></a> for a plain input, or
+      <a href="#bindTimeMask"><code>bindTimeMask</code></a> /
+      <a href="#bindDateTimeMask"><code>bindDateTimeMask</code></a> for a plain input, or
       <a href="#react"><code>useDateFieldMask</code></a> /
-      <a href="#useTimeFieldMask"><code>useTimeFieldMask</code></a> in React. The rest are pure
+      <a href="#useTimeFieldMask"><code>useTimeFieldMask</code></a> /
+      <a href="#useDateTimeFieldMask"><code>useDateTimeFieldMask</code></a> in React. The rest are pure
       functions on strings, for when you handle events yourself.
     </p>
 
@@ -864,6 +899,58 @@ const unbind = bindTimeMask(input, {
       <button type="button" class="copy-icon" data-copy-target="code-bind-time" aria-label="Copy code"></button>
     </div>
 
+    <h3 id="applyDateTime"><code>applyDateTime</code> / <code>applyDateTimePaste</code></h3>
+    <p>
+      Date and time in one field, from <code>ictus/datetime</code>. The date mask runs until the
+      year is complete, then a joiner (default a space) is written and the time mask takes over.
+      Space also jumps from a complete date to the time. Options combine both masks:
+      <code>separator</code> and <code>mode</code> for the date, <code>timeSeparator</code> and
+      <code>precision</code> for the time, and <code>joiner</code> between them. Paste accepts
+      <code>11.12.2026 09:45</code> or ISO <code>2026-12-11T09:45</code>.
+    </p>
+    <div class="code-block">
+      <pre id="code-apply-datetime"><code>import { applyDateTime, applyDateTimePaste } from "ictus/datetime";
+
+applyDateTime({ value: "11.12.202", caret: 9, key: "6" });
+// { value: "11.12.2026 ", caret: 11 }
+
+applyDateTimePaste({ value: "", caret: 0, pasted: "2026-12-11T09:45" });
+// { value: "11.12.2026 09:45", caret: 16 }</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-apply-datetime" aria-label="Copy code"></button>
+    </div>
+
+    <h3 id="parseDateTime"><code>parseDateTime</code> / <code>dateTimeStatus</code> / <code>formatDateTime</code></h3>
+    <p>
+      <code>parseDateTime</code> returns a local <code>Date</code> when both halves are complete and
+      valid, or <code>undefined</code>. <code>min</code> / <code>max</code> compare the full
+      timestamp. <code>isoDateTime</code> writes the <code>datetime-local</code> form.
+    </p>
+    <div class="code-block">
+      <pre id="code-parse-datetime"><code>parseDateTime("11.12.2026 09:45");
+// Date: 11 Dec 2026, 09:45 local
+
+dateTimeStatus("11.12.2026 09:4"); // "incomplete"
+formatDateTime(new Date(2026, 11, 11, 9, 45), { mode: "ymd", separator: "-" });
+// "2026-12-11 09:45"
+isoDateTime(new Date(2026, 11, 11, 9, 45)); // "2026-12-11T09:45"</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-parse-datetime" aria-label="Copy code"></button>
+    </div>
+
+    <h3 id="bindDateTimeMask"><code>bindDateTimeMask</code></h3>
+    <p>
+      Same wiring as <code>bindDateMask</code>, for date and time fields.
+    </p>
+    <div class="code-block">
+      <pre id="code-bind-datetime"><code>import { bindDateTimeMask } from "ictus/datetime";
+
+const unbind = bindDateTimeMask(input, {
+  separator: ".",
+  // joiner: ", ",
+  // precision: "second",
+});</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-bind-datetime" aria-label="Copy code"></button>
+    </div>
+
     <h3 id="types">Types</h3>
     <div class="code-block">
       <pre id="code-types"><code>type ApplyInput = {
@@ -986,6 +1073,29 @@ function TimeInput() {
   );
 }</code></pre>
       <button type="button" class="copy-icon" data-copy-target="code-react-time" aria-label="Copy code"></button>
+    </div>
+
+    <h3 id="useDateTimeFieldMask"><code>useDateTimeFieldMask</code></h3>
+    <p>
+      Same shape again, for date and time in one field. <code>parsed</code> is a local
+      <code>Date</code>, and <code>isoValue</code> is the <code>datetime-local</code> string
+      (<code>2026-12-11T09:45</code>).
+    </p>
+    <div class="code-block">
+      <pre id="code-react-datetime"><code>import { useDateTimeFieldMask } from "ictus/react";
+
+function DateTimeInput() {
+  const { inputProps, hiddenInputProps, parsed, status } = useDateTimeFieldMask({
+    onParsedChange: (date) => console.log(date),
+  });
+  return (
+    &lt;&gt;
+      &lt;input {...inputProps} /&gt;
+      &lt;input name="startsAt" {...hiddenInputProps} /&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+      <button type="button" class="copy-icon" data-copy-target="code-react-datetime" aria-label="Copy code"></button>
     </div>
 
     <hr />

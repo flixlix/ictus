@@ -15,6 +15,13 @@ import {
   timeStatus,
 } from "../src/time.js";
 import type { TimeFieldPrecision, TimeStatus } from "../src/time.js";
+import {
+  applyDateTime,
+  applyDateTimePaste,
+  dateTimeStatus,
+  isDateTimeMaskKey,
+  parseDateTime,
+} from "../src/datetime.js";
 import { track } from "./analytics.js";
 import { mountAdvancedDemos } from "./demos/advanced.js";
 import { appendBlurLayers, mountOverflowScrollGradients } from "./overflow-scroll-gradient.js";
@@ -89,8 +96,39 @@ function parseTimeKind(
   }
 }
 
+function parseDateTimeKind(masked: string): { kind: DateStatus; label: string } {
+  const status = dateTimeStatus(masked);
+  if (status !== "valid") {
+    return { kind: status, label: status === "invalid" ? "not a date and time" : status };
+  }
+  const date = parseDateTime(masked);
+  if (!date) return { kind: "incomplete", label: "incomplete" };
+  const label = new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+  return { kind: "valid", label };
+}
+
+type MaskKind = "date" | "time" | "datetime";
+
+function maskKind(root: HTMLElement): MaskKind {
+  const kind = root.dataset.kind;
+  return kind === "time" || kind === "datetime" ? kind : "date";
+}
+
 function isTimeRoot(root: HTMLElement): boolean {
-  return root.dataset.kind === "time";
+  return maskKind(root) === "time";
+}
+
+function isKindMaskKey(kind: MaskKind, key: string): boolean {
+  if (kind === "time") return isTimeMaskKey(key);
+  if (kind === "datetime") return isDateTimeMaskKey(key);
+  return isDateMaskKey(key);
 }
 
 function timePrecision(root: HTMLElement): TimeFieldPrecision {
@@ -107,9 +145,13 @@ function syncField(root: HTMLElement, value: string, caret: number, hint = ""): 
   input.setSelectionRange(caret, caret);
   if (caretEl) caretEl.textContent = show(value, caret);
   if (parseEl instanceof HTMLElement) {
-    const parsed = isTimeRoot(root)
-      ? parseTimeKind(value, timePrecision(root))
-      : parseKind(value);
+    const kind = maskKind(root);
+    const parsed =
+      kind === "time"
+        ? parseTimeKind(value, timePrecision(root))
+        : kind === "datetime"
+          ? parseDateTimeKind(value)
+          : parseKind(value);
     parseEl.dataset.kind = parsed.kind;
     parseEl.textContent = parsed.label;
   }
@@ -117,6 +159,7 @@ function syncField(root: HTMLElement, value: string, caret: number, hint = ""): 
 }
 
 function maskOptions(root: HTMLElement): {
+  kind: MaskKind;
   time: boolean;
   separator: string;
   precision: TimeFieldPrecision;
@@ -124,6 +167,7 @@ function maskOptions(root: HTMLElement): {
 } {
   const time = isTimeRoot(root);
   return {
+    kind: maskKind(root),
     time,
     separator: root.dataset.separator || (time ? ":" : "."),
     precision: timePrecision(root),
@@ -143,12 +187,24 @@ function applyMaskKey(
   key: string,
   mods: MaskKeyMods = {},
 ): void {
-  const { time, separator, precision, step } = maskOptions(root);
+  const { kind, time, separator, precision, step } = maskOptions(root);
   const arrow = step > 0 && (key === "ArrowUp" || key === "ArrowDown");
-  const isMaskKey = time ? isTimeMaskKey(key) : isDateMaskKey(key);
-  if (!isMaskKey && !arrow) return;
+  if (!isKindMaskKey(kind, key) && !arrow) return;
   const caret = input.selectionStart ?? 0;
-  const next = time
+  const next = kind === "datetime"
+    ? applyDateTime({
+        value: input.value,
+        caret,
+        selectionEnd: input.selectionEnd ?? undefined,
+        key,
+        separator,
+        precision,
+        step,
+        ctrlKey: mods.ctrlKey,
+        metaKey: mods.metaKey,
+        shiftKey: mods.shiftKey,
+      })
+    : time
     ? applyTime({
         value: input.value,
         caret,
@@ -181,8 +237,17 @@ function applyMaskKey(
 }
 
 function applyMaskPaste(root: HTMLElement, input: HTMLInputElement, pasted: string): void {
-  const { time, separator, precision } = maskOptions(root);
-  const next = time
+  const { kind, time, separator, precision } = maskOptions(root);
+  const next = kind === "datetime"
+    ? applyDateTimePaste({
+        value: input.value,
+        caret: input.selectionStart ?? 0,
+        selectionEnd: input.selectionEnd ?? undefined,
+        pasted,
+        separator,
+        precision,
+      })
+    : time
     ? applyTimePaste({
         value: input.value,
         caret: input.selectionStart ?? 0,
@@ -204,14 +269,13 @@ function applyMaskPaste(root: HTMLElement, input: HTMLInputElement, pasted: stri
 function bindMask(root: HTMLElement): void {
   const input = root.querySelector("input");
   if (!(input instanceof HTMLInputElement)) return;
-  const { time, step } = maskOptions(root);
+  const { kind, step } = maskOptions(root);
   syncField(root, input.value, input.selectionStart ?? input.value.length);
 
   input.addEventListener("keydown", (event) => {
     const arrow =
       step > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown");
-    const isMaskKey = time ? isTimeMaskKey(event.key) : isDateMaskKey(event.key);
-    if (!isMaskKey && !arrow) {
+    if (!isKindMaskKey(kind, event.key) && !arrow) {
       if (
         event.key.length === 1 &&
         !event.ctrlKey &&
