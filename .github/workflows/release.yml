@@ -27,11 +27,10 @@ jobs:
           node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@^11.5.1
       - run: pnpm install --frozen-lockfile
       - uses: changesets/action@v2
         with:
           publish-script: pnpm release
           commit-message: "chore: version packages"
           pr-title: "chore: version packages"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
